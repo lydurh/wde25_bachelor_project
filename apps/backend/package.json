@@ -1,0 +1,11 @@
+{
+  "name": "backend",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun"
+  },
+  "dependencies": {
+    "@repo/shared": "workspace:*",
+    "@repo/db": "workspace:*"
+  }
+}
