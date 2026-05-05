@@ -8,8 +8,6 @@
   "scripts": {
     "dev": "bun run --filter '*' dev",
     "dev:backend": "bun run --filter backend dev",
-    "dev:admin": "bun run --filter admin dev",
-    "dev:website": "bun run --filter website dev",
     "build": "bun run --filter '*' build",
     "lint": "bun run --filter '*' lint",
     "format": "prettier --write .",
