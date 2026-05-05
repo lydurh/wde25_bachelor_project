@@ -1,13 +1,8 @@
 FROM oven/bun:1
-
 WORKDIR /app
 
-COPY package.json ./
-
+COPY . .
 RUN bun install
 
-COPY . .
-
 EXPOSE 3000
-
-ENTRYPOINT ["bun", "run", "dev"]
+CMD ["bun", "run", "dev"]
