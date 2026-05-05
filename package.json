@@ -11,6 +11,11 @@
     "build": "bun run --filter '*' build",
     "lint": "bun run --filter '*' lint",
     "format": "prettier --write .",
-    "typecheck": "bun run --filter '*' typecheck"
+    "format:check": "prettier --check .",
+    "typecheck": "bun run --filter '*' typecheck",
+    "check": "bun run lint && bun run format:check && bun run typecheck"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0"
   }
 }

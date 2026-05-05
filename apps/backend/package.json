@@ -2,7 +2,9 @@
   "name": "backend",
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "build": "bun build src/index.ts --outdir dist --target bun"
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@repo/db": "workspace:*",
