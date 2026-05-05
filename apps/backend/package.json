@@ -5,7 +5,8 @@
     "build": "bun build src/index.ts --outdir dist --target bun"
   },
   "dependencies": {
+    "@repo/db": "workspace:*",
     "@repo/shared": "workspace:*",
-    "@repo/db": "workspace:*"
+    "hono": "^4.12.17"
   }
 }
