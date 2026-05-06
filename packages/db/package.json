@@ -3,7 +3,12 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
   "devDependencies": {
+    "@repo/config": "workspace:*",
     "@types/bun": "latest",
     "drizzle-kit": "^0.31.10"
   },

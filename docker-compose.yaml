@@ -9,6 +9,19 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    depends_on:
+      - db
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
   backend:
     container_name: backend
     build:
@@ -16,10 +29,28 @@ services:
       dockerfile: apps/backend/Dockerfile
     ports:
       - "3000:3000"
+    environment:
+      - PORT=3000
     depends_on: 
       - db
     env_file: 
       - .env
 
+  frontend:
+    container_name: frontend
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/frontend/src:/app/apps/frontend/src
+      - ./packages:/app/packages
+    depends_on:
+      - backend
+    env_file:
+      - .env
+
 volumes:
   pgdata:
+  pgadmin_data:

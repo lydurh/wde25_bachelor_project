@@ -8,9 +8,24 @@
   "scripts": {
     "dev": "bun run --filter '*' dev",
     "dev:backend": "bun run --filter backend dev",
+    "dev:frontend": "bun run --filter frontend dev",
     "build": "bun run --filter '*' build",
     "lint": "bun run --filter '*' lint",
     "format": "prettier --write .",
-    "typecheck": "bun run --filter '*' typecheck"
+    "format:check": "prettier --check .",
+    "typecheck": "bun run --filter '*' typecheck",
+    "check": "bun run lint && bun run format:check && bun run typecheck",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.0",
+    "prettier": "^3.0.0",
+    "typescript-eslint": "^8.0.0"
+  },
+  "lint-staged": {
+    "*": "prettier --write --ignore-unknown"
   }
 }
