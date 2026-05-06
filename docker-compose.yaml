@@ -29,20 +29,22 @@ services:
       dockerfile: apps/backend/Dockerfile
     ports:
       - "3000:3000"
+    environment:
+      - PORT=3000
     depends_on: 
       - db
     env_file: 
       - .env
 
-  admin:
-    container_name: admin
+  frontend:
+    container_name: frontend
     build:
       context: .
-      dockerfile: apps/admin/Dockerfile
+      dockerfile: apps/frontend/Dockerfile
     ports:
       - "5173:5173"
     volumes:
-      - ./apps/admin/src:/app/apps/admin/src
+      - ./apps/frontend/src:/app/apps/frontend/src
       - ./packages:/app/packages
     depends_on:
       - backend

@@ -11,8 +11,8 @@
         "typescript-eslint": "^8.0.0",
       },
     },
-    "apps/admin": {
-      "name": "admin",
+    "apps/frontend": {
+      "name": "frontend",
       "dependencies": {
         "hono": "^4.12.17",
         "react": "^19.1.0",
