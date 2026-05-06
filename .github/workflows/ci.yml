@@ -1,0 +1,61 @@
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    name: Lint, Format & Typecheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: ./.github/actions/setup
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Format check
+        run: bun run format:check
+
+      - name: Typecheck
+        run: bun run typecheck
+  
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: ./.github/actions/setup
+
+      - name: Test
+        run: bun test
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [check, test]
+
+    steps:
+      - uses: ./.github/actions/setup
+
+      - name: Build all packages
+        run: bun run build
+
+  docker:
+    name: Docker Build (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        include:
+          - app: backend
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build ${{ matrix.app }} image
+        run: docker build -f apps/${{ matrix.app }}/Dockerfile -t ${{ matrix.app }}:${{ github.sha }} .
