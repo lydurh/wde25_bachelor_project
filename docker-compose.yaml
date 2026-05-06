@@ -21,5 +21,20 @@ services:
     env_file: 
       - .env
 
+  admin:
+    container_name: admin
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/admin/src:/app/apps/admin/src
+      - ./packages:/app/packages
+    depends_on:
+      - backend
+    env_file:
+      - .env
+
 volumes:
   pgdata:

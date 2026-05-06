@@ -4,5 +4,5 @@ WORKDIR /app
 COPY . .
 RUN bun install
 
-EXPOSE 3000
-CMD ["bun", "run", "dev:backend"]
+EXPOSE 5173
+CMD ["bun", "run", "dev"]

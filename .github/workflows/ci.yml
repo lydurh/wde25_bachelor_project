@@ -56,6 +56,7 @@ jobs:
       matrix:
         include:
           - app: backend
+          - app: admin
 
     steps:
       - uses: actions/checkout@v6
