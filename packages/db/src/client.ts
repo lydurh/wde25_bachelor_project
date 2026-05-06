@@ -1,4 +1,5 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
+// eslint-disable-next-line no-restricted-syntax
 import postgres from 'postgres';
 import * as schema from './schema';
 
