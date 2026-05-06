@@ -4,12 +4,18 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "dev": "dotenv -e ../../.env -- drizzle-kit studio",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:generate": "dotenv -e ../../.env -- drizzle-kit generate",
+    "db:migrate": "dotenv -e ../../.env -- drizzle-kit migrate",
+    "db:push": "dotenv -e ../../.env -- drizzle-kit push",
+    "db:studio": "dotenv -e ../../.env -- drizzle-kit studio"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",
     "@types/bun": "latest",
+    "dotenv-cli": "^11.0.0",
     "drizzle-kit": "^0.31.10"
   },
   "peerDependencies": {
