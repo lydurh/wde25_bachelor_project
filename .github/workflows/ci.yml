@@ -13,7 +13,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: ./.github/actions/setup
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/bun-setup
 
       - name: Lint
         run: bun run lint
@@ -29,7 +30,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: ./.github/actions/setup
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/bun-setup
 
       - name: Test
         run: bun test
@@ -40,7 +42,8 @@ jobs:
     needs: [check, test]
 
     steps:
-      - uses: ./.github/actions/setup
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/bun-setup
 
       - name: Build all packages
         run: bun run build
