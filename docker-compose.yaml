@@ -14,6 +14,9 @@ services:
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
+    volumes:
+      - ./apps/backend/src:/app/apps/backend/src
+      - ./packages:/app/packages
     ports:
       - "3000:3000"
     environment:
