@@ -40,5 +40,9 @@ export const authService = {
       email: existingUser.email,
     };
   },
+
+  logout(): boolean {
+    return true;
+  },
 };
 

@@ -68,3 +68,9 @@ export const loginUser = async (c: Context) => {
 
   return c.json({ data: user }, 200);
 };
+
+export const logoutUser = async (c: Context) => {
+  authService.logout();
+
+  return c.json({ data: { message: 'Logged out successfully' } }, 200);
+};
