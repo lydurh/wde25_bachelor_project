@@ -9,6 +9,11 @@ type SignupRequest = {
   password?: string;
 };
 
+type LoginRequest = {
+  email?: string;
+  password?: string;
+};
+
 const splitName = (name: string) => {
   const [first_name, ...rest] = name.trim().split(' ');
   return {
@@ -40,4 +45,26 @@ export const signupUser = async (c: Context) => {
   const newUser = authService.signup(first_name, last_name, email, password);
 
   return c.json({ data: newUser }, 201);
+};
+
+export const loginUser = async (c: Context) => {
+  const body = (await c.req.json()) as LoginRequest;
+
+  const email = body.email?.trim();
+  const password = body.password?.trim();
+
+  if (!email || !password) {
+    return c.json(
+      { error: 'Missing required fields: email, password' },
+      400,
+    );
+  }
+
+  const user = authService.login(email, password);
+
+  if (!user) {
+    return c.json({ error: 'Invalid email or password' }, 401);
+  }
+
+  return c.json({ data: user }, 200);
 };
