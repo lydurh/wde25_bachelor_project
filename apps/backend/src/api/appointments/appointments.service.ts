@@ -1,6 +1,6 @@
-import type { Appointment } from '@repo/shared';
+import { type Appointment, parseAppointment } from '@repo/shared';
 
-const sampleAppointments: Appointment[] = [
+const samples = [
   {
     appointment_pk: '1',
     appointment_user_fk: '1',
@@ -29,10 +29,15 @@ const sampleAppointments: Appointment[] = [
     appointment_updated_at: '2026-01-02',
     appointment_deleted_at: null,
   },
-];
+] satisfies Appointment[];
 
 export const appointmentsService = {
   list(): Appointment[] {
-    return sampleAppointments;
+    return samples.map((row) => parseAppointment(row));
+  },
+
+  get(id: string): Promise<Appointment | undefined> {
+    const row = samples.find((r) => r.appointment_pk === id);
+    return Promise.resolve(row ? parseAppointment(row) : undefined);
   },
 };
