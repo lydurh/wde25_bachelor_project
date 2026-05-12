@@ -30,6 +30,20 @@ export const getAppointmentById = async (c: Context) => {
   return c.json({ data: appointment }, 200);
 };
 
+export const deleteAppointmentById = async (c: Context) => {
+  const id = c.req.param('id');
+  if (!id) {
+    return c.json({ error: 'Appointment ID is required' }, 400);
+  }
+  const deletedAppointment = await appointmentsService.delete(id);
+
+  if (!deletedAppointment) {
+    return c.json({ error: 'Appointment not found' }, 404);
+  }
+
+  return c.json({ data: deletedAppointment }, 200);
+};
+
 // `createHandlers` threads the validator's input/output types through the chain,
 // so `c.req.valid('json')` is typed as `CreateAppointmentInput` without a manual
 // `Context<...>` alias. Spread the tuple into the router.

@@ -36,6 +36,8 @@ const samples: Appointment[] = [
   },
 ];
 
+// TODO: Add a function to check if the appointment is active (eg. the appointment_deleted_at is null)
+
 export const appointmentsService = {
   list(): Appointment[] {
     return samples.map((row) => parseAppointment(row));
@@ -44,6 +46,22 @@ export const appointmentsService = {
   get(id: string): Promise<Appointment | undefined> {
     const row = samples.find((r) => r.appointment_pk === id);
     return Promise.resolve(row ? parseAppointment(row) : undefined);
+  },
+
+  delete(id: string): Promise<Appointment | undefined> {
+    if (!id) {
+      return Promise.resolve(undefined);
+    }
+    const index = samples.findIndex((r) => r.appointment_pk === id);
+    if (index === -1) {
+      return Promise.resolve(undefined);
+    }
+    const row = samples[index];
+    const deletedAppointment = parseAppointment({
+      ...row,
+      appointment_deleted_at: new Date().toISOString(),
+    });
+    return Promise.resolve(deletedAppointment);
   },
 
   post(input: CreateAppointmentInput): Promise<Appointment> {
