@@ -42,9 +42,14 @@ export const signupUser = async (c: Context) => {
         last_name: body.last_name?.trim() ?? '',
       };
 
-  const newUser = authService.signup(first_name, last_name, email, password);
+  const { user, token } = authService.signup(
+    first_name,
+    last_name,
+    email,
+    password,
+  );
 
-  return c.json({ data: newUser }, 201);
+  return c.json({ data: user, verificationToken: token }, 201);
 };
 
 export const loginUser = async (c: Context) => {
@@ -73,4 +78,20 @@ export const logoutUser = async (c: Context) => {
   authService.logout();
 
   return c.json({ data: { message: 'Logged out successfully' } }, 200);
+};
+
+export const verifyEmail = async (c: Context) => {
+  const token = c.req.query('token');
+
+  if (!token) {
+    return c.json({ error: 'Missing token query parameter' }, 400);
+  }
+
+  const user = authService.verifyEmail(token);
+
+  if (!user) {
+    return c.json({ error: 'Invalid or expired verification token' }, 400);
+  }
+
+  return c.json({ data: { message: 'Email verified successfully', user } }, 200);
 };
