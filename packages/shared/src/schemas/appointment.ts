@@ -23,9 +23,26 @@ export const appointmentSchema = z.object({
   appointment_deleted_at: z.string().min(1).nullable(),
 });
 
-export type Appointment = z.infer<typeof appointmentSchema>;
+// For this we are creating a schema for the input of the create appointment endpoint
+export const createAppointmentInputSchema = appointmentSchema
+  .pick({
+    appointment_user_fk: true,
+    location_fk: true,
+    appointment_time: true,
+    appointment_date: true,
+    appointment_notes: true,
+    appointment_duration: true,
+    appointment_total_price: true,
+  })
+  .strict(); // Here we are rejecting unknown keys --> sanitizing the input
 
-// Validates `input` and returns an `Appointment`, or throws `ZodError` on failure.
+// Here we are exporting the types for the appointment and create appointment input
+export type Appointment = z.infer<typeof appointmentSchema>;
+export type CreateAppointmentInput = z.infer<
+  typeof createAppointmentInputSchema
+>;
+
+// Here we are parsing the input and returning an `Appointment`, or throwing a `ZodError` on failure.
 export function parseAppointment(input: unknown): Appointment {
   return appointmentSchema.parse(input);
 }
