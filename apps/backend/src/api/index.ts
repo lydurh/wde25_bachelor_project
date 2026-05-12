@@ -7,6 +7,6 @@ const api = new Hono();
 
 api.route('/health', health);
 api.route('/users', usersRoutes);
-api.route('/appointments', appointmentsRouter); 
+api.route('/appointments', appointmentsRouter);
 
 export { api };
