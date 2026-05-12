@@ -1,6 +1,10 @@
-import { type Appointment, parseAppointment } from '@repo/shared';
+import {
+  type Appointment,
+  type CreateAppointmentInput,
+  parseAppointment,
+} from '@repo/shared';
 
-const samples = [
+const samples: Appointment[] = [
   {
     appointment_pk: '1',
     appointment_user_fk: '1',
@@ -29,7 +33,7 @@ const samples = [
     appointment_updated_at: '2026-01-02',
     appointment_deleted_at: null,
   },
-] satisfies Appointment[];
+];
 
 export const appointmentsService = {
   list(): Appointment[] {
@@ -39,5 +43,18 @@ export const appointmentsService = {
   get(id: string): Promise<Appointment | undefined> {
     const row = samples.find((r) => r.appointment_pk === id);
     return Promise.resolve(row ? parseAppointment(row) : undefined);
+  },
+
+  post(input: CreateAppointmentInput): Promise<Appointment> {
+    const newAppointment = parseAppointment({
+      ...input,
+      appointment_pk: crypto.randomUUID(),
+      appointment_status: 'pending',
+      appointment_created_at: new Date().toISOString(),
+      appointment_updated_at: null,
+      appointment_deleted_at: null,
+    });
+    samples.push(newAppointment);
+    return Promise.resolve(newAppointment);
   },
 };
