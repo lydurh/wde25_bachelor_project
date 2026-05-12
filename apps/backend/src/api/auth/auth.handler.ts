@@ -14,6 +14,15 @@ type LoginRequest = {
   password?: string;
 };
 
+type ForgotPasswordRequest = {
+  email?: string;
+};
+
+type ResetPasswordRequest = {
+  token?: string;
+  newPassword?: string;
+};
+
 const splitName = (name: string) => {
   const [first_name, ...rest] = name.trim().split(' ');
   return {
@@ -94,4 +103,44 @@ export const verifyEmail = async (c: Context) => {
   }
 
   return c.json({ data: { message: 'Email verified successfully', user } }, 200);
+};
+
+export const forgotPasswordUser = async (c: Context) => {
+  const body = (await c.req.json()) as ForgotPasswordRequest;
+
+  const email = body.email?.trim();
+
+  if (!email) {
+    return c.json({ error: 'Missing required field: email' }, 400);
+  }
+
+  const token = authService.forgotPassword(email);
+
+  if (!token) {
+    return c.json({ error: 'User not found or not verified' }, 404);
+  }
+
+  return c.json({ data: { resetToken: token } }, 200);
+};
+
+export const resetPasswordUser = async (c: Context) => {
+  const body = (await c.req.json()) as ResetPasswordRequest;
+
+  const token = body.token?.trim();
+  const newPassword = body.newPassword?.trim();
+
+  if (!token || !newPassword) {
+    return c.json(
+      { error: 'Missing required fields: token, newPassword' },
+      400,
+    );
+  }
+
+  const success = authService.resetPassword(token, newPassword);
+
+  if (!success) {
+    return c.json({ error: 'Invalid or expired reset token' }, 400);
+  }
+
+  return c.json({ data: { message: 'Password reset successfully' } }, 200);
 };

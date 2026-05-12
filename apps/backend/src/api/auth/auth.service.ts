@@ -7,6 +7,7 @@ type UserWithPassword = User & {
 
 const users: UserWithPassword[] = [];
 const verificationTokens = new Map<string, string>();
+const resetPasswordTokens = new Map<string, string>();
 
 export const authService = {
   signup(
@@ -83,6 +84,40 @@ export const authService = {
       name: existingUser.name,
       email: existingUser.email,
     };
+  },
+
+  forgotPassword(email: string): string | null {
+    const existingUser = users.find(
+      (user) => user.email === email && user.verified,
+    );
+
+    if (!existingUser) {
+      return null;
+    }
+
+    const token = crypto.randomUUID();
+    resetPasswordTokens.set(token, existingUser.id);
+
+    return token;
+  },
+
+  resetPassword(token: string, newPassword: string): boolean {
+    const userId = resetPasswordTokens.get(token);
+
+    if (!userId) {
+      return false;
+    }
+
+    const existingUser = users.find((user) => user.id === userId);
+
+    if (!existingUser) {
+      return false;
+    }
+
+    existingUser.password = newPassword;
+    resetPasswordTokens.delete(token);
+
+    return true;
   },
 };
 
