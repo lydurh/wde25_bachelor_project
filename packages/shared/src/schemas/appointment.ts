@@ -36,10 +36,18 @@ export const createAppointmentInputSchema = appointmentSchema
   })
   .strict(); // Here we are rejecting unknown keys --> sanitizing the input
 
+/** PATCH body: any subset of create fields may be sent. */
+export const updateAppointmentInputSchema = createAppointmentInputSchema
+  .partial()
+  .strict();
+
 // Here we are exporting the types for the appointment and create appointment input
 export type Appointment = z.infer<typeof appointmentSchema>;
 export type CreateAppointmentInput = z.infer<
   typeof createAppointmentInputSchema
+>;
+export type UpdateAppointmentInput = z.infer<
+  typeof updateAppointmentInputSchema
 >;
 
 // Here we are parsing the input and returning an `Appointment`, or throwing a `ZodError` on failure.

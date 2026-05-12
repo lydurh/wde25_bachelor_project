@@ -1,6 +1,7 @@
 import {
   type Appointment,
   type CreateAppointmentInput,
+  type UpdateAppointmentInput,
   parseAppointment,
 } from '@repo/shared';
 
@@ -56,5 +57,24 @@ export const appointmentsService = {
     });
     samples.push(newAppointment);
     return Promise.resolve(newAppointment);
+  },
+
+  patch(
+    id: string,
+    input: UpdateAppointmentInput,
+  ): Promise<Appointment | undefined> {
+    const index = samples.findIndex((r) => r.appointment_pk === id);
+    if (index === -1) {
+      return Promise.resolve(undefined);
+    }
+
+    const row = samples[index];
+    const updatedAppointment = parseAppointment({
+      ...row,
+      ...input,
+      appointment_updated_at: new Date().toISOString(),
+    });
+    samples[index] = updatedAppointment;
+    return Promise.resolve(updatedAppointment);
   },
 };
