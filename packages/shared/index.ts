@@ -5,8 +5,22 @@ export type { User } from './src/types/user';
 export type { Service } from './src/types/service';
 export type { Appointment } from './src/types/appointments';
 
-export type { CreateServiceInput, UpdateServiceInput } from './src/schemas/service';
-export { createServiceSchema, updateServiceSchema } from './src/schemas/service';
+export type {
+  CreateServiceInput,
+  UpdateServiceInput,
+} from './src/schemas/service';
+export {
+  createServiceSchema,
+  updateServiceSchema,
+} from './src/schemas/service';
 
-export type { CreateAppointmentInput, UpdateAppointmentInput } from './src/schemas/appointment';
-export { appointmentSchema, createAppointmentInputSchema, updateAppointmentInputSchema, parseAppointment } from './src/schemas/appointment';
+export type {
+  CreateAppointmentInput,
+  UpdateAppointmentInput,
+} from './src/schemas/appointment';
+export {
+  appointmentSchema,
+  createAppointmentInputSchema,
+  updateAppointmentInputSchema,
+  parseAppointment,
+} from './src/schemas/appointment';
