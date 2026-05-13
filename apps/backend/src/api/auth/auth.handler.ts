@@ -23,10 +23,10 @@ type ResetPasswordRequest = {
   newPassword?: string;
 };
 
-const splitName = (name: string) => {
+const splitName = (name: string): { first_name: string; last_name: string } => {
   const [first_name, ...rest] = name.trim().split(' ');
   return {
-    first_name,
+    first_name: first_name ?? '',
     last_name: rest.join(' ') || '',
   };
 };
