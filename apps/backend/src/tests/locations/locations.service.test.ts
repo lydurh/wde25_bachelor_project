@@ -1,7 +1,6 @@
 import { describe, expect, test, afterAll } from 'bun:test';
 import { locationsService } from '../../api/locations/locations.service';
-import { db, locations } from '@repo/db';
-import { like } from 'drizzle-orm';
+import { db, locations, like } from '@repo/db';
 
 const assertDefined = <T>(val: T | undefined): T => {
   expect(val).toBeDefined();

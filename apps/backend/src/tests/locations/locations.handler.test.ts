@@ -1,7 +1,6 @@
 import { describe, expect, test, afterAll } from 'bun:test';
 import { app } from '../../app';
-import { db, locations } from '@repo/db';
-import { like } from 'drizzle-orm';
+import { db, locations, like } from '@repo/db';
 import type { Location } from '@repo/shared';
 
 const assertDefined = <T>(val: T | undefined): T => {
