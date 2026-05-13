@@ -8,7 +8,8 @@
   },
   "devDependencies": {
     "@repo/config": "workspace:*",
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "typescript": "^5"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.7.6",
