@@ -5,6 +5,6 @@ export default defineConfig({
   schema: './src/schema/index.ts',
   out: './drizzle',
   dbCredentials: {
-    url: `postgres://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@localhost:5432/${process.env.POSTGRES_DB}`,
+    url: `postgres://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@${process.env.POSTGRES_HOST ?? 'localhost'}:5432/${process.env.POSTGRES_DB}`,
   },
 });
