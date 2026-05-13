@@ -17,6 +17,7 @@ services:
     volumes:
       - ./apps/backend/src:/app/apps/backend/src
       - ./packages:/app/packages
+      - /app/packages/db/node_modules
       - /app/packages/shared/node_modules
       - /app/packages/config/node_modules
     ports:
@@ -38,6 +39,7 @@ services:
     volumes:
       - ./apps/frontend/src:/app/apps/frontend/src
       - ./packages:/app/packages
+      - /app/packages/db/node_modules
       - /app/packages/shared/node_modules
       - /app/packages/config/node_modules
     depends_on:
