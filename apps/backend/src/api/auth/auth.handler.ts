@@ -32,7 +32,7 @@ const splitName = (name: string) => {
 };
 
 export const signupUser = async (c: Context) => {
-  const body = (await c.req.json()) as SignupRequest;
+  const body = await c.req.json<SignupRequest>();
 
   const email = body.email?.trim();
   const password = body.password?.trim();
@@ -62,7 +62,7 @@ export const signupUser = async (c: Context) => {
 };
 
 export const loginUser = async (c: Context) => {
-  const body = (await c.req.json()) as LoginRequest;
+  const body = await c.req.json<LoginRequest>();
 
   const email = body.email?.trim();
   const password = body.password?.trim();
@@ -83,13 +83,13 @@ export const loginUser = async (c: Context) => {
   return c.json({ data: user }, 200);
 };
 
-export const logoutUser = async (c: Context) => {
+export const logoutUser = (c: Context) => {
   authService.logout();
 
   return c.json({ data: { message: 'Logged out successfully' } }, 200);
 };
 
-export const verifyEmail = async (c: Context) => {
+export const verifyEmail = (c: Context) => {
   const token = c.req.query('token');
 
   if (!token) {
@@ -106,7 +106,7 @@ export const verifyEmail = async (c: Context) => {
 };
 
 export const forgotPasswordUser = async (c: Context) => {
-  const body = (await c.req.json()) as ForgotPasswordRequest;
+  const body = await c.req.json<ForgotPasswordRequest>();
 
   const email = body.email?.trim();
 
@@ -124,7 +124,7 @@ export const forgotPasswordUser = async (c: Context) => {
 };
 
 export const resetPasswordUser = async (c: Context) => {
-  const body = (await c.req.json()) as ResetPasswordRequest;
+  const body = await c.req.json<ResetPasswordRequest>();
 
   const token = body.token?.trim();
   const newPassword = body.newPassword?.trim();
