@@ -24,3 +24,7 @@ export {
   updateAppointmentInputSchema,
   parseAppointment,
 } from './src/schemas/appointment';
+
+export type { Location } from './src/types/location';
+export type { CreateLocationInput } from './src/schemas/location';
+export { createLocationSchema } from './src/schemas/location';
