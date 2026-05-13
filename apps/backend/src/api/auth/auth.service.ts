@@ -43,9 +43,7 @@ export const authService = {
   login(email: string, password: string): User | null {
     const existingUser = users.find(
       (user) =>
-        user.email === email &&
-        user.password === password &&
-        user.verified,
+        user.email === email && user.password === password && user.verified,
     );
 
     if (!existingUser) {
@@ -120,4 +118,3 @@ export const authService = {
     return true;
   },
 };
-

@@ -68,10 +68,7 @@ export const loginUser = async (c: Context) => {
   const password = body.password?.trim();
 
   if (!email || !password) {
-    return c.json(
-      { error: 'Missing required fields: email, password' },
-      400,
-    );
+    return c.json({ error: 'Missing required fields: email, password' }, 400);
   }
 
   const user = authService.login(email, password);
@@ -102,7 +99,10 @@ export const verifyEmail = (c: Context) => {
     return c.json({ error: 'Invalid or expired verification token' }, 400);
   }
 
-  return c.json({ data: { message: 'Email verified successfully', user } }, 200);
+  return c.json(
+    { data: { message: 'Email verified successfully', user } },
+    200,
+  );
 };
 
 export const forgotPasswordUser = async (c: Context) => {
