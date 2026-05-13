@@ -1,6 +1,14 @@
 {
   "name": "@repo/shared",
   "module": "index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "import": "./index.ts",
+      "default": "./index.ts"
+    }
+  },
   "type": "module",
   "private": true,
   "scripts": {
