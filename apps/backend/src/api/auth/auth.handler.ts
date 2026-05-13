@@ -34,8 +34,8 @@ const splitName = (name: string) => {
 export const signupUser = async (c: Context) => {
   const body = await c.req.json<SignupRequest>();
 
-  const email = body.email?.trim();
-  const password = body.password?.trim();
+  const email = body.email?.trim() ?? '';
+  const password = body.password?.trim() ?? '';
 
   if (!email || !password || (!body.name && !body.first_name)) {
     return c.json(
