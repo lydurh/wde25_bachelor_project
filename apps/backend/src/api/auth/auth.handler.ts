@@ -44,12 +44,13 @@ export const signupUser = async (c: Context) => {
     );
   }
 
-  const { first_name, last_name } = body.name
-    ? splitName(body.name)
-    : {
-        first_name: body.first_name?.trim() ?? '',
-        last_name: body.last_name?.trim() ?? '',
-      };
+  const { first_name, last_name }: { first_name: string; last_name: string } =
+    body.name
+      ? splitName(body.name)
+      : {
+          first_name: body.first_name?.trim() ?? '',
+          last_name: body.last_name?.trim() ?? '',
+        };
 
   const { user, token } = authService.signup(
     first_name,
