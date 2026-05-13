@@ -44,13 +44,12 @@ export const signupUser = async (c: Context) => {
     );
   }
 
-  const names =
-    body.name
-      ? splitName(body.name)
-      : {
-          first_name: body.first_name?.trim() ?? '',
-          last_name: body.last_name?.trim() ?? '',
-        };
+  const names = body.name
+    ? splitName(body.name)
+    : {
+        first_name: body.first_name?.trim() ?? '',
+        last_name: body.last_name?.trim() ?? '',
+      };
 
   const { first_name, last_name } = names;
 
