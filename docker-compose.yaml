@@ -8,6 +8,26 @@ services:
       - .env
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    container_name: migrate
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_HOST=db
+    command: ["bun", "run", "db:push"]
+    restart: "no"
 
   backend:
     container_name: backend
@@ -24,10 +44,32 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
-    depends_on: 
-      - db
+      - POSTGRES_HOST=db
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     env_file: 
       - .env
+
+  drizzle-studio:
+    container_name: drizzle-studio
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    ports:
+      - "4983:4983"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_HOST=db
+    command: ["bunx", "drizzle-kit", "studio", "--host", "0.0.0.0"]
+    working_dir: /app/packages/db
+    volumes:
+      - ./packages:/app/packages
+      - /app/packages/db/node_modules
 
   frontend:
     container_name: frontend
