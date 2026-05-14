@@ -40,3 +40,18 @@ export {
 export type { Location } from './src/types/location';
 export type { CreateLocationInput } from './src/schemas/location';
 export { createLocationSchema } from './src/schemas/location';
+
+export type {
+  SignupInput,
+  LoginInput,
+  ForgotPasswordInput,
+  ResetPasswordInput,
+  VerifyEmailQuery,
+} from './src/schemas/auth';
+export {
+  signupInputSchema,
+  loginInputSchema,
+  forgotPasswordInputSchema,
+  resetPasswordInputSchema,
+  verifyEmailQuerySchema,
+} from './src/schemas/auth';
