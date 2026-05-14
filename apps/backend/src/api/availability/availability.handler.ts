@@ -10,19 +10,26 @@ import { availabilityService } from './availability.service';
 
 const factory = createFactory();
 
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function requireAvailabilityId(id: string | undefined): string {
+  if (!id || !UUID_REGEX.test(id)) {
+    throw new HTTPException(400, { message: 'Invalid id parameter' });
+  }
+  return id;
+}
+
 export const listAvailability = async (c: Context) => {
   const data = await availabilityService.list();
   return c.json({ data });
 };
 
 export const getAvailability = async (c: Context) => {
-  const id = c.req.param('id');
-  if (!id) {
-    return c.json({ error: 'Availability ID is required' }, 400);
-  }
+  const id = requireAvailabilityId(c.req.param('id'));
   const data = await availabilityService.get(id);
   if (!data) {
-    return c.json({ error: 'Availability not found' }, 404);
+    throw new HTTPException(404, { message: 'Availability not found' });
   }
   return c.json({ data });
 };
@@ -30,10 +37,12 @@ export const getAvailability = async (c: Context) => {
 export const createAvailability = factory.createHandlers(
   zValidator('json', createAvailabilityInputSchema, (result, c) => {
     if (!result.success) {
-      return c.json(
-        { error: 'Invalid Input', issues: result.error.issues },
-        400,
-      );
+      throw new HTTPException(400, {
+        res: c.json(
+          { error: 'Invalid input', issues: result.error.issues },
+          400,
+        ),
+      });
     }
     return undefined;
   }),
@@ -52,35 +61,31 @@ export const createAvailability = factory.createHandlers(
 export const updateAvailability = factory.createHandlers(
   zValidator('json', updateAvailabilityInputSchema, (result, c) => {
     if (!result.success) {
-      return c.json(
-        { error: 'Invalid Input', issues: result.error.issues },
-        400,
-      );
+      throw new HTTPException(400, {
+        res: c.json(
+          { error: 'Invalid input', issues: result.error.issues },
+          400,
+        ),
+      });
     }
     return undefined;
   }),
   async (c) => {
-    const id = c.req.param('id');
-    if (!id) {
-      return c.json({ error: 'Availability ID is required' }, 400);
-    }
+    const id = requireAvailabilityId(c.req.param('id'));
     const input = c.req.valid('json');
     const data = await availabilityService.patch(id, input);
     if (!data) {
-      return c.json({ error: 'Availability not found' }, 404);
+      throw new HTTPException(404, { message: 'Availability not found' });
     }
     return c.json({ data }, 200);
   },
 );
 
 export const deleteAvailability = async (c: Context) => {
-  const id = c.req.param('id');
-  if (!id) {
-    return c.json({ error: 'Availability ID is required' }, 400);
-  }
+  const id = requireAvailabilityId(c.req.param('id'));
   const data = await availabilityService.delete(id);
   if (!data) {
-    return c.json({ error: 'Availability not found' }, 404);
+    throw new HTTPException(404, { message: 'Availability not found' });
   }
   return c.json({ data }, 200);
 };

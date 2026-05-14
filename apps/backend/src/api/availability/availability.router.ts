@@ -8,10 +8,10 @@ import {
   updateAvailability,
 } from './availability.handler';
 
-export const availabilityRouter = new Hono();
+export const availabilityRoutes = new Hono();
 
-availabilityRouter.get('/', listAvailability);
-availabilityRouter.get('/:id', getAvailability);
-availabilityRouter.post('/', ...createAvailability);
-availabilityRouter.patch('/:id', ...updateAvailability);
-availabilityRouter.delete('/:id', deleteAvailability);
+availabilityRoutes.get('/', listAvailability);
+availabilityRoutes.get('/:id', getAvailability);
+availabilityRoutes.post('/', ...createAvailability);
+availabilityRoutes.patch('/:id', ...updateAvailability);
+availabilityRoutes.delete('/:id', deleteAvailability);
