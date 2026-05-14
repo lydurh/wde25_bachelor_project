@@ -1,5 +1,11 @@
-import { db, availability, isNull, eq, and } from '@repo/db';
-import type { InferSelectModel } from 'drizzle-orm';
+import {
+  and,
+  availability,
+  db,
+  eq,
+  type InferSelectModel,
+  isNull,
+} from '@repo/db';
 import {
   type Availability,
   type CreateAvailabilityInput,

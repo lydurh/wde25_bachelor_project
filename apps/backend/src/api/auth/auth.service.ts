@@ -1,6 +1,12 @@
-import type { InferSelectModel } from 'drizzle-orm';
-import { and, eq, isNotNull, isNull } from 'drizzle-orm';
-import { db, users } from '@repo/db';
+import {
+  and,
+  db,
+  eq,
+  isNotNull,
+  isNull,
+  type InferSelectModel,
+  users,
+} from '@repo/db';
 import type { User } from '@repo/shared';
 
 type UserRow = InferSelectModel<typeof users>;
