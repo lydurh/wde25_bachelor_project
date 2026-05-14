@@ -1,8 +1,9 @@
 import { Hono } from 'hono';
-import { listUsers } from './users.handler';
+import { getUserById, listUsers } from './users.handler';
 
 const usersRoutes = new Hono();
 
 usersRoutes.get('/', listUsers);
+usersRoutes.get('/:id', getUserById);
 
 export { usersRoutes };

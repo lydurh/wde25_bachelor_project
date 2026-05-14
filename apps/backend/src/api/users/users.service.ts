@@ -17,4 +17,8 @@ export const usersService = {
   list(): User[] {
     return sampleUsers;
   },
+
+  get(id: string): User | undefined {
+    return sampleUsers.find((user) => user.id === id);
+  },
 };

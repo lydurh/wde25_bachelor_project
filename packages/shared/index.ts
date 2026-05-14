@@ -14,6 +14,9 @@ export {
   updateServiceSchema,
 } from './src/schemas/service';
 
+export type { GetUserByIdParams } from './src/schemas/user';
+export { getUserByIdParamsSchema } from './src/schemas/user';
+
 export type {
   CreateAppointmentInput,
   UpdateAppointmentInput,
