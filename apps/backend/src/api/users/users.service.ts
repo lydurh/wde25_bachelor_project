@@ -38,6 +38,7 @@ export const usersService = {
       user_last_name?: string;
       user_location_fk?: string;
       user_password?: string;
+      repeat_password?: string;
     },
   ): User | undefined {
     const user = sampleUsers.find((user) => user.id === id);

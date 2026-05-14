@@ -49,7 +49,8 @@ export const patchUserById = async (c: Context) => {
     );
   }
 
-  const user = usersService.update(parsedParams.data.id, parsedBody.data);
+  const { repeat_password, ...updateData } = parsedBody.data;
+  const user = usersService.update(parsedParams.data.id, updateData);
 
   if (!user) {
     return c.json({ error: 'User not found' }, 404);

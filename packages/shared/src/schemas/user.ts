@@ -23,10 +23,36 @@ export const updateUserSchema = z
       .max(255, 'Password is too long')
       .regex(/^[^<>\n\r]*$/, 'Invalid characters in password')
       .optional(),
+    repeat_password: z.string().optional(),
   })
   .refine((body: Record<string, unknown>) => Object.keys(body).length > 0, {
     message: 'At least one field is required',
-  });
+  })
+  .superRefine(
+    (
+      data: Record<string, unknown> & {
+        user_password?: string;
+        repeat_password?: string;
+      },
+      ctx: z.RefinementCtx,
+    ) => {
+      if (data.user_password) {
+        if (!data.repeat_password) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['repeat_password'],
+            message: 'Repeat password is required',
+          });
+        } else if (data.repeat_password !== data.user_password) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['repeat_password'],
+            message: 'Passwords must match',
+          });
+        }
+      }
+    },
+  );
 
 export type GetUserByIdParams = z.infer<typeof getUserByIdParamsSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
