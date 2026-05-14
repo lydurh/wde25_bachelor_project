@@ -1,3 +1,5 @@
+import { db, appointments, eq, isNull, and } from '@repo/db';
+import type { InferSelectModel } from 'drizzle-orm';
 import {
   type Appointment,
   type CreateAppointmentInput,
@@ -5,94 +7,103 @@ import {
   parseAppointment,
 } from '@repo/shared';
 
-const samples: Appointment[] = [
-  {
-    appointment_pk: '1',
-    appointment_user_fk: '1',
-    location_fk: '1',
-    appointment_time: '10:00',
-    appointment_date: '2026-01-01',
-    appointment_notes: 'Notes',
-    appointment_duration: 60,
-    appointment_total_price: '100',
-    appointment_status: 'pending',
-    appointment_created_at: '2026-01-01',
-    appointment_updated_at: '2026-01-01',
-    appointment_deleted_at: null,
-  },
-  {
-    appointment_pk: '2',
-    appointment_user_fk: '2',
-    location_fk: '2',
-    appointment_time: '11:00',
-    appointment_date: '2026-01-02',
-    appointment_notes: 'Notes',
-    appointment_duration: 60,
-    appointment_total_price: '100',
-    appointment_status: 'pending',
-    appointment_created_at: '2026-01-02',
-    appointment_updated_at: '2026-01-02',
-    appointment_deleted_at: null,
-  },
-];
+type AppointmentRow = InferSelectModel<typeof appointments>;
 
-// TODO: Add a function to check if the appointment is active (eg. the appointment_deleted_at is null)
+/*
+  DB row → API shape: `parseAppointment` (Zod) expects wire strings for date/time
+  (e.g. YYYY-MM-DD, HH:MM / HH:MM:SS). Drizzle/postgres often already give strings
+  for `date` / `time`, but they can come through as `Date` depending on driver
+  settings, so we must not call `.toISOString()` blindly (strings have no such
+  method). These helpers normalize either form before validation. Timestamps
+  below are handled separately because they are reliably `Date` in this schema.
+*/
+function toWireDate(value: string | Date): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+  return value.toISOString().slice(0, 10);
+}
+
+function toWireTime(value: string | Date): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+  return value.toISOString().slice(11, 19);
+}
+
+function appointmentFromRow(row: AppointmentRow): Appointment {
+  return parseAppointment({
+    appointment_pk: row.appointment_pk,
+    appointment_user_fk: row.appointment_user_fk,
+    location_fk: row.location_fk,
+    appointment_time: toWireTime(row.appointment_time),
+    appointment_date: toWireDate(row.appointment_date),
+    appointment_notes: row.appointment_notes,
+    appointment_duration: row.appointment_duration,
+    appointment_total_price: row.appointment_total_price,
+    appointment_status: row.appointment_status,
+    appointment_created_at: row.appointment_created_at.toISOString(),
+    appointment_updated_at: row.appointment_updated_at?.toISOString() ?? null,
+    appointment_deleted_at: row.appointment_deleted_at?.toISOString() ?? null,
+  });
+}
+
+const notDeleted = isNull(appointments.appointment_deleted_at);
 
 export const appointmentsService = {
-  list(): Appointment[] {
-    return samples.map((row) => parseAppointment(row));
+  async list() {
+    const rows = await db.select().from(appointments).where(notDeleted);
+    return rows.map(appointmentFromRow);
   },
 
-  get(id: string): Promise<Appointment | undefined> {
-    const row = samples.find((r) => r.appointment_pk === id);
-    return Promise.resolve(row ? parseAppointment(row) : undefined);
+  async get(id: string) {
+    const [row] = await db
+      .select()
+      .from(appointments)
+      .where(and(eq(appointments.appointment_pk, id), notDeleted))
+      .limit(1);
+    return row ? appointmentFromRow(row) : undefined;
   },
 
-  delete(id: string): Promise<Appointment | undefined> {
+  async delete(id: string) {
     if (!id) {
-      return Promise.resolve(undefined);
+      return undefined;
     }
-    const index = samples.findIndex((r) => r.appointment_pk === id);
-    if (index === -1) {
-      return Promise.resolve(undefined);
-    }
-    const row = samples[index];
-    const deletedAppointment = parseAppointment({
-      ...row,
-      appointment_deleted_at: new Date().toISOString(),
-    });
-    return Promise.resolve(deletedAppointment);
+    const [row] = await db
+      .update(appointments)
+      .set({ appointment_deleted_at: new Date() })
+      .where(and(eq(appointments.appointment_pk, id), notDeleted))
+      .returning();
+    return row ? appointmentFromRow(row) : undefined;
   },
 
-  post(input: CreateAppointmentInput): Promise<Appointment> {
-    const newAppointment = parseAppointment({
-      ...input,
-      appointment_pk: crypto.randomUUID(),
-      appointment_status: 'pending',
-      appointment_created_at: new Date().toISOString(),
-      appointment_updated_at: null,
-      appointment_deleted_at: null,
-    });
-    samples.push(newAppointment);
-    return Promise.resolve(newAppointment);
+  async post(input: CreateAppointmentInput) {
+    const [row] = await db
+      .insert(appointments)
+      .values({
+        appointment_user_fk: input.appointment_user_fk,
+        location_fk: input.location_fk,
+        appointment_time: input.appointment_time,
+        appointment_date: input.appointment_date,
+        appointment_notes: input.appointment_notes,
+        appointment_duration: input.appointment_duration,
+        appointment_total_price: input.appointment_total_price,
+      })
+      .returning();
+
+    return row ? appointmentFromRow(row) : null;
   },
 
-  patch(
-    id: string,
-    input: UpdateAppointmentInput,
-  ): Promise<Appointment | undefined> {
-    const index = samples.findIndex((r) => r.appointment_pk === id);
-    if (index === -1) {
-      return Promise.resolve(undefined);
-    }
+  async patch(id: string, input: UpdateAppointmentInput) {
+    const [row] = await db
+      .update(appointments)
+      .set({
+        ...input,
+        appointment_updated_at: new Date(),
+      })
+      .where(and(eq(appointments.appointment_pk, id), notDeleted))
+      .returning();
 
-    const row = samples[index];
-    const updatedAppointment = parseAppointment({
-      ...row,
-      ...input,
-      appointment_updated_at: new Date().toISOString(),
-    });
-    samples[index] = updatedAppointment;
-    return Promise.resolve(updatedAppointment);
+    return row ? appointmentFromRow(row) : undefined;
   },
 };
