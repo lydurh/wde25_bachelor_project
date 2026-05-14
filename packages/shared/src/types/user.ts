@@ -6,4 +6,5 @@ export type User = {
   user_location_fk?: string;
   user_password: string;
   user_role: string;
+  user_deleted_at?: string | null;
 };

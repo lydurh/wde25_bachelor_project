@@ -58,3 +58,23 @@ export const patchUserById = async (c: Context) => {
 
   return c.json({ data: user }, 200);
 };
+
+export const deleteUserById = (c: Context) => {
+  const params = { id: c.req.param('id') ?? '' };
+  const parsedParams = getUserByIdParamsSchema.safeParse(params);
+
+  if (!parsedParams.success) {
+    return c.json(
+      { error: 'Invalid user id', issues: parsedParams.error.issues },
+      400,
+    );
+  }
+
+  const user = usersService.delete(parsedParams.data.id);
+
+  if (!user) {
+    return c.json({ error: 'User not found' }, 404);
+  }
+
+  return c.json({ data: user }, 200);
+};

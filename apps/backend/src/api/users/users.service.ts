@@ -9,6 +9,7 @@ const sampleUsers = [
     user_location_fk: 'Guldbergsgade 29, 2200 København N',
     user_password: 'Password123!',
     user_role: 'client',
+    user_deleted_at: null,
   },
   {
     id: '2',
@@ -18,16 +19,19 @@ const sampleUsers = [
     user_location_fk: 'Guldbergsgade 29, 2200 København N',
     user_password: 'Password123!',
     user_role: 'client',
+    user_deleted_at: null,
   },
 ];
 
 export const usersService = {
   list(): User[] {
-    return sampleUsers;
+    return sampleUsers.filter((user) => !user.user_deleted_at);
   },
 
   get(id: string): User | undefined {
-    return sampleUsers.find((user) => user.id === id);
+    return sampleUsers.find(
+      (user) => user.id === id && !user.user_deleted_at,
+    );
   },
 
   update(
@@ -67,6 +71,19 @@ export const usersService = {
       user.user_password = data.user_password;
     }
 
+    return user;
+  },
+
+  delete(id: string): User | undefined {
+    const user = sampleUsers.find(
+      (user) => user.id === id && !user.user_deleted_at,
+    );
+
+    if (!user) {
+      return undefined;
+    }
+
+    user.user_deleted_at = new Date().toISOString();
     return user;
   },
 };
