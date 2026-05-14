@@ -1,3 +1,5 @@
+import { db, availability, isNull, eq, and } from '@repo/db';
+import type { InferSelectModel } from 'drizzle-orm';
 import {
   type Availability,
   type CreateAvailabilityInput,
@@ -5,84 +7,74 @@ import {
   type UpdateAvailabilityInput,
 } from '@repo/shared';
 
-const samples: Availability[] = [
-  {
-    availability_pk: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-    availability_date: '2026-01-01',
-    availability_start_time: '10:00',
-    availability_end_time: '11:00',
-    availability_type: 'available',
-    availability_created_at: '2026-01-01T09:00:00.000Z',
-    availability_updated_at: null,
-    availability_deleted_at: null,
-  },
-  {
-    availability_pk: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-    availability_date: '2026-01-02',
-    availability_start_time: '11:00',
-    availability_end_time: '12:00',
-    availability_type: 'available',
-    availability_created_at: '2026-01-02T09:00:00.000Z',
-    availability_updated_at: null,
-    availability_deleted_at: null,
-  },
-];
+type AvailabilityRow = InferSelectModel<typeof availability>;
+
+function availabilityFromRow(row: AvailabilityRow): Availability {
+  return parseAvailability({
+    availability_pk: row.availability_pk,
+    availability_date: row.availability_date,
+    availability_start_time: row.availability_start_time,
+    availability_end_time: row.availability_end_time,
+    availability_type: row.availability_type,
+    availability_created_at: row.availability_created_at.toISOString(),
+    availability_updated_at: row.availability_updated_at?.toISOString() ?? null,
+    availability_deleted_at: row.availability_deleted_at?.toISOString() ?? null,
+  });
+}
+
+const notDeleted = isNull(availability.availability_deleted_at);
 
 export const availabilityService = {
-  list(): Promise<Availability[]> {
-    return Promise.resolve(samples.map((row) => parseAvailability(row)));
+  async list() {
+    const rows = await db.select().from(availability).where(notDeleted);
+    return rows.map(availabilityFromRow);
   },
 
-  get(id: string): Promise<Availability | undefined> {
-    const row = samples.find((r) => r.availability_pk === id);
-    return Promise.resolve(row ? parseAvailability(row) : undefined);
+  async get(id: string) {
+    const [row] = await db
+      .select()
+      .from(availability)
+      .where(and(eq(availability.availability_pk, id), notDeleted))
+      .limit(1);
+    return row ? availabilityFromRow(row) : undefined;
   },
 
-  delete(id: string): Promise<Availability | undefined> {
+  async delete(id: string) {
     if (!id) {
-      return Promise.resolve(undefined);
+      return undefined;
     }
-    const index = samples.findIndex((r) => r.availability_pk === id);
-    if (index === -1) {
-      return Promise.resolve(undefined);
-    }
-    const removed = samples.splice(index, 1)[0];
-    if (!removed) {
-      return Promise.resolve(undefined);
-    }
-    return Promise.resolve(parseAvailability(removed));
+    const [row] = await db
+      .update(availability)
+      .set({ availability_deleted_at: new Date() })
+      .where(and(eq(availability.availability_pk, id), notDeleted))
+      .returning();
+    return row ? availabilityFromRow(row) : undefined;
   },
 
-  post(input: CreateAvailabilityInput): Promise<Availability> {
-    const row: Availability = {
-      availability_pk: crypto.randomUUID(),
-      availability_date: input.availability_date,
-      availability_start_time: input.availability_start_time,
-      availability_end_time: input.availability_end_time,
-      availability_type: input.availability_type ?? 'available',
-      availability_created_at: new Date().toISOString(),
-      availability_updated_at: null,
-      availability_deleted_at: null,
-    };
-    samples.push(row);
-    return Promise.resolve(parseAvailability(row));
+  async post(input: CreateAvailabilityInput) {
+    const [row] = await db
+      .insert(availability)
+      .values({
+        availability_date: input.availability_date,
+        availability_start_time: input.availability_start_time,
+        availability_end_time: input.availability_end_time,
+        availability_type: input.availability_type ?? 'available',
+      })
+      .returning();
+
+    return row ? availabilityFromRow(row) : null;
   },
 
-  patch(
-    id: string,
-    input: UpdateAvailabilityInput,
-  ): Promise<Availability | undefined> {
-    const index = samples.findIndex((r) => r.availability_pk === id);
-    if (index === -1) {
-      return Promise.resolve(undefined);
-    }
-    const row = samples[index];
-    const updatedAvailability = parseAvailability({
-      ...row,
-      ...input,
-      availability_updated_at: new Date().toISOString(),
-    });
-    samples[index] = updatedAvailability;
-    return Promise.resolve(updatedAvailability);
+  async patch(id: string, input: UpdateAvailabilityInput) {
+    const [row] = await db
+      .update(availability)
+      .set({
+        ...input,
+        availability_updated_at: new Date(),
+      })
+      .where(and(eq(availability.availability_pk, id), notDeleted))
+      .returning();
+
+    return row ? availabilityFromRow(row) : undefined;
   },
 };

@@ -1,4 +1,5 @@
 import type { Context } from 'hono';
+import { HTTPException } from 'hono/http-exception';
 import { createFactory } from 'hono/factory';
 import { zValidator } from '@hono/zod-validator';
 import {
@@ -39,6 +40,11 @@ export const createAvailability = factory.createHandlers(
   async (c) => {
     const input = c.req.valid('json');
     const data = await availabilityService.post(input);
+    if (data === null) {
+      throw new HTTPException(500, {
+        message: 'Availability was not returned after insert',
+      });
+    }
     return c.json({ data }, 201);
   },
 );
