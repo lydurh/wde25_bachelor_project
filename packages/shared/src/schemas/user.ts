@@ -11,6 +11,19 @@ export const getUserByIdParamsSchema = z.object({
   id: z.string().min(1, 'User ID is required'),
 });
 
+export const createUserSchema = z.object({
+  user_email: z.string().email('Invalid email format').max(255),
+  user_first_name: safeString.min(1, 'First name is required').max(100),
+  user_last_name: safeString.max(100).optional().default(''),
+  user_password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(255, 'Password is too long')
+    .regex(/^[^<>\n\r]*$/, 'Invalid characters in password'),
+  user_role: z.string().max(50).optional(),
+  user_location_fk: z.string().uuid('Invalid location ID').optional(),
+});
+
 export const updateUserSchema = z
   .object({
     user_email: z.string().email('Invalid email format').max(255).optional(),
@@ -61,4 +74,5 @@ export const updateUserSchema = z
   );
 
 export type GetUserByIdParams = z.infer<typeof getUserByIdParamsSchema>;
+export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;

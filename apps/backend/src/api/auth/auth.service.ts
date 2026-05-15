@@ -1,32 +1,24 @@
-import {
-  and,
-  db,
-  eq,
-  isNotNull,
-  isNull,
-  type InferSelectModel,
-  users,
-} from '@repo/db';
+import { and, db, eq, isNotNull, isNull, users } from '@repo/db';
 import type { User } from '@repo/shared';
-
-type UserRow = InferSelectModel<typeof users>;
 
 const verificationTokens = new Map<string, string>();
 const resetPasswordTokens = new Map<string, string>();
 
-function userFromRow(row: UserRow): User {
-  const name = [row.user_first_name, row.user_last_name]
-    .filter(Boolean)
-    .join(' ')
-    .trim();
-  return {
-    id: row.user_pk,
-    name,
-    email: row.user_email,
-  };
-}
-
 export const authService = {
+  list() {
+    return db.select().from(users).where(isNull(users.user_deleted_at));
+  },
+
+  async getById(id: string) {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.user_pk, id))
+      .limit(1);
+
+    return user;
+  },
+
   async signup(
     first_name: string,
     last_name: string,
@@ -61,7 +53,7 @@ export const authService = {
     verificationTokens.set(token, row.user_pk);
 
     return {
-      user: userFromRow(row),
+      user: row,
       token,
     };
   },
@@ -80,7 +72,7 @@ export const authService = {
       )
       .limit(1);
 
-    return row ? userFromRow(row) : null;
+    return row ? row : null;
   },
 
   logout(): boolean {
@@ -107,7 +99,7 @@ export const authService = {
 
     verificationTokens.delete(token);
 
-    return userFromRow(updated);
+    return updated;
   },
 
   async forgotPassword(email: string): Promise<string | null> {

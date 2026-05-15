@@ -1,65 +1,41 @@
-import type { User } from '@repo/shared';
-
-
+import { db, users, isNull, eq, and } from '@repo/db';
+import type { UpdateUserInput, CreateUserInput } from '@repo/shared';
 
 export const usersService = {
-  list(): User[] {
-    return sampleUsers.filter((user) => !user.user_deleted_at);
+  list() {
+    return db.select().from(users).where(isNull(users.user_deleted_at));
   },
 
-  get(id: string): User | undefined {
-    return sampleUsers.find((user) => user.id === id && !user.user_deleted_at);
-  },
-
-  update(
-    id: string,
-    data: {
-      user_email?: string | undefined;
-      user_first_name?: string | undefined;
-      user_last_name?: string | undefined;
-      user_location_fk?: string | undefined;
-      user_password?: string | undefined;
-    },
-  ): User | undefined {
-    const user = sampleUsers.find((user) => user.id === id);
-
-    if (!user) {
-      return undefined;
-    }
-
-    if (data.user_email) {
-      user.user_email = data.user_email;
-    }
-
-    if (data.user_first_name) {
-      user.user_first_name = data.user_first_name;
-    }
-
-    if (data.user_last_name) {
-      user.user_last_name = data.user_last_name;
-    }
-
-    if (data.user_location_fk) {
-      user.user_location_fk = data.user_location_fk;
-    }
-
-    if (data.user_password) {
-      user.user_password = data.user_password;
-    }
+  async getById(id: string) {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.user_pk, id))
+      .limit(1);
 
     return user;
   },
 
-  delete(id: string): User | undefined {
-    const user = sampleUsers.find(
-      (user) => user.id === id && !user.user_deleted_at,
-    );
+  async create(data: CreateUserInput) {
+    const [user] = await db.insert(users).values(data).returning();
+    return user;
+  },
 
-    if (!user) {
-      return undefined;
-    }
+  async update(id: string, data: UpdateUserInput) {
+    const [user] = await db
+      .update(users)
+      .set({ ...data, user_updated_at: new Date() })
+      .where(and(eq(users.user_pk, id), isNull(users.user_deleted_at)))
+      .returning();
+    return user;
+  },
 
-    user.user_deleted_at = new Date().toISOString();
+  async remove(id: string) {
+    const [user] = await db
+      .update(users)
+      .set({ user_deleted_at: new Date() })
+      .where(and(eq(users.user_pk, id), isNull(users.user_deleted_at)))
+      .returning();
     return user;
   },
 };

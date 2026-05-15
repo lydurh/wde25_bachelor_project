@@ -1,16 +1,18 @@
 import { Hono } from 'hono';
 import {
-  getUserById,
   listUsers,
-  patchUserById,
-  deleteUserById,
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUser,
 } from './users.handler';
 
 const usersRoutes = new Hono();
 
 usersRoutes.get('/', listUsers);
 usersRoutes.get('/:id', getUserById);
-usersRoutes.patch('/:id', patchUserById);
-usersRoutes.delete('/:id', deleteUserById);
+usersRoutes.post('/', createUser);
+usersRoutes.patch('/:id', updateUser);
+usersRoutes.delete('/:id', deleteUser);
 
 export { usersRoutes };
