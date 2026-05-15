@@ -39,7 +39,7 @@ describe('GET /api/services', () => {
   });
 });
 
-describe('GET /api/services/:serviceId', () => {
+describe('GET /api/services/:id', () => {
   it('should return 200 with a valid service', async () => {
     const created = assertDefined(
       await servicesService.create({
@@ -129,7 +129,7 @@ describe('POST /api/services', () => {
   });
 });
 
-describe('PATCH /api/services/:serviceId', () => {
+describe('PATCH /api/services/:id', () => {
   it('should return 200 with partial update', async () => {
     const created = assertDefined(
       await servicesService.create({
@@ -180,7 +180,7 @@ describe('PATCH /api/services/:serviceId', () => {
   });
 });
 
-describe('DELETE /api/services/:serviceId', () => {
+describe('DELETE /api/services/:id', () => {
   it('should return 204 on successful soft-delete', async () => {
     const created = assertDefined(
       await servicesService.create({

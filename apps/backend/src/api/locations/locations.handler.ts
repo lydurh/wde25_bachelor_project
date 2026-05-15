@@ -13,13 +13,13 @@ export const listLocations = async (c: Context) => {
 };
 
 export const getLocation = async (c: Context) => {
-  const locationId = c.req.param('locationId');
+  const id = c.req.param('id');
 
-  if (!locationId || !UUID_REGEX.test(locationId)) {
-    throw new HTTPException(400, { message: 'Invalid locationId parameter' });
+  if (!id || !UUID_REGEX.test(id)) {
+    throw new HTTPException(400, { message: 'Invalid id parameter' });
   }
 
-  const location = await locationsService.getById(locationId);
+  const location = await locationsService.getById(id);
   if (!location) {
     throw new HTTPException(404, { message: 'Location not found' });
   }

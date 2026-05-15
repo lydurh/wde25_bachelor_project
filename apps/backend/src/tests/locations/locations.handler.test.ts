@@ -21,7 +21,7 @@ describe('GET /api/locations', () => {
   });
 });
 
-describe('GET /api/locations/:locationId', () => {
+describe('GET /api/locations/:id', () => {
   test('should return 200 for existing location', async () => {
     const createRes = await app.request('/api/locations', {
       method: 'POST',
