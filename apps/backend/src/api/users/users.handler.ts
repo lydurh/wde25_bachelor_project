@@ -49,7 +49,7 @@ export const patchUserById = async (c: Context) => {
     );
   }
 
-  const { repeat_password, ...updateData } = parsedBody.data;
+  const { repeat_password: _repeat_password, ...updateData } = parsedBody.data;
   const user = usersService.update(parsedParams.data.id, updateData);
 
   if (!user) {

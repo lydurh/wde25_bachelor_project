@@ -1,6 +1,6 @@
 import type { User } from '@repo/shared';
 
-const sampleUsers = [
+const sampleUsers: User[] = [
   {
     id: '1',
     user_email: 'john.doe@example.co',
@@ -9,7 +9,6 @@ const sampleUsers = [
     user_location_fk: 'Guldbergsgade 29, 2200 København N',
     user_password: 'Password123!',
     user_role: 'client',
-    user_deleted_at: null,
   },
   {
     id: '2',
@@ -19,7 +18,6 @@ const sampleUsers = [
     user_location_fk: 'Guldbergsgade 29, 2200 København N',
     user_password: 'Password123!',
     user_role: 'client',
-    user_deleted_at: null,
   },
 ];
 
@@ -37,12 +35,11 @@ export const usersService = {
   update(
     id: string,
     data: {
-      user_email?: string;
-      user_first_name?: string;
-      user_last_name?: string;
-      user_location_fk?: string;
-      user_password?: string;
-      repeat_password?: string;
+      user_email?: string | undefined;
+      user_first_name?: string | undefined;
+      user_last_name?: string | undefined;
+      user_location_fk?: string | undefined;
+      user_password?: string | undefined;
     },
   ): User | undefined {
     const user = sampleUsers.find((user) => user.id === id);

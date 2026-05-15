@@ -31,8 +31,8 @@ export const updateUserSchema = z
   .superRefine(
     (
       data: Record<string, unknown> & {
-        user_password?: string;
-        repeat_password?: string;
+        user_password?: string | undefined;
+        repeat_password?: string | undefined;
       },
       ctx: z.RefinementCtx,
     ) => {
