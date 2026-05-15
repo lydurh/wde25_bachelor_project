@@ -1,7 +1,7 @@
 export { z } from 'zod';
 export type { ZodSchema } from 'zod';
 
-export type { User } from './src/types/user';
+export type { User, UserRow } from './src/types/user';
 export type { Service } from './src/types/service';
 export type { Appointment } from './src/types/appointments';
 
@@ -13,6 +13,17 @@ export {
   createServiceSchema,
   updateServiceSchema,
 } from './src/schemas/service';
+
+export type {
+  GetUserByIdParams,
+  CreateUserInput,
+  UpdateUserInput,
+} from './src/schemas/user';
+export {
+  getUserByIdParamsSchema,
+  createUserSchema,
+  updateUserSchema,
+} from './src/schemas/user';
 
 export type {
   CreateAppointmentInput,
