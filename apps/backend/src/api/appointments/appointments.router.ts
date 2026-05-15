@@ -7,10 +7,10 @@ import {
   updateAppointment,
 } from './appointments.handler';
 
-export const appointmentsRouter = new Hono();
+export const appointmentsRoutes = new Hono();
 
-appointmentsRouter.get('/', listAppointments);
-appointmentsRouter.get('/:id', getAppointmentById);
-appointmentsRouter.delete('/:id', deleteAppointmentById);
-appointmentsRouter.post('/', ...createAppointment);
-appointmentsRouter.patch('/:id', ...updateAppointment);
+appointmentsRoutes.get('/', listAppointments);
+appointmentsRoutes.get('/:id', getAppointmentById);
+appointmentsRoutes.delete('/:id', deleteAppointmentById);
+appointmentsRoutes.post('/', ...createAppointment);
+appointmentsRoutes.patch('/:id', ...updateAppointment);

@@ -10,9 +10,9 @@ import {
 const servicesRoutes = new Hono();
 
 servicesRoutes.get('/', listServices);
-servicesRoutes.get('/:serviceId', getService);
+servicesRoutes.get('/:id', getService);
 servicesRoutes.post('/', createService);
-servicesRoutes.patch('/:serviceId', updateService);
-servicesRoutes.delete('/:serviceId', deleteService);
+servicesRoutes.patch('/:id', updateService);
+servicesRoutes.delete('/:id', deleteService);
 
 export { servicesRoutes };

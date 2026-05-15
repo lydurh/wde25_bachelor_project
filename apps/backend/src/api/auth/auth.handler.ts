@@ -1,86 +1,66 @@
 import type { Context } from 'hono';
+import { createFactory } from 'hono/factory';
+import { zValidator } from '@hono/zod-validator';
+import {
+  signupInputSchema,
+  loginInputSchema,
+  forgotPasswordInputSchema,
+  resetPasswordInputSchema,
+  verifyEmailQuerySchema,
+} from '@repo/shared';
 import { authService } from './auth.service';
 
-type SignupRequest = {
-  name?: string;
-  first_name?: string;
-  last_name?: string;
-  email?: string;
-  password?: string;
-};
+const factory = createFactory();
 
-type LoginRequest = {
-  email?: string;
-  password?: string;
-};
+const invalidRequest = (
+  result: { success: false; error: { issues: unknown } },
+  c: Context,
+) => c.json({ error: 'Invalid input', issues: result.error.issues }, 400);
 
-type ForgotPasswordRequest = {
-  email?: string;
-};
+export const signupUser = factory.createHandlers(
+  zValidator('json', signupInputSchema, (result, c) => {
+    if (!result.success) {
+      return invalidRequest(result, c);
+    }
+    return undefined;
+  }),
+  async (c) => {
+    const input = signupInputSchema.parse(c.req.valid('json'));
 
-type ResetPasswordRequest = {
-  token?: string;
-  newPassword?: string;
-};
-
-const splitName = (name: string): { first_name: string; last_name: string } => {
-  const [first_name, ...rest] = name.trim().split(' ');
-  return {
-    first_name: first_name ?? '',
-    last_name: rest.join(' ') || '',
-  };
-};
-
-export const signupUser = async (c: Context) => {
-  const body = await c.req.json<SignupRequest>();
-
-  const email: string = body.email?.trim() ?? '';
-  const password: string = body.password?.trim() ?? '';
-
-  if (!email || !password || (!body.name && !body.first_name)) {
-    return c.json(
-      { error: 'Missing required fields: name/first_name, email, password' },
-      400,
+    const result = await authService.signup(
+      input.first_name,
+      input.last_name ?? '',
+      input.email,
+      input.password,
     );
-  }
 
-  const names: { first_name: string; last_name: string } = body.name
-    ? splitName(body.name)
-    : {
-        first_name: body.first_name?.trim() ?? '',
-        last_name: body.last_name?.trim() ?? '',
-      };
+    if (!result) {
+      return c.json({ error: 'Email already registered' }, 409);
+    }
 
-  const { first_name, last_name } = names;
+    return c.json({ data: result.user, verificationToken: result.token }, 201);
+  },
+);
 
-  const { user, token } = authService.signup(
-    first_name,
-    last_name,
-    email,
-    password,
-  );
+export const loginUser = factory.createHandlers(
+  zValidator('json', loginInputSchema, (result, c) => {
+    if (!result.success) {
+      return invalidRequest(result, c);
+    }
+    return undefined;
+  }),
+  async (c) => {
+    const { email, password } = loginInputSchema.parse(c.req.valid('json'));
 
-  return c.json({ data: user, verificationToken: token }, 201);
-};
+    const user = await authService.login(email, password);
 
-export const loginUser = async (c: Context) => {
-  const body = await c.req.json<LoginRequest>();
+    if (!user) {
+      return c.json({ error: 'Invalid email or password' }, 401);
+    }
 
-  const email = body.email?.trim();
-  const password = body.password?.trim();
-
-  if (!email || !password) {
-    return c.json({ error: 'Missing required fields: email, password' }, 400);
-  }
-
-  const user = authService.login(email, password);
-
-  if (!user) {
-    return c.json({ error: 'Invalid email or password' }, 401);
-  }
-
-  return c.json({ data: user }, 200);
-};
+    return c.json({ data: user }, 200);
+  },
+);
 
 export const logoutUser = (c: Context) => {
   authService.logout();
@@ -88,61 +68,67 @@ export const logoutUser = (c: Context) => {
   return c.json({ data: { message: 'Logged out successfully' } }, 200);
 };
 
-export const verifyEmail = (c: Context) => {
-  const token = c.req.query('token');
+export const verifyEmail = factory.createHandlers(
+  zValidator('query', verifyEmailQuerySchema, (result, c) => {
+    if (!result.success) {
+      return invalidRequest(result, c);
+    }
+    return undefined;
+  }),
+  async (c) => {
+    const { token } = verifyEmailQuerySchema.parse(c.req.valid('query'));
 
-  if (!token) {
-    return c.json({ error: 'Missing token query parameter' }, 400);
-  }
+    const user = await authService.verifyEmail(token);
 
-  const user = authService.verifyEmail(token);
+    if (!user) {
+      return c.json({ error: 'Invalid or expired verification token' }, 400);
+    }
 
-  if (!user) {
-    return c.json({ error: 'Invalid or expired verification token' }, 400);
-  }
-
-  return c.json(
-    { data: { message: 'Email verified successfully', user } },
-    200,
-  );
-};
-
-export const forgotPasswordUser = async (c: Context) => {
-  const body = await c.req.json<ForgotPasswordRequest>();
-
-  const email = body.email?.trim();
-
-  if (!email) {
-    return c.json({ error: 'Missing required field: email' }, 400);
-  }
-
-  const token = authService.forgotPassword(email);
-
-  if (!token) {
-    return c.json({ error: 'User not found or not verified' }, 404);
-  }
-
-  return c.json({ data: { resetToken: token } }, 200);
-};
-
-export const resetPasswordUser = async (c: Context) => {
-  const body = await c.req.json<ResetPasswordRequest>();
-
-  const token = body.token?.trim();
-  const newPassword = body.newPassword?.trim();
-
-  if (!token || !newPassword) {
     return c.json(
-      { error: 'Missing required fields: token, newPassword' },
-      400,
+      { data: { message: 'Email verified successfully', user } },
+      200,
     );
-  }
+  },
+);
 
-  const success = authService.resetPassword(token, newPassword);
+export const forgotPasswordUser = factory.createHandlers(
+  zValidator('json', forgotPasswordInputSchema, (result, c) => {
+    if (!result.success) {
+      return invalidRequest(result, c);
+    }
+    return undefined;
+  }),
+  async (c) => {
+    const { email } = forgotPasswordInputSchema.parse(c.req.valid('json'));
 
-  if (!success) {
-    return c.json({ error: 'Invalid or expired reset token' }, 400);
-  }
+    const token = await authService.forgotPassword(email);
 
-  return c.json({ data: { message: 'Password reset successfully' } }, 200);
-};
+    if (!token) {
+      return c.json({ error: 'User not found or not verified' }, 404);
+    }
+
+    return c.json({ data: { resetToken: token } }, 200);
+  },
+);
+
+export const resetPasswordUser = factory.createHandlers(
+  zValidator('json', resetPasswordInputSchema, (result, c) => {
+    if (!result.success) {
+      return invalidRequest(result, c);
+    }
+    return undefined;
+  }),
+  async (c) => {
+    const { token, newPassword } = resetPasswordInputSchema.parse(
+      c.req.valid('json'),
+    );
+
+    const success = await authService.resetPassword(token, newPassword);
+
+    if (!success) {
+      return c.json({ error: 'Invalid or expired reset token' }, 400);
+    }
+
+    return c.json({ data: { message: 'Password reset successfully' } }, 200);
+  },
+);

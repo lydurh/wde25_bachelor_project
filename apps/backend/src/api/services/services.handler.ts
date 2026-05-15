@@ -13,13 +13,13 @@ export const listServices = async (c: Context) => {
 };
 
 export const getService = async (c: Context) => {
-  const serviceId = c.req.param('serviceId');
+  const id = c.req.param('id');
 
-  if (!serviceId || !UUID_REGEX.test(serviceId)) {
-    throw new HTTPException(400, { message: 'Invalid serviceId parameter' });
+  if (!id || !UUID_REGEX.test(id)) {
+    throw new HTTPException(400, { message: 'Invalid id parameter' });
   }
 
-  const service = await servicesService.getById(serviceId);
+  const service = await servicesService.getById(id);
 
   if (!service) {
     throw new HTTPException(404, { message: 'Service not found' });
@@ -44,10 +44,10 @@ export const createService = async (c: Context) => {
 };
 
 export const updateService = async (c: Context) => {
-  const serviceId = c.req.param('serviceId');
+  const id = c.req.param('id');
 
-  if (!serviceId || !UUID_REGEX.test(serviceId)) {
-    throw new HTTPException(400, { message: 'Invalid serviceId parameter' });
+  if (!id || !UUID_REGEX.test(id)) {
+    throw new HTTPException(400, { message: 'Invalid id parameter' });
   }
 
   const body: unknown = await c.req.json();
@@ -60,7 +60,7 @@ export const updateService = async (c: Context) => {
     );
   }
 
-  const service = await servicesService.update(serviceId, parsed.data);
+  const service = await servicesService.update(id, parsed.data);
 
   if (!service) {
     throw new HTTPException(404, { message: 'Service not found' });
@@ -70,13 +70,13 @@ export const updateService = async (c: Context) => {
 };
 
 export const deleteService = async (c: Context) => {
-  const serviceId = c.req.param('serviceId');
+  const id = c.req.param('id');
 
-  if (!serviceId || !UUID_REGEX.test(serviceId)) {
-    throw new HTTPException(400, { message: 'Invalid serviceId parameter' });
+  if (!id || !UUID_REGEX.test(id)) {
+    throw new HTTPException(400, { message: 'Invalid id parameter' });
   }
 
-  const service = await servicesService.remove(serviceId);
+  const service = await servicesService.remove(id);
 
   if (!service) {
     throw new HTTPException(404, { message: 'Service not found' });

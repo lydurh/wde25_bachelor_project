@@ -8,7 +8,7 @@ import {
 const locationsRoutes = new Hono();
 
 locationsRoutes.get('/', listLocations);
-locationsRoutes.get('/:locationId', getLocation);
+locationsRoutes.get('/:id', getLocation);
 locationsRoutes.post('/', createLocation);
 
 export { locationsRoutes };
