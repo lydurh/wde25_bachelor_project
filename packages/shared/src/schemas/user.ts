@@ -14,8 +14,14 @@ export const getUserByIdParamsSchema = z.object({
 export const updateUserSchema = z
   .object({
     user_email: z.string().email('Invalid email format').max(255).optional(),
-    user_first_name: safeString.min(1, 'First name is required').max(100).optional(),
-    user_last_name: safeString.min(1, 'Last name is required').max(100).optional(),
+    user_first_name: safeString
+      .min(1, 'First name is required')
+      .max(100)
+      .optional(),
+    user_last_name: safeString
+      .min(1, 'Last name is required')
+      .max(100)
+      .optional(),
     user_location_fk: z.string().uuid('Invalid location ID').optional(),
     user_password: z
       .string()
