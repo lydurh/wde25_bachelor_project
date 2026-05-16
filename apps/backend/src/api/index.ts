@@ -13,16 +13,14 @@ const api = new Hono();
 api.route('/health', health);
 api.route('/auth', authRoutes);
 
-// Protected routes — require valid JWT
 api.use('/users/*', authMiddleware);
 api.use('/appointments/*', authMiddleware);
 api.use('/availability/*', authMiddleware);
 
-// Admin-only write operations on services and locations
-api.use('/services', authMiddleware, adminMiddleware); // POST
-api.use('/services/:id', authMiddleware, adminMiddleware); // PATCH, DELETE
-api.use('/locations', authMiddleware, adminMiddleware); // POST
-api.use('/locations/:id', authMiddleware, adminMiddleware); // future PATCH, DELETE
+api.use('/services', authMiddleware, adminMiddleware);
+api.use('/services/:id', authMiddleware, adminMiddleware);
+api.use('/locations', authMiddleware, adminMiddleware);
+api.use('/locations/:id', authMiddleware, adminMiddleware);
 
 api.route('/users', usersRoutes);
 api.route('/services', servicesRoutes);
