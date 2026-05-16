@@ -35,7 +35,7 @@ export const signupUser = factory.createHandlers(
       return c.json({ error: 'Email already registered' }, 409);
     }
 
-    return c.json({ data: result.user, verificationToken: result.token }, 201);
+    return c.json({ data: result.user }, 201);
   },
 );
 
