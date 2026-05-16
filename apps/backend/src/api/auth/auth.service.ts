@@ -1,5 +1,6 @@
 import { and, db, eq, isNotNull, isNull, users } from '@repo/db';
 import type { LoginInput, SignupInput, SignupResult, User } from '@repo/shared';
+import { toPublicUser } from '@repo/shared';
 
 const verificationTokens = new Map<string, string>();
 const resetPasswordTokens = new Map<string, string>();
@@ -50,7 +51,7 @@ export const authService = {
     verificationTokens.set(token, row.user_pk);
 
     return {
-      user: row,
+      user: toPublicUser(row),
       token,
     };
   },
@@ -76,7 +77,7 @@ export const authService = {
     );
     if (!isValid) return null;
 
-    return row;
+    return toPublicUser(row);
   },
 
   logout(): boolean {
@@ -103,7 +104,7 @@ export const authService = {
 
     verificationTokens.delete(token);
 
-    return updated;
+    return toPublicUser(updated);
   },
 
   async forgotPassword(email: string): Promise<string | null> {
