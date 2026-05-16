@@ -1,5 +1,5 @@
 import { and, db, eq, isNotNull, isNull, users } from '@repo/db';
-import type { User } from '@repo/shared';
+import type { LoginInput, SignupInput, SignupResult, User } from '@repo/shared';
 
 const verificationTokens = new Map<string, string>();
 const resetPasswordTokens = new Map<string, string>();
@@ -19,29 +19,26 @@ export const authService = {
     return user;
   },
 
-  async signup(
-    first_name: string,
-    last_name: string,
-    email: string,
-    password: string,
-  ): Promise<{ user: User; token: string } | null> {
+  async signup(input: SignupInput): Promise<SignupResult | null> {
     const [existing] = await db
       .select({ pk: users.user_pk })
       .from(users)
-      .where(eq(users.user_email, email))
+      .where(eq(users.user_email, input.email))
       .limit(1);
 
     if (existing) {
       return null;
     }
 
+    const hashedPassword = await Bun.password.hash(input.password);
+
     const [row] = await db
       .insert(users)
       .values({
-        user_email: email,
-        user_first_name: first_name,
-        user_last_name: last_name || '',
-        user_password: password,
+        user_email: input.email,
+        user_first_name: input.first_name,
+        user_last_name: input.last_name ?? '',
+        user_password: hashedPassword,
       })
       .returning();
 
@@ -58,21 +55,28 @@ export const authService = {
     };
   },
 
-  async login(email: string, password: string): Promise<User | null> {
+  async login(input: LoginInput): Promise<User | null> {
     const [row] = await db
       .select()
       .from(users)
       .where(
         and(
-          eq(users.user_email, email),
-          eq(users.user_password, password),
+          eq(users.user_email, input.email),
           isNotNull(users.user_verified_at),
           isNull(users.user_deleted_at),
         ),
       )
       .limit(1);
 
-    return row ? row : null;
+    if (!row) return null;
+
+    const isValid = await Bun.password.verify(
+      input.password,
+      row.user_password,
+    );
+    if (!isValid) return null;
+
+    return row;
   },
 
   logout(): boolean {
@@ -132,10 +136,12 @@ export const authService = {
       return false;
     }
 
+    const hashedPassword = await Bun.password.hash(newPassword);
+
     const [updated] = await db
       .update(users)
       .set({
-        user_password: newPassword,
+        user_password: hashedPassword,
         user_updated_at: new Date(),
       })
       .where(and(eq(users.user_pk, userId), isNull(users.user_deleted_at)))

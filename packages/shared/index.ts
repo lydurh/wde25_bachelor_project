@@ -4,6 +4,7 @@ export type { ZodSchema } from 'zod';
 export type { User, UserRow } from './src/types/user';
 export type { Service } from './src/types/service';
 export type { Appointment } from './src/types/appointments';
+export type { JwtPayload } from './src/types/jwt';
 
 export type {
   CreateServiceInput,
@@ -58,6 +59,7 @@ export type {
   ForgotPasswordInput,
   ResetPasswordInput,
   VerifyEmailQuery,
+  SignupResult,
 } from './src/schemas/auth';
 export {
   signupInputSchema,

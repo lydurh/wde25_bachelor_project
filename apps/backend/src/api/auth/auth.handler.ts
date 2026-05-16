@@ -1,5 +1,6 @@
 import type { Context } from 'hono';
 import { createFactory } from 'hono/factory';
+import { sign } from 'hono/jwt';
 import { zValidator } from '@hono/zod-validator';
 import {
   signupInputSchema,
@@ -9,6 +10,7 @@ import {
   verifyEmailQuerySchema,
 } from '@repo/shared';
 import { authService } from './auth.service';
+import { env } from '../../lib/env';
 
 const factory = createFactory();
 
@@ -27,12 +29,7 @@ export const signupUser = factory.createHandlers(
   async (c) => {
     const input = signupInputSchema.parse(c.req.valid('json'));
 
-    const result = await authService.signup(
-      input.first_name,
-      input.last_name ?? '',
-      input.email,
-      input.password,
-    );
+    const result = await authService.signup(input);
 
     if (!result) {
       return c.json({ error: 'Email already registered' }, 409);
@@ -50,15 +47,24 @@ export const loginUser = factory.createHandlers(
     return undefined;
   }),
   async (c) => {
-    const { email, password } = loginInputSchema.parse(c.req.valid('json'));
+    const input = loginInputSchema.parse(c.req.valid('json'));
 
-    const user = await authService.login(email, password);
+    const user = await authService.login(input);
 
     if (!user) {
       return c.json({ error: 'Invalid email or password' }, 401);
     }
 
-    return c.json({ data: user }, 200);
+    const token = await sign(
+      {
+        sub: user.user_pk,
+        role: user.user_role,
+        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // 24 hours
+      },
+      env.JWT_SECRET,
+    );
+
+    return c.json({ data: { token, user } }, 200);
   },
 );
 

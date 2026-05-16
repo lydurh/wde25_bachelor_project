@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { User } from '../types/user';
 
 /** POST /auth/signup */
 export const signupInputSchema = z
@@ -44,3 +45,9 @@ export const verifyEmailQuerySchema = z.object({
 });
 
 export type VerifyEmailQuery = z.infer<typeof verifyEmailQuerySchema>;
+
+/** Auth service result types */
+export type SignupResult = {
+  user: User;
+  token: string;
+};
