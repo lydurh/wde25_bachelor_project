@@ -10,7 +10,7 @@ const appointmentExample: Appointment = {
   appointment_notes: null,
   appointment_duration: 60,
   appointment_total_price: null,
-  appointment_status: 'scheduled',
+  appointment_status: 'confirmed',
   appointment_created_at: '2026-01-01T09:00:00.000Z',
   appointment_updated_at: null,
   appointment_deleted_at: null,

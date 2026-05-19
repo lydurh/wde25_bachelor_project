@@ -23,7 +23,28 @@ export const availabilitySchema = z.object({
   availability_deleted_at: z.string().min(1).nullable(),
 });
 
-export const createAvailabilityInputSchema = availabilitySchema
+function parseTimeMinutes(t: string): number {
+  const [h, m] = t.split(':').map(Number);
+  return (h ?? 0) * 60 + (m ?? 0);
+}
+
+function validateTimeRange(data: {
+  availability_start_time?: string | undefined;
+  availability_end_time?: string | undefined;
+}): boolean {
+  if (!data.availability_start_time || !data.availability_end_time) return true;
+  return (
+    parseTimeMinutes(data.availability_start_time) <
+    parseTimeMinutes(data.availability_end_time)
+  );
+}
+
+const timeRangeRefinement = {
+  message: 'availability_start_time must be before availability_end_time',
+  path: ['availability_end_time'] as [string],
+};
+
+const _createAvailabilityBase = availabilitySchema
   .pick({
     availability_date: true,
     availability_start_time: true,
@@ -33,9 +54,17 @@ export const createAvailabilityInputSchema = availabilitySchema
   .partial({ availability_type: true })
   .strict();
 
-export const updateAvailabilityInputSchema = createAvailabilityInputSchema
-  .partial()
-  .strict();
+const _updateAvailabilityBase = _createAvailabilityBase.partial().strict();
+
+export const createAvailabilityInputSchema = _createAvailabilityBase.refine(
+  validateTimeRange,
+  timeRangeRefinement,
+);
+
+export const updateAvailabilityInputSchema = _updateAvailabilityBase.refine(
+  validateTimeRange,
+  timeRangeRefinement,
+);
 
 export type Availability = z.infer<typeof availabilitySchema>;
 export type CreateAvailabilityInput = z.infer<

@@ -1,5 +1,7 @@
 import { and, db, eq, isNotNull, isNull, users } from '@repo/db';
-import type { User } from '@repo/shared';
+import type { LoginInput, SignupInput, User } from '@repo/shared';
+import { toPublicUser } from '@repo/shared';
+import { locationsService } from '../locations/locations.service';
 
 const verificationTokens = new Map<string, string>();
 const resetPasswordTokens = new Map<string, string>();
@@ -20,11 +22,17 @@ export const authService = {
   },
 
   async signup(
-    first_name: string,
-    last_name: string,
-    email: string,
-    password: string,
+    input: SignupInput,
   ): Promise<{ user: User; token: string } | null> {
+    const {
+      first_name,
+      last_name,
+      email,
+      password,
+      address,
+      postal_code,
+      city,
+    } = input;
     const [existing] = await db
       .select({ pk: users.user_pk })
       .from(users)
@@ -35,13 +43,27 @@ export const authService = {
       return null;
     }
 
+    const location = await locationsService.create({
+      location_address: address,
+      location_postal_code: postal_code,
+      location_city: city,
+      location_country: 'Denmark',
+    });
+
+    if (!location) {
+      throw new Error('Location insert failed');
+    }
+
+    const hashedPassword = await Bun.password.hash(password);
+
     const [row] = await db
       .insert(users)
       .values({
         user_email: email,
         user_first_name: first_name,
         user_last_name: last_name || '',
-        user_password: password,
+        user_password: hashedPassword,
+        user_location_fk: location.location_pk,
       })
       .returning();
 
@@ -53,26 +75,33 @@ export const authService = {
     verificationTokens.set(token, row.user_pk);
 
     return {
-      user: row,
+      user: toPublicUser(row),
       token,
     };
   },
 
-  async login(email: string, password: string): Promise<User | null> {
+  async login(input: LoginInput): Promise<User | null> {
     const [row] = await db
       .select()
       .from(users)
       .where(
         and(
-          eq(users.user_email, email),
-          eq(users.user_password, password),
+          eq(users.user_email, input.email),
           isNotNull(users.user_verified_at),
           isNull(users.user_deleted_at),
         ),
       )
       .limit(1);
 
-    return row ? row : null;
+    if (!row) return null;
+
+    const isValid = await Bun.password.verify(
+      input.password,
+      row.user_password,
+    );
+    if (!isValid) return null;
+
+    return toPublicUser(row);
   },
 
   logout(): boolean {
@@ -99,7 +128,7 @@ export const authService = {
 
     verificationTokens.delete(token);
 
-    return updated;
+    return toPublicUser(updated);
   },
 
   async forgotPassword(email: string): Promise<string | null> {
@@ -132,10 +161,12 @@ export const authService = {
       return false;
     }
 
+    const hashedPassword = await Bun.password.hash(newPassword);
+
     const [updated] = await db
       .update(users)
       .set({
-        user_password: newPassword,
+        user_password: hashedPassword,
         user_updated_at: new Date(),
       })
       .where(and(eq(users.user_pk, userId), isNull(users.user_deleted_at)))

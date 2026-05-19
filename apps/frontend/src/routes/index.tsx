@@ -10,12 +10,16 @@ import { TimeSelectPage } from '@/views/booking/pages/booking';
 import { AdminDashboardPage } from '@/views/admin/pages/dashboard';
 import { ProfilePage } from '@/views/user/pages/profile';
 import { AppointmentsPage } from '@/views/user/pages/appointments';
+import { LoginPage } from '@/views/auth/pages/login';
 
 export const router = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
   {
     element: <AuthLayout />,
-    children: [{ path: '/signup', element: <SignupPage /> }],
+    children: [
+      { path: '/signup', element: <SignupPage /> },
+      { path: '/login', element: <LoginPage /> },
+    ],
   },
   {
     path: '/book',

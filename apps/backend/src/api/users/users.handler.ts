@@ -1,10 +1,18 @@
 import type { Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
-import { createUserSchema, updateUserSchema } from '@repo/shared';
+import { createFactory } from 'hono/factory';
+import { zValidator } from '@hono/zod-validator';
+import { createUserSchema, updateUserSchema, uuidSchema } from '@repo/shared';
 import { usersService } from './users.service';
 
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const factory = createFactory();
+
+function requireUserId(id: string | undefined): string {
+  if (!id || !uuidSchema.safeParse(id).success) {
+    throw new HTTPException(400, { message: 'Invalid userId parameter' });
+  }
+  return id;
+}
 
 export const listUsers = async (c: Context) => {
   const data = await usersService.list();
@@ -13,12 +21,7 @@ export const listUsers = async (c: Context) => {
 };
 
 export const getUserById = async (c: Context) => {
-  const userId = c.req.param('id');
-
-  if (!userId || !UUID_REGEX.test(userId)) {
-    throw new HTTPException(400, { message: 'Invalid userId parameter' });
-  }
-
+  const userId = requireUserId(c.req.param('id'));
   const user = await usersService.getById(userId);
 
   if (!user) {
@@ -28,61 +31,59 @@ export const getUserById = async (c: Context) => {
   return c.json({ data: user });
 };
 
-export const createUser = async (c: Context) => {
-  const body: unknown = await c.req.json();
-  const parsed = createUserSchema.safeParse(body);
+export const createUser = factory.createHandlers(
+  zValidator('json', createUserSchema, (result, c) => {
+    if (!result.success) {
+      throw new HTTPException(400, {
+        res: c.json(
+          { error: 'Invalid input', issues: result.error.issues },
+          400,
+        ),
+      });
+    }
+    return undefined;
+  }),
+  async (c) => {
+    const input = c.req.valid('json');
+    const user = await usersService.create(input);
 
-  if (!parsed.success) {
-    return c.json(
-      { error: 'Validation failed', details: parsed.error.flatten() },
-      400,
-    );
-  }
+    return c.json({ data: user }, 201);
+  },
+);
 
-  const user = await usersService.create(parsed.data);
+export const updateUser = factory.createHandlers(
+  zValidator('json', updateUserSchema, (result, c) => {
+    if (!result.success) {
+      throw new HTTPException(400, {
+        res: c.json(
+          { error: 'Invalid input', issues: result.error.issues },
+          400,
+        ),
+      });
+    }
+    return undefined;
+  }),
+  async (c) => {
+    const userId = requireUserId(c.req.param('id'));
+    const input = c.req.valid('json');
+    const { repeat_password: _repeat_password, ...updateData } = input;
+    const user = await usersService.update(userId, updateData);
 
-  return c.json({ data: user }, 201);
-};
+    if (!user) {
+      throw new HTTPException(404, { message: 'User not found' });
+    }
 
-export const updateUser = async (c: Context) => {
-  const userId = c.req.param('id');
-
-  if (!userId || !UUID_REGEX.test(userId)) {
-    throw new HTTPException(400, { message: 'Invalid userId parameter' });
-  }
-
-  const body: unknown = await c.req.json();
-  const parsed = updateUserSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return c.json(
-      { error: 'Validation failed', details: parsed.error.flatten() },
-      400,
-    );
-  }
-
-  const { repeat_password: _repeat_password, ...updateData } = parsed.data;
-  const user = await usersService.update(userId, updateData);
-
-  if (!user) {
-    throw new HTTPException(404, { message: 'User not found' });
-  }
-
-  return c.json({ data: user });
-};
+    return c.json({ data: user });
+  },
+);
 
 export const deleteUser = async (c: Context) => {
-  const userId = c.req.param('id');
-
-  if (!userId || !UUID_REGEX.test(userId)) {
-    throw new HTTPException(400, { message: 'Invalid userId parameter' });
-  }
-
+  const userId = requireUserId(c.req.param('id'));
   const user = await usersService.remove(userId);
 
   if (!user) {
     throw new HTTPException(404, { message: 'User not found' });
   }
 
-  return c.body(null, 204);
+  return c.json({ data: user }, 200);
 };

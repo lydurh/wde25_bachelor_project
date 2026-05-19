@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { User } from '../types/user';
 
 /** POST /auth/signup */
 export const signupInputSchema = z
@@ -7,6 +8,9 @@ export const signupInputSchema = z
     last_name: z.string().trim().optional(),
     email: z.string().trim().min(1, 'Email is required'),
     password: z.string().trim().min(1, 'Password is required'),
+    address: z.string().trim().min(1, 'Address is required'),
+    postal_code: z.string().trim().min(4, 'Postal code must be 4 digits'),
+    city: z.string().trim().min(1, 'City is required'),
   })
   .strict();
 
@@ -44,3 +48,9 @@ export const verifyEmailQuerySchema = z.object({
 });
 
 export type VerifyEmailQuery = z.infer<typeof verifyEmailQuerySchema>;
+
+/** Auth service result types */
+export type SignupResult = {
+  user: User;
+  token: string;
+};
