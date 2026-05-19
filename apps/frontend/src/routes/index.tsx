@@ -8,6 +8,7 @@ import { LandingPage } from '@/views/landing/pages/landing';
 import { SignupPage } from '@/views/auth/pages/signup';
 import { TimeSelectPage } from '@/views/booking/pages/booking';
 import { AdminDashboardPage } from '@/views/admin/pages/dashboard';
+import { profileLoader } from '@/lib/loaders/profile';
 import { ProfilePage } from '@/views/user/pages/profile';
 import { AppointmentsPage } from '@/views/user/pages/appointments';
 import { LoginPage } from '@/views/auth/pages/login';
@@ -35,8 +36,16 @@ export const router = createBrowserRouter([
     path: '/profile',
     element: <UserLayout />,
     children: [
-      { index: true, element: <ProfilePage /> },
-      { path: 'appointments', element: <AppointmentsPage /> },
+      {
+        index: true,
+        element: <ProfilePage />,
+        loader: profileLoader,
+      },
+      {
+        path: 'appointments',
+        element: <AppointmentsPage />,
+        loader: profileLoader,
+      },
     ],
   },
 ]);

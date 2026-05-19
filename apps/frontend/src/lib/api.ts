@@ -1,8 +1,13 @@
 const API_BASE = '/api';
 
 export const api = {
-  async get<T>(path: string): Promise<T> {
-    const res = await fetch(`${API_BASE}${path}`);
+  async get<T>(path: string, token?: string): Promise<T> {
+    const res = await fetch(`${API_BASE}${path}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
     if (!res.ok) throw new Error(`GET ${path} failed: ${res.status}`);
     return res.json() as Promise<T>;
   },
