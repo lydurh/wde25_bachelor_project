@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { AppointmentCard } from '@/components/custom/appointment-card';
 import type { Appointment } from '@repo/shared';
 import { Link } from 'react-router';
+import { useState } from 'react';
 
 const appointmentExample: Appointment = {
   appointment_pk: '1',
@@ -21,6 +22,8 @@ const appointmentExample: Appointment = {
 };
 
 export const ProfilePage = () => {
+  const [editing, setEditing] = useState<boolean>(false);
+
   return (
     <main className="space-y-8">
       <section>
@@ -28,27 +31,46 @@ export const ProfilePage = () => {
       </section>
       <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold">Your Profile</h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Your Profile</h2>
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={() => setEditing(!editing)}
+            >
+              {editing ? 'Cancel' : 'Edit'}
+            </Button>
+          </div>
           <form>
             <FieldGroup className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Field className="md:col-span-1">
                 <FieldLabel>First Name</FieldLabel>
-                <Input type="text" placeholder="John" />
+                <Input disabled={!editing} type="text" placeholder="John" />
               </Field>
               <Field className="md:col-span-1">
                 <FieldLabel>Last Name</FieldLabel>
-                <Input type="text" placeholder="Doe" />
+                <Input disabled={!editing} type="text" placeholder="Doe" />
               </Field>
               <Field className="md:col-span-2">
                 <FieldLabel>Email</FieldLabel>
-                <Input type="email" placeholder="john.doe@example.com" />
+                <Input
+                  disabled={!editing}
+                  type="email"
+                  placeholder="john.doe@example.com"
+                />
               </Field>
               <Field className="md:col-span-2">
                 <FieldLabel>Address</FieldLabel>
-                <Input type="text" placeholder="123 Main St" />
+                <Input
+                  disabled={!editing}
+                  type="text"
+                  placeholder="123 Main St"
+                />
               </Field>
               <Field className="md:col-span-2">
-                <Button type="submit">Save</Button>
+                <Button disabled={!editing} type="submit">
+                  Save
+                </Button>
               </Field>
             </FieldGroup>
           </form>
