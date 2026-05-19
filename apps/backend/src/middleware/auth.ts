@@ -3,13 +3,9 @@ import { verify } from 'hono/jwt';
 import type { JwtPayload } from '@repo/shared';
 import { env } from '../lib/env';
 
-declare module 'hono' {
-  type ContextVariableMap = {
-    jwtPayload: JwtPayload;
-  };
-}
+type AuthVars = { Variables: { jwtPayload: JwtPayload } };
 
-export const authMiddleware = createMiddleware(async (c, next) => {
+export const authMiddleware = createMiddleware<AuthVars>(async (c, next) => {
   const authHeader = c.req.header('Authorization');
 
   if (!authHeader?.startsWith('Bearer ')) {
@@ -39,7 +35,7 @@ export const authMiddleware = createMiddleware(async (c, next) => {
   return next();
 });
 
-export const adminMiddleware = createMiddleware(async (c, next) => {
+export const adminMiddleware = createMiddleware<AuthVars>(async (c, next) => {
   const payload = c.get('jwtPayload');
 
   if (payload.role !== 'admin') {
