@@ -1,5 +1,7 @@
 import { and, db, eq, isNotNull, isNull, users } from '@repo/db';
 import type { User } from '@repo/shared';
+import { locations } from '@repo/db';
+import * as bcrypt from 'bcryptjs';
 
 const verificationTokens = new Map<string, string>();
 const resetPasswordTokens = new Map<string, string>();
@@ -24,6 +26,9 @@ export const authService = {
     last_name: string,
     email: string,
     password: string,
+    address: string,
+    postal_code: string,
+    city: string,
   ): Promise<{ user: User; token: string } | null> {
     const [existing] = await db
       .select({ pk: users.user_pk })
@@ -34,6 +39,23 @@ export const authService = {
     if (existing) {
       return null;
     }
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const location = (
+      await db
+        .insert(locations)
+        .values({
+          location_address: address,
+          location_postal_code: postal_code,
+          location_city: city,
+          location_country: 'Denmark',
+        })
+        .returning()
+    )[0];
+
+    if (!location) {
+      throw new Error('Location insert failed');
+    }
 
     const [row] = await db
       .insert(users)
@@ -41,7 +63,8 @@ export const authService = {
         user_email: email,
         user_first_name: first_name,
         user_last_name: last_name || '',
-        user_password: password,
+        user_password: hashedPassword,
+        user_location_fk: location.location_pk,
       })
       .returning();
 
@@ -62,17 +85,18 @@ export const authService = {
     const [row] = await db
       .select()
       .from(users)
-      .where(
-        and(
-          eq(users.user_email, email),
-          eq(users.user_password, password),
-          isNotNull(users.user_verified_at),
-          isNull(users.user_deleted_at),
-        ),
-      )
+      .where(and(eq(users.user_email, email), isNull(users.user_deleted_at)))
       .limit(1);
 
-    return row ? row : null;
+    if (!row) return null;
+
+    const passwordMatch = await bcrypt.compare(password, row.user_password);
+
+    if (!passwordMatch) return null;
+
+    if (!row.user_verified_at) return null;
+
+    return row;
   },
 
   logout(): boolean {
@@ -135,7 +159,7 @@ export const authService = {
     const [updated] = await db
       .update(users)
       .set({
-        user_password: newPassword,
+        user_password: await bcrypt.hash(newPassword, 10),
         user_updated_at: new Date(),
       })
       .where(and(eq(users.user_pk, userId), isNull(users.user_deleted_at)))

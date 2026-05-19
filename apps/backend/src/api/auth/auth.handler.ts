@@ -32,6 +32,9 @@ export const signupUser = factory.createHandlers(
       input.last_name ?? '',
       input.email,
       input.password,
+      input.address,
+      input.postal_code,
+      input.city,
     );
 
     if (!result) {
