@@ -9,6 +9,7 @@ import { SignupPage } from '@/views/auth/pages/signup';
 import { TimeSelectPage } from '@/views/booking/pages/booking';
 import { AdminDashboardPage } from '@/views/admin/pages/dashboard';
 import { ProfilePage } from '@/views/user/pages/profile';
+import { AppointmentsPage } from '@/views/user/pages/appointments';
 
 export const router = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
@@ -27,8 +28,11 @@ export const router = createBrowserRouter([
     children: [{ index: true, element: <AdminDashboardPage /> }],
   },
   {
-    path: '/dashboard',
+    path: '/profile',
     element: <UserLayout />,
-    children: [{ path: 'profile', element: <ProfilePage /> }],
+    children: [
+      { index: true, element: <ProfilePage /> },
+      { path: 'appointments', element: <AppointmentsPage /> },
+    ],
   },
 ]);
