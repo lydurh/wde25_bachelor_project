@@ -67,7 +67,7 @@ describe('servicesService.getById', () => {
     expect(result).toBeUndefined();
   });
 
-  it('should return a soft-deleted service (getById does not filter deleted)', async () => {
+  it('should not return a soft-deleted service', async () => {
     const created = assertDefined(
       await servicesService.create({
         ...validInput,
@@ -77,10 +77,8 @@ describe('servicesService.getById', () => {
     testIds.push(created.service_pk);
     await servicesService.remove(created.service_pk);
 
-    const result = assertDefined(
-      await servicesService.getById(created.service_pk),
-    );
-    expect(result.service_deleted_at).toBeInstanceOf(Date);
+    const result = await servicesService.getById(created.service_pk);
+    expect(result).toBeUndefined();
   });
 });
 

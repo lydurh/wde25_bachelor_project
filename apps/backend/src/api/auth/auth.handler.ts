@@ -1,5 +1,6 @@
 import type { Context } from 'hono';
 import { createFactory } from 'hono/factory';
+import { sign } from 'hono/jwt';
 import { zValidator } from '@hono/zod-validator';
 import {
   signupInputSchema,
@@ -9,6 +10,7 @@ import {
   verifyEmailQuerySchema,
 } from '@repo/shared';
 import { authService } from './auth.service';
+import { env } from '../../lib/env';
 
 const factory = createFactory();
 
@@ -25,7 +27,7 @@ export const signupUser = factory.createHandlers(
     return undefined;
   }),
   async (c) => {
-    const input = signupInputSchema.parse(c.req.valid('json'));
+    const input = c.req.valid('json');
 
     const result = await authService.signup(
       input.first_name,
@@ -41,7 +43,7 @@ export const signupUser = factory.createHandlers(
       return c.json({ error: 'Email already registered' }, 409);
     }
 
-    return c.json({ data: result.user, verificationToken: result.token }, 201);
+    return c.json({ data: result.user }, 201);
   },
 );
 
@@ -53,15 +55,24 @@ export const loginUser = factory.createHandlers(
     return undefined;
   }),
   async (c) => {
-    const { email, password } = loginInputSchema.parse(c.req.valid('json'));
+    const input = c.req.valid('json');
 
-    const user = await authService.login(email, password);
+    const user = await authService.login(input);
 
     if (!user) {
       return c.json({ error: 'Invalid email or password' }, 401);
     }
 
-    return c.json({ data: user }, 200);
+    const token = await sign(
+      {
+        sub: user.user_pk,
+        role: user.user_role,
+        exp: Math.floor(Date.now() / 1000) + 60 * 15, // 15 minutes
+      },
+      env.JWT_SECRET,
+    );
+
+    return c.json({ data: { token, user } }, 200);
   },
 );
 
@@ -79,7 +90,7 @@ export const verifyEmail = factory.createHandlers(
     return undefined;
   }),
   async (c) => {
-    const { token } = verifyEmailQuerySchema.parse(c.req.valid('query'));
+    const { token } = c.req.valid('query');
 
     const user = await authService.verifyEmail(token);
 
@@ -102,15 +113,20 @@ export const forgotPasswordUser = factory.createHandlers(
     return undefined;
   }),
   async (c) => {
-    const { email } = forgotPasswordInputSchema.parse(c.req.valid('json'));
+    const { email } = c.req.valid('json');
 
-    const token = await authService.forgotPassword(email);
+    await authService.forgotPassword(email);
 
-    if (!token) {
-      return c.json({ error: 'User not found or not verified' }, 404);
-    }
-
-    return c.json({ data: { resetToken: token } }, 200);
+    // Always return 200 regardless of whether email exists — prevents user enumeration
+    return c.json(
+      {
+        data: {
+          message:
+            'If that email is registered and verified, a reset link has been sent.',
+        },
+      },
+      200,
+    );
   },
 );
 
@@ -122,9 +138,7 @@ export const resetPasswordUser = factory.createHandlers(
     return undefined;
   }),
   async (c) => {
-    const { token, newPassword } = resetPasswordInputSchema.parse(
-      c.req.valid('json'),
-    );
+    const { token, newPassword } = c.req.valid('json');
 
     const success = await authService.resetPassword(token, newPassword);
 

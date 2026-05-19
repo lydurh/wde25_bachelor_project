@@ -1,10 +1,11 @@
 import { app } from './app';
+import { env } from './lib/env';
 
 declare global {
   var __serverStarted: boolean | undefined;
 }
 
-const port = 3000;
+const port = env.PORT;
 
 if (!globalThis.__serverStarted) {
   globalThis.__serverStarted = true;
