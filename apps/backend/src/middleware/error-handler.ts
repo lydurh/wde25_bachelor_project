@@ -5,8 +5,12 @@ export const errorHandler: ErrorHandler = (err, c) => {
   console.error(`[Error] ${err.message}`, err.stack);
 
   if (err instanceof HTTPException) {
-    return c.json({ error: err.message, status: err.status }, err.status);
+    // If the exception carries a pre-built response (e.g. from zValidator), return it directly
+    if (err.res) {
+      return err.getResponse();
+    }
+    return c.json({ error: err.message }, err.status);
   }
 
-  return c.json({ error: 'Internal Server Error', status: 500 }, 500);
+  return c.json({ error: 'Internal Server Error' }, 500);
 };

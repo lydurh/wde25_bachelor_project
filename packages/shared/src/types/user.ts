@@ -25,3 +25,17 @@ export type User = {
   user_created_at: Date;
   user_updated_at: Date | null;
 };
+
+/** Strip sensitive fields from a DB row before returning to the client. */
+export function toPublicUser(row: UserRow): User {
+  return {
+    user_pk: row.user_pk,
+    user_role: row.user_role,
+    user_email: row.user_email,
+    user_first_name: row.user_first_name,
+    user_last_name: row.user_last_name,
+    user_location_fk: row.user_location_fk,
+    user_created_at: row.user_created_at,
+    user_updated_at: row.user_updated_at,
+  };
+}

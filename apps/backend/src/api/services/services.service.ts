@@ -17,7 +17,9 @@ export const servicesService = {
     const [service] = await db
       .select()
       .from(services)
-      .where(eq(services.service_pk, id))
+      .where(
+        and(eq(services.service_pk, id), isNull(services.service_deleted_at)),
+      )
       .limit(1);
 
     return service;
