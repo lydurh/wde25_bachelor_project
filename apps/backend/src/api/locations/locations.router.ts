@@ -9,6 +9,6 @@ const locationsRoutes = new Hono();
 
 locationsRoutes.get('/', listLocations);
 locationsRoutes.get('/:id', getLocation);
-locationsRoutes.post('/', createLocation);
+locationsRoutes.post('/', ...createLocation);
 
 export { locationsRoutes };
