@@ -1,6 +1,8 @@
 export { z } from 'zod';
 export type { ZodSchema } from 'zod';
 
+export { uuidSchema } from './src/schemas/common';
+
 export type { User, UserRow } from './src/types/user';
 export { toPublicUser } from './src/types/user';
 export type { Service } from './src/types/service';

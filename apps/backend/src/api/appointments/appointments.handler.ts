@@ -6,15 +6,13 @@ import { appointmentsService } from './appointments.service';
 import {
   createAppointmentInputSchema,
   updateAppointmentInputSchema,
+  uuidSchema,
 } from '@repo/shared';
 
 const factory = createFactory();
 
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 function requireAppointmentId(id: string | undefined): string {
-  if (!id || !UUID_REGEX.test(id)) {
+  if (!id || !uuidSchema.safeParse(id).success) {
     throw new HTTPException(400, { message: 'Invalid id parameter' });
   }
   return id;

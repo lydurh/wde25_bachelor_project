@@ -2,16 +2,13 @@ import type { Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { createFactory } from 'hono/factory';
 import { zValidator } from '@hono/zod-validator';
-import { createUserSchema, updateUserSchema } from '@repo/shared';
+import { createUserSchema, updateUserSchema, uuidSchema } from '@repo/shared';
 import { usersService } from './users.service';
 
 const factory = createFactory();
 
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 function requireUserId(id: string | undefined): string {
-  if (!id || !UUID_REGEX.test(id)) {
+  if (!id || !uuidSchema.safeParse(id).success) {
     throw new HTTPException(400, { message: 'Invalid userId parameter' });
   }
   return id;
