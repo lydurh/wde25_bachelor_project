@@ -15,7 +15,7 @@ export const usersService = {
     const [user] = await db
       .select()
       .from(users)
-      .where(eq(users.user_pk, id))
+      .where(and(eq(users.user_pk, id), isNull(users.user_deleted_at)))
       .limit(1);
 
     return user ? toPublicUser(user) : undefined;
