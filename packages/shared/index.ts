@@ -30,8 +30,10 @@ export {
 export type {
   CreateAppointmentInput,
   UpdateAppointmentInput,
+  AppointmentStatus,
 } from './src/schemas/appointment';
 export {
+  APPOINTMENT_STATUSES,
   appointmentSchema,
   createAppointmentInputSchema,
   updateAppointmentInputSchema,

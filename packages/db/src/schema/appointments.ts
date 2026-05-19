@@ -3,15 +3,22 @@ import {
   decimal,
   index,
   integer,
+  pgEnum,
   pgTable,
   text,
   time,
   timestamp,
   uuid,
-  varchar,
 } from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { locations } from './locations';
+
+export const appointmentStatusEnum = pgEnum('appointment_status', [
+  'pending',
+  'confirmed',
+  'cancelled',
+  'completed',
+]);
 
 export const appointments = pgTable(
   'appointments',
@@ -31,7 +38,7 @@ export const appointments = pgTable(
       precision: 10,
       scale: 2,
     }),
-    appointment_status: varchar('appointment_status', { length: 50 })
+    appointment_status: appointmentStatusEnum('appointment_status')
       .notNull()
       .default('pending'),
     appointment_created_at: timestamp('appointment_created_at', {

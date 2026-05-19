@@ -1,5 +1,14 @@
 import { z } from 'zod';
 
+export const APPOINTMENT_STATUSES = [
+  'pending',
+  'confirmed',
+  'cancelled',
+  'completed',
+] as const;
+
+export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
+
 /** API / wire shape for an appointment (matches DB intent; PKs are UUID strings in Postgres). */
 export const appointmentSchema = z.object({
   appointment_pk: z.string().min(1),
@@ -17,7 +26,7 @@ export const appointmentSchema = z.object({
   appointment_notes: z.string().nullable(),
   appointment_duration: z.number().int().nonnegative().nullable(),
   appointment_total_price: z.string().nullable(),
-  appointment_status: z.string().min(1),
+  appointment_status: z.enum(APPOINTMENT_STATUSES),
   appointment_created_at: z.string().min(1),
   appointment_updated_at: z.string().min(1).nullable(),
   appointment_deleted_at: z.string().min(1).nullable(),
