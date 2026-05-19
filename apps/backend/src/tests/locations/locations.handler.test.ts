@@ -1,5 +1,7 @@
-import { describe, expect, test, afterAll } from 'bun:test';
+import { describe, expect, test, afterAll, beforeAll } from 'bun:test';
+import { sign } from 'hono/jwt';
 import { app } from '../../app';
+import { env } from '../../lib/env';
 import { db, locations, like } from '@repo/db';
 import type { Location } from '@repo/shared';
 
@@ -7,6 +9,20 @@ const assertDefined = <T>(val: T | undefined): T => {
   expect(val).toBeDefined();
   return val as T;
 };
+
+let adminToken: string;
+
+beforeAll(async () => {
+  adminToken = await sign(
+    {
+      sub: 'test-admin',
+      role: 'admin',
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    },
+    env.JWT_SECRET,
+    'HS256',
+  );
+});
 
 afterAll(async () => {
   await db.delete(locations).where(like(locations.location_address, 'TEST_%'));
@@ -25,7 +41,10 @@ describe('GET /api/locations/:id', () => {
   test('should return 200 for existing location', async () => {
     const createRes = await app.request('/api/locations', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
       body: JSON.stringify({
         location_address: 'TEST_HandlerGetById',
         location_city: 'Copenhagen',
@@ -57,7 +76,10 @@ describe('POST /api/locations', () => {
   test('should return 201 with valid body', async () => {
     const res = await app.request('/api/locations', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
       body: JSON.stringify({
         location_address: 'TEST_HandlerCreate',
         location_city: 'Copenhagen',
@@ -71,7 +93,10 @@ describe('POST /api/locations', () => {
   test('should return 400 for invalid body', async () => {
     const res = await app.request('/api/locations', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
       body: JSON.stringify({}),
     });
     expect(res.status).toBe(400);
@@ -80,7 +105,10 @@ describe('POST /api/locations', () => {
   test('should return 400 for missing required city', async () => {
     const res = await app.request('/api/locations', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
       body: JSON.stringify({
         location_address: 'TEST_HandlerNoCity',
       }),

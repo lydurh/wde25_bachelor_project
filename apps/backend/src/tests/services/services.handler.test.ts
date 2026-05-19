@@ -1,5 +1,7 @@
-import { describe, it, expect, afterAll } from 'bun:test';
+import { describe, it, expect, afterAll, beforeAll } from 'bun:test';
+import { sign } from 'hono/jwt';
 import { app } from '../../app';
+import { env } from '../../lib/env';
 import { servicesService } from '../../api/services/services.service';
 import type { Service } from '@repo/shared';
 
@@ -7,6 +9,19 @@ type ServiceResponse = { data: Service };
 type ServiceListResponse = { data: Service[] };
 
 const testIds: string[] = [];
+let adminToken: string;
+
+beforeAll(async () => {
+  adminToken = await sign(
+    {
+      sub: 'test-admin',
+      role: 'admin',
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    },
+    env.JWT_SECRET,
+    'HS256',
+  );
+});
 
 const assertDefined = <T>(val: T | undefined): T => {
   expect(val).toBeDefined();
@@ -78,7 +93,10 @@ describe('POST /api/services', () => {
   it('should return 201 with valid input', async () => {
     const res = await app.request('/api/services', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
       body: JSON.stringify({
         ...validInput,
         service_title: 'TEST_HandlerCreate',
@@ -94,7 +112,10 @@ describe('POST /api/services', () => {
   it('should return 400 with missing required fields', async () => {
     const res = await app.request('/api/services', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
       body: JSON.stringify({
         service_description: 'No title',
         service_duration: 30,
@@ -107,7 +128,10 @@ describe('POST /api/services', () => {
   it('should return 400 with invalid price format', async () => {
     const res = await app.request('/api/services', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
       body: JSON.stringify({
         ...validInput,
         service_price: '30',
@@ -119,7 +143,10 @@ describe('POST /api/services', () => {
   it('should return 400 with negative duration', async () => {
     const res = await app.request('/api/services', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
       body: JSON.stringify({
         ...validInput,
         service_duration: -1,
@@ -141,7 +168,10 @@ describe('PATCH /api/services/:id', () => {
 
     const res = await app.request(`/api/services/${created.service_pk}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
       body: JSON.stringify({ service_title: 'TEST_HandlerPatched' }),
     });
     const body = (await res.json()) as ServiceResponse;
@@ -155,7 +185,10 @@ describe('PATCH /api/services/:id', () => {
       '/api/services/00000000-0000-0000-0000-000000000000',
       {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
         body: JSON.stringify({ service_title: 'Nope' }),
       },
     );
@@ -173,7 +206,10 @@ describe('PATCH /api/services/:id', () => {
 
     const res = await app.request(`/api/services/${created.service_pk}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
       body: JSON.stringify({ service_duration: -1 }),
     });
     expect(res.status).toBe(400);
@@ -181,7 +217,7 @@ describe('PATCH /api/services/:id', () => {
 });
 
 describe('DELETE /api/services/:id', () => {
-  it('should return 204 on successful soft-delete', async () => {
+  it('should return 200 on successful soft-delete', async () => {
     const created = assertDefined(
       await servicesService.create({
         ...validInput,
@@ -192,8 +228,9 @@ describe('DELETE /api/services/:id', () => {
 
     const res = await app.request(`/api/services/${created.service_pk}`, {
       method: 'DELETE',
+      headers: { Authorization: `Bearer ${adminToken}` },
     });
-    expect(res.status).toBe(204);
+    expect(res.status).toBe(200);
   });
 
   it('should hide the service from GET list after deletion', async () => {
@@ -207,6 +244,7 @@ describe('DELETE /api/services/:id', () => {
 
     await app.request(`/api/services/${created.service_pk}`, {
       method: 'DELETE',
+      headers: { Authorization: `Bearer ${adminToken}` },
     });
 
     const listRes = await app.request('/api/services', { method: 'GET' });
@@ -220,7 +258,10 @@ describe('DELETE /api/services/:id', () => {
   it('should return 404 for non-existent ID', async () => {
     const res = await app.request(
       '/api/services/00000000-0000-0000-0000-000000000000',
-      { method: 'DELETE' },
+      {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${adminToken}` },
+      },
     );
     expect(res.status).toBe(404);
   });
@@ -236,9 +277,11 @@ describe('DELETE /api/services/:id', () => {
 
     await app.request(`/api/services/${created.service_pk}`, {
       method: 'DELETE',
+      headers: { Authorization: `Bearer ${adminToken}` },
     });
     const res = await app.request(`/api/services/${created.service_pk}`, {
       method: 'DELETE',
+      headers: { Authorization: `Bearer ${adminToken}` },
     });
     expect(res.status).toBe(404);
   });
