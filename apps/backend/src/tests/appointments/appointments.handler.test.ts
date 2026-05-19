@@ -27,6 +27,9 @@ beforeAll(async () => {
       last_name: 'AppointmentHandler',
       email: 'TEST_appt_handler@example.com',
       password: 'password123',
+      address: 'TEST Address 1',
+      postal_code: '1234',
+      city: 'Copenhagen',
     }),
   );
   testUserId = signupResult.user.user_pk;

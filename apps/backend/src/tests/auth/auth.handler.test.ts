@@ -27,6 +27,9 @@ describe('POST /api/auth/signup', () => {
         last_name: 'SignupHandler',
         email: 'TEST_handler_signup@example.com',
         password: 'password123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
       }),
     });
     const body = (await res.json()) as UserResponse;
@@ -44,6 +47,9 @@ describe('POST /api/auth/signup', () => {
         last_name: 'Dup',
         email: 'TEST_handler_signup_dup@example.com',
         password: 'password123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
       }),
     });
 
@@ -55,6 +61,9 @@ describe('POST /api/auth/signup', () => {
         last_name: 'Dup2',
         email: 'TEST_handler_signup_dup@example.com',
         password: 'password456',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
       }),
     });
     expect(res.status).toBe(409);
@@ -87,6 +96,9 @@ describe('POST /api/auth/signup', () => {
         last_name: 'NoPwd',
         email: 'TEST_handler_nopwd@example.com',
         password: 'password123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
       }),
     });
     const body = (await res.json()) as { data: Record<string, unknown> };
@@ -102,6 +114,9 @@ describe('POST /api/auth/login', () => {
         last_name: 'LoginHandler',
         email: 'TEST_handler_login@example.com',
         password: 'password123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
       }),
     );
     await authService.verifyEmail(verifyToken);
@@ -160,6 +175,9 @@ describe('POST /api/auth/login', () => {
       last_name: 'LoginUnverified',
       email: 'TEST_handler_login_unverified@example.com',
       password: 'password123',
+      address: 'TEST Address 1',
+      postal_code: '1234',
+      city: 'Copenhagen',
     });
 
     const res = await app.request('/api/auth/login', {
@@ -195,6 +213,9 @@ describe('GET /api/auth/verify-email', () => {
         last_name: 'VerifyHandler',
         email: 'TEST_handler_verify@example.com',
         password: 'password123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
       }),
     );
 
@@ -241,6 +262,9 @@ describe('POST /api/auth/forgot-password', () => {
         last_name: 'ForgotHandler',
         email: 'TEST_handler_forgot@example.com',
         password: 'password123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
       }),
     );
     await authService.verifyEmail(verifyToken);
@@ -283,6 +307,9 @@ describe('POST /api/auth/reset-password', () => {
         last_name: 'ResetHandler',
         email: 'TEST_handler_reset@example.com',
         password: 'oldpassword123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
       }),
     );
     await authService.verifyEmail(verifyToken);

@@ -1,8 +1,7 @@
 import { and, db, eq, isNotNull, isNull, users } from '@repo/db';
-import type { User } from '@repo/shared';
-import { locations } from '@repo/db';
-import type { LoginInput, SignupInput, SignupResult, User } from '@repo/shared';
+import type { LoginInput, SignupInput, User } from '@repo/shared';
 import { toPublicUser } from '@repo/shared';
+import { locationsService } from '../locations/locations.service';
 
 const verificationTokens = new Map<string, string>();
 const resetPasswordTokens = new Map<string, string>();
@@ -23,42 +22,39 @@ export const authService = {
   },
 
   async signup(
-    first_name: string,
-    last_name: string,
-    email: string,
-    password: string,
-    address: string,
-    postal_code: string,
-    city: string,
+    input: SignupInput,
   ): Promise<{ user: User; token: string } | null> {
+    const {
+      first_name,
+      last_name,
+      email,
+      password,
+      address,
+      postal_code,
+      city,
+    } = input;
     const [existing] = await db
       .select({ pk: users.user_pk })
       .from(users)
-      .where(eq(users.user_email, input.email))
+      .where(eq(users.user_email, email))
       .limit(1);
 
     if (existing) {
       return null;
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const location = (
-      await db
-        .insert(locations)
-        .values({
-          location_address: address,
-          location_postal_code: postal_code,
-          location_city: city,
-          location_country: 'Denmark',
-        })
-        .returning()
-    )[0];
+    const location = await locationsService.create({
+      location_address: address,
+      location_postal_code: postal_code,
+      location_city: city,
+      location_country: 'Denmark',
+    });
 
     if (!location) {
       throw new Error('Location insert failed');
     }
 
-    const hashedPassword = await Bun.password.hash(input.password);
+    const hashedPassword = await Bun.password.hash(password);
 
     const [row] = await db
       .insert(users)

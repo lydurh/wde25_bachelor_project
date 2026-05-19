@@ -19,6 +19,9 @@ beforeAll(async () => {
       last_name: 'AppointmentSvc',
       email: 'TEST_appt_service@example.com',
       password: 'password123',
+      address: 'TEST Address 1',
+      postal_code: '1234',
+      city: 'Copenhagen',
     }),
   );
   testUserId = result.user.user_pk;

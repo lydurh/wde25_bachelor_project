@@ -62,7 +62,7 @@ export const SignupPage = () => {
       }
 
       const data = (await res.json()) as SignupSuccess;
-      console.log('SUCCESS:', data);
+      console.warn('Signup succeeded:', data);
 
       // Redirect to login page after successful signup
       void navigate('/login');
