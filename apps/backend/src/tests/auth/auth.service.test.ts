@@ -20,6 +20,9 @@ describe('authService.signup', () => {
         last_name: 'User',
         email: 'TEST_signup@example.com',
         password: 'password123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
       }),
     );
 
@@ -36,6 +39,9 @@ describe('authService.signup', () => {
         last_name: 'UUID',
         email: 'TEST_signup_uuid@example.com',
         password: 'password123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
       }),
     );
 
@@ -50,6 +56,9 @@ describe('authService.signup', () => {
       last_name: 'Duplicate',
       email: 'TEST_signup_dup@example.com',
       password: 'password123',
+      address: 'TEST Address 1',
+      postal_code: '1234',
+      city: 'Copenhagen',
     });
 
     const result = await authService.signup({
@@ -57,6 +66,9 @@ describe('authService.signup', () => {
       last_name: 'Duplicate2',
       email: 'TEST_signup_dup@example.com',
       password: 'password456',
+      address: 'TEST Address 1',
+      postal_code: '1234',
+      city: 'Copenhagen',
     });
 
     expect(result).toBeNull();
@@ -69,6 +81,9 @@ describe('authService.signup', () => {
         last_name: 'NoPassword',
         email: 'TEST_signup_nopwd@example.com',
         password: 'password123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
       }),
     );
 
@@ -84,6 +99,9 @@ describe('authService.signup', () => {
         last_name: 'Role',
         email: 'TEST_signup_role@example.com',
         password: 'password123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
       }),
     );
 
@@ -106,6 +124,9 @@ describe('authService.login', () => {
       last_name: 'Login',
       email: 'TEST_login_wrong_pwd@example.com',
       password: 'correctpassword',
+      address: 'TEST Address 1',
+      postal_code: '1234',
+      city: 'Copenhagen',
     });
 
     const result = await authService.login({
@@ -121,6 +142,9 @@ describe('authService.login', () => {
       last_name: 'Unverified',
       email: 'TEST_login_unverified@example.com',
       password: 'password123',
+      address: 'TEST Address 1',
+      postal_code: '1234',
+      city: 'Copenhagen',
     });
 
     const result = await authService.login({
@@ -137,6 +161,9 @@ describe('authService.login', () => {
         last_name: 'Verified',
         email: 'TEST_login_verified@example.com',
         password: 'password123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
       }),
     );
     await authService.verifyEmail(token);
@@ -167,6 +194,9 @@ describe('authService.verifyEmail', () => {
         last_name: 'VerifyEmail',
         email: 'TEST_verify_email@example.com',
         password: 'password123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
       }),
     );
 
@@ -187,6 +217,9 @@ describe('authService.verifyEmail', () => {
         last_name: 'VerifyTwice',
         email: 'TEST_verify_twice@example.com',
         password: 'password123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
       }),
     );
     await authService.verifyEmail(token);
@@ -210,6 +243,9 @@ describe('authService.forgotPassword', () => {
       last_name: 'ForgotUnverified',
       email: 'TEST_forgot_unverified@example.com',
       password: 'password123',
+      address: 'TEST Address 1',
+      postal_code: '1234',
+      city: 'Copenhagen',
     });
 
     const result = await authService.forgotPassword(
@@ -225,6 +261,9 @@ describe('authService.forgotPassword', () => {
         last_name: 'ForgotVerified',
         email: 'TEST_forgot_verified@example.com',
         password: 'password123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
       }),
     );
     await authService.verifyEmail(verifyToken);
@@ -253,6 +292,9 @@ describe('authService.resetPassword', () => {
         last_name: 'ResetPwd',
         email: 'TEST_reset_pwd@example.com',
         password: 'oldpassword123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
       }),
     );
     await authService.verifyEmail(verifyToken);
@@ -281,6 +323,9 @@ describe('authService.resetPassword', () => {
         last_name: 'ResetOnce',
         email: 'TEST_reset_once@example.com',
         password: 'password123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
       }),
     );
     await authService.verifyEmail(verifyToken);
