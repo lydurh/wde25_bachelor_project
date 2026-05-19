@@ -16,7 +16,6 @@
     "@repo/db": "workspace:*",
     "@repo/shared": "workspace:*",
     "hono": "^4.12.17",
-    "postgres": "^3.4.9",
-    "bcryptjs": "^3.0.2"
+    "postgres": "^3.4.9"
   }
 }
