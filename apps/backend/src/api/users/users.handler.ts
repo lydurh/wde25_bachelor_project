@@ -88,5 +88,5 @@ export const deleteUser = async (c: Context) => {
     throw new HTTPException(404, { message: 'User not found' });
   }
 
-  return c.body(null, 204);
+  return c.json({ data: user }, 200);
 };

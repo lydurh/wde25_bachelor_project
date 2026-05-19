@@ -87,5 +87,5 @@ export const deleteService = async (c: Context) => {
     throw new HTTPException(404, { message: 'Service not found' });
   }
 
-  return c.body(null, 204);
+  return c.json({ data: service }, 200);
 };
