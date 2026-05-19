@@ -29,7 +29,15 @@ export const signupUser = factory.createHandlers(
   async (c) => {
     const input = c.req.valid('json');
 
-    const result = await authService.signup(input);
+    const result = await authService.signup(
+      input.first_name,
+      input.last_name ?? '',
+      input.email,
+      input.password,
+      input.address,
+      input.postal_code,
+      input.city,
+    );
 
     if (!result) {
       return c.json({ error: 'Email already registered' }, 409);

@@ -1,4 +1,6 @@
 import { and, db, eq, isNotNull, isNull, users } from '@repo/db';
+import type { User } from '@repo/shared';
+import { locations } from '@repo/db';
 import type { LoginInput, SignupInput, SignupResult, User } from '@repo/shared';
 import { toPublicUser } from '@repo/shared';
 
@@ -20,7 +22,15 @@ export const authService = {
     return user;
   },
 
-  async signup(input: SignupInput): Promise<SignupResult | null> {
+  async signup(
+    first_name: string,
+    last_name: string,
+    email: string,
+    password: string,
+    address: string,
+    postal_code: string,
+    city: string,
+  ): Promise<{ user: User; token: string } | null> {
     const [existing] = await db
       .select({ pk: users.user_pk })
       .from(users)
@@ -30,16 +40,34 @@ export const authService = {
     if (existing) {
       return null;
     }
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const location = (
+      await db
+        .insert(locations)
+        .values({
+          location_address: address,
+          location_postal_code: postal_code,
+          location_city: city,
+          location_country: 'Denmark',
+        })
+        .returning()
+    )[0];
+
+    if (!location) {
+      throw new Error('Location insert failed');
+    }
 
     const hashedPassword = await Bun.password.hash(input.password);
 
     const [row] = await db
       .insert(users)
       .values({
-        user_email: input.email,
-        user_first_name: input.first_name,
-        user_last_name: input.last_name ?? '',
+        user_email: email,
+        user_first_name: first_name,
+        user_last_name: last_name || '',
         user_password: hashedPassword,
+        user_location_fk: location.location_pk,
       })
       .returning();
 
