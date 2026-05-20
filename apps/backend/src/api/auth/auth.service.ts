@@ -22,7 +22,9 @@ export const authService = {
     return user;
   },
 
-  async signup(input: SignupInput): Promise<{ user: User } | null> {
+  async signup(
+    input: SignupInput,
+  ): Promise<{ user: User; token: string } | null> {
     const {
       first_name,
       last_name,
@@ -81,20 +83,21 @@ export const authService = {
       to: process.env['EMAIL_USER'] ?? '',
       subject: 'Verify your account',
       html: `
-        <h2>Hello ${email}</h2>
-
+<h2>Hello ${email}</h2>
+ 
         <p>
           Please verify your account by clicking the link below:
-        </p>
-
+</p>
+ 
         <a href="${verificationLink}">
           Verify Account
-        </a>
+</a>
       `,
     });
 
     return {
       user: toPublicUser(row),
+      token,
     };
   },
 
