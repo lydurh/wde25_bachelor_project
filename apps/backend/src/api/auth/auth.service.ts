@@ -2,6 +2,7 @@ import { and, db, eq, isNotNull, isNull, users } from '@repo/db';
 import type { LoginInput, SignupInput, User } from '@repo/shared';
 import { toPublicUser } from '@repo/shared';
 import { locationsService } from '../locations/locations.service';
+import { transporter } from '../../utils/mailer';
 
 const verificationTokens = new Map<string, string>();
 const resetPasswordTokens = new Map<string, string>();
@@ -72,7 +73,31 @@ export const authService = {
     }
 
     const token = crypto.randomUUID();
+
     verificationTokens.set(token, row.user_pk);
+
+    const verificationLink = `http://localhost:3000/api/auth/verify-email?token=${token}`;
+
+    try {
+      await transporter.sendMail({
+        from: process.env['EMAIL_USER'] ?? '',
+        to: process.env['EMAIL_USER'] ?? '',
+        subject: 'Verify your account',
+        html: `
+<h2>Hello ${email}</h2>
+ 
+          <p>
+            Please verify your account by clicking the link below:
+</p>
+ 
+          <a href="${verificationLink}">
+            Verify Account
+</a>
+        `,
+      });
+    } catch (err) {
+      console.warn('Failed to send verification email:', err);
+    }
 
     return {
       user: toPublicUser(row),
