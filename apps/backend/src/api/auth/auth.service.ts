@@ -78,22 +78,26 @@ export const authService = {
 
     const verificationLink = `http://localhost:3000/api/auth/verify-email?token=${token}`;
 
-    await transporter.sendMail({
-      from: process.env['EMAIL_USER'] ?? '',
-      to: process.env['EMAIL_USER'] ?? '',
-      subject: 'Verify your account',
-      html: `
+    try {
+      await transporter.sendMail({
+        from: process.env['EMAIL_USER'] ?? '',
+        to: process.env['EMAIL_USER'] ?? '',
+        subject: 'Verify your account',
+        html: `
 <h2>Hello ${email}</h2>
  
-        <p>
-          Please verify your account by clicking the link below:
+          <p>
+            Please verify your account by clicking the link below:
 </p>
  
-        <a href="${verificationLink}">
-          Verify Account
+          <a href="${verificationLink}">
+            Verify Account
 </a>
-      `,
-    });
+        `,
+      });
+    } catch (err) {
+      console.warn('Failed to send verification email:', err);
+    }
 
     return {
       user: toPublicUser(row),

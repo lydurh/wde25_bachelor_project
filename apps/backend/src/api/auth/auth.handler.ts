@@ -90,7 +90,10 @@ export const verifyEmail = factory.createHandlers(
       return c.json({ error: 'Invalid or expired verification token' }, 400);
     }
 
-    return c.redirect('http://localhost:5173/login');
+    return c.json(
+      { data: { message: 'Email verified successfully', user } },
+      200,
+    );
   },
 );
 
