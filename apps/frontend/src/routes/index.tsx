@@ -8,6 +8,7 @@ import { LandingPage } from '@/views/landing/pages/landing';
 import { SignupPage } from '@/views/auth/pages/signup';
 import { TimeSelectPage } from '@/views/booking/pages/booking';
 import { AdminDashboardPage } from '@/views/admin/pages/dashboard';
+import { ServicesPage } from '@/views/admin/pages/services';
 import { ProfilePage } from '@/views/user/pages/profile';
 import { LoginPage } from '@/views/auth/pages/login';
 
@@ -28,7 +29,10 @@ export const router = createBrowserRouter([
   {
     path: '/admin',
     element: <AdminLayout />,
-    children: [{ index: true, element: <AdminDashboardPage /> }],
+    children: [
+      { index: true, element: <AdminDashboardPage /> },
+      { path: 'services', element: <ServicesPage /> },
+    ],
   },
   {
     path: '/dashboard',
