@@ -1,17 +1,20 @@
-import { createBrowserRouter } from 'react-router';
+import { createBrowserRouter, Navigate } from 'react-router';
 
-import { AuthLayout } from '@/components/layout/auth-layout';
 import { AdminLayout } from '@/components/layout/admin-layout';
+import { AuthLayout } from '@/components/layout/auth-layout';
 import { BookingLayout } from '@/components/layout/booking-layout';
 import { UserLayout } from '@/components/layout/user-layout';
-import { LandingPage } from '@/views/landing/pages/landing';
-import { SignupPage } from '@/views/auth/pages/signup';
-import { TimeSelectPage } from '@/views/booking/pages/booking';
-import { AdminDashboardPage } from '@/views/admin/pages/dashboard';
 import { profileLoader } from '@/lib/loaders/profile';
-import { ProfilePage } from '@/views/user/pages/profile';
-import { AppointmentsPage } from '@/views/user/pages/appointments';
+import { AdminDashboardPage } from '@/views/admin/pages/dashboard';
 import { LoginPage } from '@/views/auth/pages/login';
+import { SignupPage } from '@/views/auth/pages/signup';
+import { ConfirmationPage } from '@/views/booking/pages/booking-confirmation';
+import { InformationPage } from '@/views/booking/pages/booking-information';
+import { ServicesPage } from '@/views/booking/pages/booking-service';
+import { TimeSelectPage } from '@/views/booking/pages/booking-time';
+import { LandingPage } from '@/views/landing/pages/landing';
+import { AppointmentsPage } from '@/views/user/pages/appointments';
+import { ProfilePage } from '@/views/user/pages/profile';
 
 export const router = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
@@ -25,7 +28,13 @@ export const router = createBrowserRouter([
   {
     path: '/book',
     element: <BookingLayout />,
-    children: [{ path: 'time', element: <TimeSelectPage /> }],
+    children: [
+      { index: true, element: <Navigate to="service" replace /> },
+      { path: 'service', element: <ServicesPage /> },
+      { path: 'time', element: <TimeSelectPage /> },
+      { path: 'information', element: <InformationPage /> },
+      { path: 'confirm', element: <ConfirmationPage /> },
+    ],
   },
   {
     path: '/admin',
