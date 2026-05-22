@@ -2,10 +2,52 @@ import { and, db, eq, isNotNull, isNull, users } from '@repo/db';
 import type { LoginInput, SignupInput, User } from '@repo/shared';
 import { toPublicUser } from '@repo/shared';
 import { locationsService } from '../locations/locations.service';
-import { transporter } from '../../utils/mailer';
+import { HTTPException } from 'hono/http-exception';
+import {
+  getMailFrom,
+  isMockEmailTransport,
+  resolveMailRecipient,
+  transporter,
+} from '../../utils/mailer';
+import { env } from '../../lib/env';
 
-const verificationTokens = new Map<string, string>();
-const resetPasswordTokens = new Map<string, string>();
+const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
+const RESET_TTL_MS = 60 * 60 * 1000;
+
+type TokenEntry = { userId: string; expiresAt: number };
+
+const verificationTokens = new Map<string, TokenEntry>();
+const resetPasswordTokens = new Map<string, TokenEntry>();
+
+const isTokenValid = (entry: TokenEntry | undefined): entry is TokenEntry => {
+  if (!entry) return false;
+  if (entry.expiresAt <= Date.now()) {
+    return false;
+  }
+  return true;
+};
+
+const consumeToken = (
+  map: Map<string, TokenEntry>,
+  token: string,
+): string | null => {
+  const entry = map.get(token);
+  if (!isTokenValid(entry)) {
+    map.delete(token);
+    return null;
+  }
+  map.delete(token);
+  return entry.userId;
+};
+
+/** Safe snippet for HTML email bodies (matches shared escapeHtml). */
+const escapeEmailDisplay = (value: string): string =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 
 export const authService = {
   list() {
@@ -24,7 +66,7 @@ export const authService = {
 
   async signup(
     input: SignupInput,
-  ): Promise<{ user: User; token: string } | null> {
+  ): Promise<{ user: User; verificationToken: string }> {
     const {
       first_name,
       last_name,
@@ -41,7 +83,9 @@ export const authService = {
       .limit(1);
 
     if (existing) {
-      return null;
+      throw new HTTPException(409, {
+        message: 'Email already registered',
+      });
     }
 
     const location = await locationsService.create({
@@ -72,36 +116,43 @@ export const authService = {
       throw new Error('Failed to create user');
     }
 
-    const token = crypto.randomUUID();
+    const verificationToken = crypto.randomUUID();
 
-    verificationTokens.set(token, row.user_pk);
+    verificationTokens.set(verificationToken, {
+      userId: row.user_pk,
+      expiresAt: Date.now() + VERIFICATION_TTL_MS,
+    });
 
-    const verificationLink = `http://localhost:3000/api/auth/verify-email?token=${token}`;
+    const verificationLink = `${env.PUBLIC_API_URL}/api/auth/verify-email?token=${verificationToken}`;
+    const safeEmail = escapeEmailDisplay(email);
+    const mailTo = resolveMailRecipient(email);
 
     try {
       await transporter.sendMail({
-        from: process.env['EMAIL_USER'] ?? '',
-        to: process.env['EMAIL_USER'] ?? '',
+        from: getMailFrom(),
+        to: mailTo,
         subject: 'Verify your account',
         html: `
-<h2>Hello ${email}</h2>
- 
-          <p>
-            Please verify your account by clicking the link below:
-</p>
- 
-          <a href="${verificationLink}">
-            Verify Account
-</a>
+<h2>Hello ${safeEmail}</h2>
+<p>Thanks for signing up! Please verify your account by clicking the link below:</p>
+<p><a href="${verificationLink}">Verify Account</a></p>
         `,
       });
+      if (isMockEmailTransport) {
+        console.warn(
+          `[email] Set EMAIL_USER and EMAIL_PASS in .env to receive mail. Verification link:\n  ${verificationLink}`,
+        );
+      }
     } catch (err) {
       console.warn('Failed to send verification email:', err);
+      console.warn(
+        `[email] Verification link for ${email}:\n  ${verificationLink}`,
+      );
     }
 
     return {
       user: toPublicUser(row),
-      token,
+      verificationToken,
     };
   },
 
@@ -134,7 +185,7 @@ export const authService = {
   },
 
   async verifyEmail(token: string): Promise<User | null> {
-    const userId = verificationTokens.get(token);
+    const userId = consumeToken(verificationTokens, token);
 
     if (!userId) {
       return null;
@@ -147,16 +198,13 @@ export const authService = {
       .returning();
 
     if (!updated) {
-      verificationTokens.delete(token);
       return null;
     }
-
-    verificationTokens.delete(token);
 
     return toPublicUser(updated);
   },
 
-  async forgotPassword(email: string): Promise<string | null> {
+  async forgotPassword(email: string): Promise<boolean> {
     const [row] = await db
       .select()
       .from(users)
@@ -170,17 +218,45 @@ export const authService = {
       .limit(1);
 
     if (!row) {
-      return null;
+      return false;
     }
 
     const token = crypto.randomUUID();
-    resetPasswordTokens.set(token, row.user_pk);
+    resetPasswordTokens.set(token, {
+      userId: row.user_pk,
+      expiresAt: Date.now() + RESET_TTL_MS,
+    });
 
-    return token;
+    const resetLink = `${env.FRONTEND_URL}/reset-password?token=${token}`;
+    const safeEmail = escapeEmailDisplay(email);
+    const mailTo = resolveMailRecipient(email);
+
+    try {
+      await transporter.sendMail({
+        from: getMailFrom(),
+        to: mailTo,
+        subject: 'Reset your password',
+        html: `
+<h2>Hello ${safeEmail}</h2>
+<p>Click the link below to reset your password.</p>
+<p><a href="${resetLink}">Reset Password</a></p>
+        `,
+      });
+      if (isMockEmailTransport) {
+        console.warn(
+          `[email] Set EMAIL_USER and EMAIL_PASS in .env to receive mail. Reset link:\n  ${resetLink}`,
+        );
+      }
+    } catch (err) {
+      console.warn('Failed to send reset password email:', err);
+      console.warn(`[email] Reset link for ${email}:\n  ${resetLink}`);
+    }
+
+    return true;
   },
 
   async resetPassword(token: string, newPassword: string): Promise<boolean> {
-    const userId = resetPasswordTokens.get(token);
+    const userId = consumeToken(resetPasswordTokens, token);
 
     if (!userId) {
       return false;
@@ -198,12 +274,33 @@ export const authService = {
       .returning();
 
     if (!updated) {
-      resetPasswordTokens.delete(token);
       return false;
     }
 
-    resetPasswordTokens.delete(token);
-
     return true;
   },
+};
+
+/** @internal Test helper — retrieves active reset token for a user id. */
+export const findResetTokenByUserId = (userId: string): string | null => {
+  for (const [token, entry] of resetPasswordTokens) {
+    if (isTokenValid(entry) && entry.userId === userId) {
+      return token;
+    }
+  }
+  return null;
+};
+
+/** @internal Test helper — retrieves active reset token by user email. */
+export const getResetTokenForTest = async (
+  email: string,
+): Promise<string | null> => {
+  const [row] = await db
+    .select({ pk: users.user_pk })
+    .from(users)
+    .where(eq(users.user_email, email))
+    .limit(1);
+
+  if (!row) return null;
+  return findResetTokenByUserId(row.pk);
 };

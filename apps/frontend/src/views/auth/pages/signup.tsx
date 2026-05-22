@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
+import { signupInputSchema, type User } from '@repo/shared';
+import { api, ApiError } from '@/lib/api';
+import { flattenApiIssues, flattenZodErrors } from '@/lib/zod-form';
+import {
+  AuthFormBanner,
+  AuthFormField,
+} from '@/components/auth/auth-form-field';
 
-type SignupSuccess = {
-  message: string;
-};
-
-type SignupError = {
-  error: string;
-};
+type SignupResponse = { data: User };
 
 export const SignupPage = () => {
   const navigate = useNavigate();
@@ -22,52 +23,66 @@ export const SignupPage = () => {
     password: '',
     repeat_password: '',
   });
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
+    setFieldErrors({});
 
     if (form.password !== form.repeat_password) {
-      alert('Passwords do not match');
+      setFieldErrors({ repeat_password: 'Passwords do not match' });
       return;
     }
 
+    const parsed = signupInputSchema.safeParse({
+      first_name: form.first_name,
+      last_name: form.last_name || undefined,
+      email: form.email,
+      password: form.password,
+      address: form.address,
+      postal_code: form.postal_code,
+      city: form.city,
+    });
+
+    if (!parsed.success) {
+      setFieldErrors(flattenZodErrors(parsed.error.issues));
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      const res = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          first_name: form.first_name,
-          last_name: form.last_name,
-          email: form.email,
-          password: form.password,
-          address: form.address,
-          postal_code: form.postal_code,
-          city: form.city,
-        }),
-      });
-
-      if (!res.ok) {
-        const errorData = (await res.json()) as SignupError;
-        console.error('Backend error:', errorData);
-        return;
-      }
-
-      const data = (await res.json()) as SignupSuccess;
-      console.warn('Signup succeeded:', data);
-
-      // Redirect to login page after successful signup
-      void navigate('/login');
+      await api.post<SignupResponse>('/auth/signup', parsed.data);
+      void navigate('/login', { replace: true });
     } catch (err) {
-      console.error('Network error:', err);
+      if (err instanceof ApiError) {
+        if (err.status === 409) {
+          setFormError('Email already registered');
+        } else if (err.issues) {
+          setFieldErrors(flattenApiIssues(err.issues));
+          setFormError(err.message);
+        } else {
+          setFormError(err.message);
+        }
+      } else {
+        setFormError('Signup failed. Please check your details and try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -76,119 +91,118 @@ export const SignupPage = () => {
       <div className="w-full max-w-md md:max-w-2xl bg-white rounded-2xl shadow-sm border border-border p-6 md:p-8">
         <h1 className="text-3xl font-semibold text-center mb-6">Sign Up</h1>
 
+        {formError && (
+          <div className="mb-4">
+            <AuthFormBanner variant="error">{formError}</AuthFormBanner>
+          </div>
+        )}
+
         <form
           className="flex flex-col gap-4"
           id="signup"
           onSubmit={(e) => {
             void handleSubmit(e);
           }}
+          noValidate
         >
-          {/* First name */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">First Name</label>
-            <input
-              type="text"
-              name="first_name"
-              value={form.first_name}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-input bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              required
-            />
-          </div>
-
-          {/* Last name */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Last Name</label>
-            <input
-              type="text"
-              name="last_name"
-              value={form.last_name}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-input bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* Email */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-input bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              required
-            />
-          </div>
-
-          {/* Address */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Address</label>
-            <input
-              type="text"
-              name="address"
-              value={form.address}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-input bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* Postal + City */}
+          <AuthFormField
+            id="first_name"
+            name="first_name"
+            label="First Name"
+            value={form.first_name}
+            onChange={handleChange}
+            error={fieldErrors['first_name']}
+            disabled={isSubmitting}
+            required
+            autoComplete="given-name"
+          />
+          <AuthFormField
+            id="last_name"
+            name="last_name"
+            label="Last Name"
+            value={form.last_name}
+            onChange={handleChange}
+            error={fieldErrors['last_name']}
+            disabled={isSubmitting}
+            autoComplete="family-name"
+          />
+          <AuthFormField
+            id="email"
+            name="email"
+            label="Email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            error={fieldErrors['email']}
+            disabled={isSubmitting}
+            required
+            autoComplete="email"
+          />
+          <AuthFormField
+            id="address"
+            name="address"
+            label="Address"
+            value={form.address}
+            onChange={handleChange}
+            error={fieldErrors['address']}
+            disabled={isSubmitting}
+            required
+            autoComplete="street-address"
+          />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Postal Code</label>
-              <input
-                type="text"
-                name="postal_code"
-                value={form.postal_code}
-                onChange={handleChange}
-                className="w-full rounded-lg border border-input bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">City</label>
-              <input
-                type="text"
-                name="city"
-                value={form.city}
-                onChange={handleChange}
-                className="w-full rounded-lg border border-input bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-          </div>
-
-          {/* Password */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
+            <AuthFormField
+              id="postal_code"
+              name="postal_code"
+              label="Postal Code"
+              value={form.postal_code}
               onChange={handleChange}
-              className="w-full rounded-lg border border-input bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              error={fieldErrors['postal_code']}
+              disabled={isSubmitting}
               required
+              autoComplete="postal-code"
+            />
+            <AuthFormField
+              id="city"
+              name="city"
+              label="City"
+              value={form.city}
+              onChange={handleChange}
+              error={fieldErrors['city']}
+              disabled={isSubmitting}
+              required
+              autoComplete="address-level2"
             />
           </div>
-
-          {/* Repeat password */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Repeat Password</label>
-            <input
-              type="password"
-              name="repeat_password"
-              value={form.repeat_password}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-input bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              required
-            />
-          </div>
-
+          <AuthFormField
+            id="password"
+            name="password"
+            label="Password"
+            type="password"
+            value={form.password}
+            onChange={handleChange}
+            error={fieldErrors['password']}
+            disabled={isSubmitting}
+            required
+            autoComplete="new-password"
+          />
+          <AuthFormField
+            id="repeat_password"
+            name="repeat_password"
+            label="Repeat Password"
+            type="password"
+            value={form.repeat_password}
+            onChange={handleChange}
+            error={fieldErrors['repeat_password']}
+            disabled={isSubmitting}
+            required
+            autoComplete="new-password"
+          />
           <button
             type="submit"
-            className="mt-2 rounded-lg bg-black px-4 py-3 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+            disabled={isSubmitting}
+            className="mt-2 rounded-lg bg-black px-4 py-3 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
           >
-            Sign Up
+            {isSubmitting ? 'Signing up…' : 'Sign Up'}
           </button>
         </form>
       </div>

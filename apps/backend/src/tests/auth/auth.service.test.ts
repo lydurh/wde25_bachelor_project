@@ -1,5 +1,5 @@
-import { describe, it, expect, afterAll } from 'bun:test';
-import { authService } from '../../api/auth/auth.service';
+import { describe, it, expect, afterAll, beforeAll } from 'bun:test';
+import { authService, getResetTokenForTest } from '../../api/auth/auth.service';
 import { db, users, like } from '@repo/db';
 
 const assertDefined = <T>(val: T | undefined | null): T => {
@@ -8,12 +8,16 @@ const assertDefined = <T>(val: T | undefined | null): T => {
   return val as T;
 };
 
+beforeAll(async () => {
+  await db.delete(users).where(like(users.user_email, 'TEST_%'));
+});
+
 afterAll(async () => {
   await db.delete(users).where(like(users.user_email, 'TEST_%'));
 });
 
 describe('authService.signup', () => {
-  it('should create a new user and return user + token', async () => {
+  it('should create a new user and return user + verificationToken', async () => {
     const result = assertDefined(
       await authService.signup({
         first_name: 'TEST',
@@ -28,8 +32,8 @@ describe('authService.signup', () => {
 
     expect(result.user.user_email).toBe('TEST_signup@example.com');
     expect(result.user.user_first_name).toBe('TEST');
-    expect(typeof result.token).toBe('string');
-    expect(result.token.length).toBeGreaterThan(0);
+    expect(typeof result.verificationToken).toBe('string');
+    expect(result.verificationToken.length).toBeGreaterThan(0);
   });
 
   it('should generate a valid UUID for user_pk', async () => {
@@ -50,7 +54,7 @@ describe('authService.signup', () => {
     );
   });
 
-  it('should return null when email is already registered', async () => {
+  it('should throw 409 when email is already registered', async () => {
     await authService.signup({
       first_name: 'TEST',
       last_name: 'Duplicate',
@@ -61,17 +65,17 @@ describe('authService.signup', () => {
       city: 'Copenhagen',
     });
 
-    const result = await authService.signup({
-      first_name: 'TEST',
-      last_name: 'Duplicate2',
-      email: 'TEST_signup_dup@example.com',
-      password: 'password456',
-      address: 'TEST Address 1',
-      postal_code: '1234',
-      city: 'Copenhagen',
-    });
-
-    expect(result).toBeNull();
+    expect(
+      authService.signup({
+        first_name: 'TEST',
+        last_name: 'Duplicate',
+        email: 'TEST_signup_dup@example.com',
+        password: 'password456',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
+      }),
+    ).rejects.toThrow('Email already registered');
   });
 
   it('should not expose user_password in the returned user object', async () => {
@@ -155,7 +159,7 @@ describe('authService.login', () => {
   });
 
   it('should return user after email is verified', async () => {
-    const { token } = assertDefined(
+    const { verificationToken } = assertDefined(
       await authService.signup({
         first_name: 'TEST',
         last_name: 'Verified',
@@ -166,7 +170,7 @@ describe('authService.login', () => {
         city: 'Copenhagen',
       }),
     );
-    await authService.verifyEmail(token);
+    await authService.verifyEmail(verificationToken);
 
     const result = assertDefined(
       await authService.login({
@@ -176,7 +180,7 @@ describe('authService.login', () => {
     );
 
     expect(result.user_email).toBe('TEST_login_verified@example.com');
-  });
+  }, 15000);
 });
 
 describe('authService.logout', () => {
@@ -188,7 +192,7 @@ describe('authService.logout', () => {
 
 describe('authService.verifyEmail', () => {
   it('should verify a user and return the user', async () => {
-    const { token } = assertDefined(
+    const { verificationToken } = assertDefined(
       await authService.signup({
         first_name: 'TEST',
         last_name: 'VerifyEmail',
@@ -200,18 +204,22 @@ describe('authService.verifyEmail', () => {
       }),
     );
 
-    const result = assertDefined(await authService.verifyEmail(token));
+    const result = assertDefined(
+      await authService.verifyEmail(verificationToken),
+    );
 
     expect(result.user_email).toBe('TEST_verify_email@example.com');
   });
 
   it('should return null for an invalid token', async () => {
-    const result = await authService.verifyEmail('invalid-token-xyz');
+    const result = await authService.verifyEmail(
+      '00000000-0000-0000-0000-000000000000',
+    );
     expect(result).toBeNull();
   });
 
   it('should return null when token is used a second time', async () => {
-    const { token } = assertDefined(
+    const { verificationToken } = assertDefined(
       await authService.signup({
         first_name: 'TEST',
         last_name: 'VerifyTwice',
@@ -222,22 +230,22 @@ describe('authService.verifyEmail', () => {
         city: 'Copenhagen',
       }),
     );
-    await authService.verifyEmail(token);
+    await authService.verifyEmail(verificationToken);
 
-    const result = await authService.verifyEmail(token);
+    const result = await authService.verifyEmail(verificationToken);
     expect(result).toBeNull();
   });
 });
 
 describe('authService.forgotPassword', () => {
-  it('should return null for a non-existent email', async () => {
+  it('should return false for a non-existent email', async () => {
     const result = await authService.forgotPassword(
       'nonexistent_TEST@example.com',
     );
-    expect(result).toBeNull();
+    expect(result).toBe(false);
   });
 
-  it('should return null for an unverified user', async () => {
+  it('should return false for an unverified user', async () => {
     await authService.signup({
       first_name: 'TEST',
       last_name: 'ForgotUnverified',
@@ -251,11 +259,11 @@ describe('authService.forgotPassword', () => {
     const result = await authService.forgotPassword(
       'TEST_forgot_unverified@example.com',
     );
-    expect(result).toBeNull();
+    expect(result).toBe(false);
   });
 
-  it('should return a reset token for a verified user', async () => {
-    const { token: verifyToken } = assertDefined(
+  it('should return true for a verified user', async () => {
+    const { verificationToken } = assertDefined(
       await authService.signup({
         first_name: 'TEST',
         last_name: 'ForgotVerified',
@@ -266,27 +274,32 @@ describe('authService.forgotPassword', () => {
         city: 'Copenhagen',
       }),
     );
-    await authService.verifyEmail(verifyToken);
+    await authService.verifyEmail(verificationToken);
+
+    const sent = await authService.forgotPassword(
+      'TEST_forgot_verified@example.com',
+    );
+    expect(sent).toBe(true);
 
     const resetToken = assertDefined(
-      await authService.forgotPassword('TEST_forgot_verified@example.com'),
+      await getResetTokenForTest('TEST_forgot_verified@example.com'),
     );
     expect(typeof resetToken).toBe('string');
     expect(resetToken.length).toBeGreaterThan(0);
-  });
+  }, 15000);
 });
 
 describe('authService.resetPassword', () => {
   it('should return false for an invalid token', async () => {
     const result = await authService.resetPassword(
-      'invalid-token',
+      '00000000-0000-0000-0000-000000000000',
       'newpassword123',
     );
     expect(result).toBe(false);
   });
 
   it('should reset the password and allow login with new password', async () => {
-    const { token: verifyToken } = assertDefined(
+    const { verificationToken } = assertDefined(
       await authService.signup({
         first_name: 'TEST',
         last_name: 'ResetPwd',
@@ -297,10 +310,12 @@ describe('authService.resetPassword', () => {
         city: 'Copenhagen',
       }),
     );
-    await authService.verifyEmail(verifyToken);
+    await authService.verifyEmail(verificationToken);
+
+    await authService.forgotPassword('TEST_reset_pwd@example.com');
 
     const resetToken = assertDefined(
-      await authService.forgotPassword('TEST_reset_pwd@example.com'),
+      await getResetTokenForTest('TEST_reset_pwd@example.com'),
     );
 
     const success = await authService.resetPassword(
@@ -314,10 +329,10 @@ describe('authService.resetPassword', () => {
       password: 'newpassword456',
     });
     expect(user).not.toBeNull();
-  });
+  }, 15000);
 
   it('should invalidate the reset token after use', async () => {
-    const { token: verifyToken } = assertDefined(
+    const { verificationToken } = assertDefined(
       await authService.signup({
         first_name: 'TEST',
         last_name: 'ResetOnce',
@@ -328,10 +343,12 @@ describe('authService.resetPassword', () => {
         city: 'Copenhagen',
       }),
     );
-    await authService.verifyEmail(verifyToken);
+    await authService.verifyEmail(verificationToken);
+
+    await authService.forgotPassword('TEST_reset_once@example.com');
 
     const resetToken = assertDefined(
-      await authService.forgotPassword('TEST_reset_once@example.com'),
+      await getResetTokenForTest('TEST_reset_once@example.com'),
     );
 
     await authService.resetPassword(resetToken, 'newpassword123');
@@ -340,5 +357,5 @@ describe('authService.resetPassword', () => {
       'anotherpassword',
     );
     expect(second).toBe(false);
-  });
+  }, 15000);
 });

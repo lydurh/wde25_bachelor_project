@@ -5,8 +5,8 @@ export const users = pgTable('users', {
   user_pk: uuid('user_pk').primaryKey().defaultRandom(),
   user_role: varchar('user_role', { length: 50 }).notNull().default('client'),
   user_email: varchar('user_email', { length: 255 }).notNull().unique(),
-  user_first_name: varchar('user_first_name', { length: 100 }).notNull(),
-  user_last_name: varchar('user_last_name', { length: 100 }).notNull(),
+  user_first_name: varchar('user_first_name', { length: 20 }).notNull(),
+  user_last_name: varchar('user_last_name', { length: 20 }).notNull(),
   user_location_fk: uuid('user_location_fk').references(
     () => locations.location_pk,
     { onDelete: 'set null' },
