@@ -1,4 +1,9 @@
 import baseConfig from './packages/config/eslint/base.mjs';
 
 // eslint-disable-next-line no-restricted-syntax
-export default [...baseConfig];
+export default [
+  ...baseConfig,
+  {
+    ignores: ['apps/frontend/src/components/ui/**'],
+  },
+];
