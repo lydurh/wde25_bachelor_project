@@ -19,6 +19,14 @@ const invalidRequest = (
   c: Context,
 ) => c.json({ error: 'Invalid input', issues: result.error.issues }, 400);
 
+const loginRedirectUrl = (params: Record<string, string>) => {
+  const url = new URL('/login', env.FRONTEND_URL);
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
+  }
+  return url.toString();
+};
+
 export const signupUser = factory.createHandlers(
   zValidator('json', signupInputSchema, (result, c) => {
     if (!result.success) {
@@ -57,11 +65,13 @@ export const loginUser = factory.createHandlers(
 
     const token = await sign(
       {
-        sub: user.user_pk,
-        role: user.user_role,
-        exp: Math.floor(Date.now() / 1000) + 60 * 15, // 15 minutes
+        user_pk: user.user_pk,
+        user_role: user.user_role,
+        user_email: user.user_email,
+        exp: Math.floor(Date.now() / 1000) + env.JWT_EXPIRES_IN_SECONDS,
       },
       env.JWT_SECRET,
+      'HS256',
     );
 
     return c.json({ data: { token, user } }, 200);
@@ -87,13 +97,10 @@ export const verifyEmail = factory.createHandlers(
     const user = await authService.verifyEmail(token);
 
     if (!user) {
-      return c.json({ error: 'Invalid or expired verification token' }, 400);
+      return c.redirect(loginRedirectUrl({ verifyError: '1' }), 302);
     }
 
-    return c.json(
-      { data: { message: 'Email verified successfully', user } },
-      200,
-    );
+    return c.redirect(loginRedirectUrl({ verified: '1' }), 302);
   },
 );
 
@@ -109,12 +116,10 @@ export const forgotPasswordUser = factory.createHandlers(
 
     await authService.forgotPassword(email);
 
-    // Always return 200 regardless of whether email exists — prevents user enumeration
     return c.json(
       {
         data: {
-          message:
-            'If that email is registered and verified, a reset link has been sent.',
+          message: 'If the email is registered, a reset link has been sent.',
         },
       },
       200,

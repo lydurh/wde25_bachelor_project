@@ -1,9 +1,13 @@
 import { z } from 'zod';
+import { emailSchema, userRoleSchema, uuidSchema } from '../validators';
 
 export const jwtPayloadSchema = z.object({
-  sub: z.string().min(1),
-  role: z.string(),
-  exp: z.number(),
+  user_pk: uuidSchema,
+  user_role: userRoleSchema,
+  user_email: emailSchema,
+  exp: z.number().int().positive(),
 });
 
 export type JwtPayload = z.infer<typeof jwtPayloadSchema>;
+
+export type AuthUser = JwtPayload;

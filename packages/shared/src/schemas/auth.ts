@@ -1,16 +1,26 @@
 import { z } from 'zod';
 import type { User } from '../types/user';
+import {
+  emailSchema,
+  loginPasswordSchema,
+  nameSchema,
+  optionalNameSchema,
+  passwordSchema,
+  postalCodeSchema,
+  safeString,
+  uuidSchema,
+} from '../validators';
 
 /** POST /auth/signup */
 export const signupInputSchema = z
   .object({
-    first_name: z.string().trim().min(1, 'First name is required'),
-    last_name: z.string().trim().optional(),
-    email: z.string().trim().min(1, 'Email is required'),
-    password: z.string().trim().min(1, 'Password is required'),
-    address: z.string().trim().min(1, 'Address is required'),
-    postal_code: z.string().trim().min(4, 'Postal code must be 4 digits'),
-    city: z.string().trim().min(1, 'City is required'),
+    first_name: nameSchema({ label: 'First name' }),
+    last_name: optionalNameSchema({ label: 'Last name' }).optional(),
+    email: emailSchema,
+    password: passwordSchema,
+    address: safeString({ min: 1, max: 255, label: 'Address' }),
+    postal_code: postalCodeSchema,
+    city: safeString({ min: 1, max: 100, label: 'City' }),
   })
   .strict();
 
@@ -18,8 +28,8 @@ export type SignupInput = z.infer<typeof signupInputSchema>;
 
 export const loginInputSchema = z
   .object({
-    email: z.string().trim().min(1, 'Email is required'),
-    password: z.string().trim().min(1, 'Password is required'),
+    email: emailSchema,
+    password: loginPasswordSchema,
   })
   .strict();
 
@@ -27,7 +37,7 @@ export type LoginInput = z.infer<typeof loginInputSchema>;
 
 export const forgotPasswordInputSchema = z
   .object({
-    email: z.string().trim().min(1, 'Email is required'),
+    email: emailSchema,
   })
   .strict();
 
@@ -35,22 +45,24 @@ export type ForgotPasswordInput = z.infer<typeof forgotPasswordInputSchema>;
 
 export const resetPasswordInputSchema = z
   .object({
-    token: z.string().trim().min(1, 'Token is required'),
-    newPassword: z.string().trim().min(1, 'New password is required'),
+    token: uuidSchema,
+    newPassword: passwordSchema,
   })
   .strict();
 
 export type ResetPasswordInput = z.infer<typeof resetPasswordInputSchema>;
 
 /** GET /auth/verify-email?token=… */
-export const verifyEmailQuerySchema = z.object({
-  token: z.string().min(1, 'Token is required'),
-});
+export const verifyEmailQuerySchema = z
+  .object({
+    token: uuidSchema,
+  })
+  .strict();
 
 export type VerifyEmailQuery = z.infer<typeof verifyEmailQuerySchema>;
 
 /** Auth service result types */
 export type SignupResult = {
   user: User;
-  token: string;
+  verificationToken: string;
 };

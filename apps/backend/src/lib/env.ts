@@ -7,6 +7,9 @@ const envSchema = z.object({
   POSTGRES_DB: z.string(),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
+  FRONTEND_URL: z.string().default('http://localhost:5173'),
+  PUBLIC_API_URL: z.string().default('http://localhost:3000'),
+  JWT_EXPIRES_IN_SECONDS: z.coerce.number().default(900),
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
     .default('development'),

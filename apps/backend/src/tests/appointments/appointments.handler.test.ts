@@ -36,8 +36,9 @@ beforeAll(async () => {
 
   userToken = await sign(
     {
-      sub: testUserId,
-      role: 'client',
+      user_pk: testUserId,
+      user_role: 'client',
+      user_email: signupResult.user.user_email,
       exp: Math.floor(Date.now() / 1000) + 3600,
     },
     env.JWT_SECRET,
