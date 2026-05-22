@@ -19,7 +19,11 @@ import { ForgotPasswordPage } from '@/views/auth/pages/forgot-password';
 import { ResetPasswordPage } from '@/views/auth/pages/reset-password';
 
 export const router = createBrowserRouter([
-  { path: '/', element: <LandingPage /> },
+  {
+    path: '/',
+    element: <LandingPage />,
+  },
+
   {
     element: (
       <GuestRoute>
@@ -27,17 +31,36 @@ export const router = createBrowserRouter([
       </GuestRoute>
     ),
     children: [
-      { path: '/signup', element: <SignupPage /> },
-      { path: '/login', element: <LoginPage /> },
-      { path: '/forgot-password', element: <ForgotPasswordPage /> },
-      { path: '/reset-password', element: <ResetPasswordPage /> },
+      {
+        path: '/signup',
+        element: <SignupPage />,
+      },
+      {
+        path: '/login',
+        element: <LoginPage />,
+      },
+      {
+        path: '/forgot-password',
+        element: <ForgotPasswordPage />,
+      },
+      {
+        path: '/reset-password',
+        element: <ResetPasswordPage />,
+      },
     ],
   },
+
   {
     path: '/book',
     element: <BookingLayout />,
-    children: [{ path: 'time', element: <TimeSelectPage /> }],
+    children: [
+      {
+        path: 'time',
+        element: <TimeSelectPage />,
+      },
+    ],
   },
+
   {
     path: '/admin',
     element: (
@@ -45,18 +68,21 @@ export const router = createBrowserRouter([
         <AdminLayout />
       </AdminRoute>
     ),
-    children: [{ index: true, element: <AdminDashboardPage /> }],
+    children: [
+      {
+        index: true,
+        element: <AdminDashboardPage />,
+      },
+    ],
   },
+
   {
-    path: '/dashboard',
+    path: '/profile',
     element: (
       <ClientRoute>
         <UserLayout />
       </ClientRoute>
     ),
-    children: [{ path: 'profile', element: <ProfilePage /> }],
-    path: '/profile',
-    element: <UserLayout />,
     children: [
       {
         index: true,

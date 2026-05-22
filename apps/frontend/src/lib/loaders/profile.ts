@@ -10,9 +10,6 @@ export async function profileLoader() {
   const token = localStorage.getItem('token');
   if (!token) return redirect('/login');
 
-  const { data } = await api.get<{ data: Appointment[] }>(
-    '/appointments',
-    token,
-  );
+  const { data } = await api.get<{ data: Appointment[] }>('/appointments');
   return { appointments: data };
 }
