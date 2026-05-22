@@ -2,6 +2,7 @@ import { and, db, eq, isNotNull, isNull, users } from '@repo/db';
 import type { LoginInput, SignupInput, User } from '@repo/shared';
 import { toPublicUser } from '@repo/shared';
 import { locationsService } from '../locations/locations.service';
+import { HTTPException } from 'hono/http-exception';
 import {
   getMailFrom,
   isMockEmailTransport,
@@ -82,7 +83,9 @@ export const authService = {
       .limit(1);
 
     if (existing) {
-      return null;
+      throw new HTTPException(409, {
+        message: 'Email already registered',
+      });
     }
 
     const location = await locationsService.create({
