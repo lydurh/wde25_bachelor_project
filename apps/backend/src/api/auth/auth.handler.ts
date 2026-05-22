@@ -39,10 +39,6 @@ export const signupUser = factory.createHandlers(
 
     const result = await authService.signup(input);
 
-    if (!result) {
-      return c.json({ error: 'Email already registered' }, 409);
-    }
-
     return c.json({ data: result.user }, 201);
   },
 );

@@ -66,7 +66,7 @@ export const authService = {
 
   async signup(
     input: SignupInput,
-  ): Promise<{ user: User; verificationToken: string } | null> {
+  ): Promise<{ user: User; verificationToken: string }> {
     const {
       first_name,
       last_name,

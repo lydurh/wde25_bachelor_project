@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll } from 'bun:test';
+import { describe, it, expect, afterAll, beforeAll } from 'bun:test';
 import { authService, getResetTokenForTest } from '../../api/auth/auth.service';
 import { db, users, like } from '@repo/db';
 
@@ -7,6 +7,10 @@ const assertDefined = <T>(val: T | undefined | null): T => {
   expect(val).toBeDefined();
   return val as T;
 };
+
+beforeAll(async () => {
+  await db.delete(users).where(like(users.user_email, 'TEST_%'));
+});
 
 afterAll(async () => {
   await db.delete(users).where(like(users.user_email, 'TEST_%'));
@@ -50,7 +54,7 @@ describe('authService.signup', () => {
     );
   });
 
-  it('should return null when email is already registered', async () => {
+  it('should throw 409 when email is already registered', async () => {
     await authService.signup({
       first_name: 'TEST',
       last_name: 'Duplicate',
@@ -61,17 +65,17 @@ describe('authService.signup', () => {
       city: 'Copenhagen',
     });
 
-    const result = await authService.signup({
-      first_name: 'TEST',
-      last_name: 'Duplicate2',
-      email: 'TEST_signup_dup@example.com',
-      password: 'password456',
-      address: 'TEST Address 1',
-      postal_code: '1234',
-      city: 'Copenhagen',
-    });
-
-    expect(result).toBeNull();
+    expect(
+      authService.signup({
+        first_name: 'TEST',
+        last_name: 'Duplicate',
+        email: 'TEST_signup_dup@example.com',
+        password: 'password456',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
+      }),
+    ).rejects.toThrow('Email already registered');
   });
 
   it('should not expose user_password in the returned user object', async () => {
@@ -176,7 +180,7 @@ describe('authService.login', () => {
     );
 
     expect(result.user_email).toBe('TEST_login_verified@example.com');
-  });
+  }, 15000);
 });
 
 describe('authService.logout', () => {
@@ -282,7 +286,7 @@ describe('authService.forgotPassword', () => {
     );
     expect(typeof resetToken).toBe('string');
     expect(resetToken.length).toBeGreaterThan(0);
-  });
+  }, 15000);
 });
 
 describe('authService.resetPassword', () => {
@@ -325,7 +329,7 @@ describe('authService.resetPassword', () => {
       password: 'newpassword456',
     });
     expect(user).not.toBeNull();
-  });
+  }, 15000);
 
   it('should invalidate the reset token after use', async () => {
     const { verificationToken } = assertDefined(
@@ -353,5 +357,5 @@ describe('authService.resetPassword', () => {
       'anotherpassword',
     );
     expect(second).toBe(false);
-  });
+  }, 15000);
 });

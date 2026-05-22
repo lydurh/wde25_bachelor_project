@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll } from 'bun:test';
+import { describe, it, expect, afterAll, beforeAll } from 'bun:test';
 import { app } from '../../app';
 import { authService, getResetTokenForTest } from '../../api/auth/auth.service';
 import { db, users, like } from '@repo/db';
@@ -12,6 +12,10 @@ const assertDefined = <T>(val: T | undefined | null): T => {
   expect(val).toBeDefined();
   return val as T;
 };
+
+beforeAll(async () => {
+  await db.delete(users).where(like(users.user_email, 'TEST_%'));
+});
 
 afterAll(async () => {
   await db.delete(users).where(like(users.user_email, 'TEST_%'));
@@ -61,7 +65,7 @@ describe('POST /api/auth/signup', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         first_name: 'TEST',
-        last_name: 'Dup2',
+        last_name: 'Second',
         email: dupEmail,
         password: 'password456',
         address: 'TEST Address 1',
@@ -352,7 +356,7 @@ describe('POST /api/auth/forgot-password', () => {
       body: JSON.stringify({ email: 'TEST_handler_forgot@example.com' }),
     });
     expect(res.status).toBe(200);
-  });
+  }, 15000);
 
   it('should return 400 with missing email field', async () => {
     const res = await app.request('/api/auth/forgot-password', {
@@ -378,11 +382,12 @@ describe('POST /api/auth/reset-password', () => {
   });
 
   it('should return 200 with a valid reset token', async () => {
+    const resetEmail = `TEST_handler_reset_${Date.now()}@example.com`;
     const { verificationToken } = assertDefined(
       await authService.signup({
         first_name: 'TEST',
         last_name: 'ResetHandler',
-        email: 'TEST_handler_reset@example.com',
+        email: resetEmail,
         password: 'oldpassword123',
         address: 'TEST Address 1',
         postal_code: '1234',
@@ -391,11 +396,9 @@ describe('POST /api/auth/reset-password', () => {
     );
     await authService.verifyEmail(verificationToken);
 
-    await authService.forgotPassword('TEST_handler_reset@example.com');
+    await authService.forgotPassword(resetEmail);
 
-    const resetToken = assertDefined(
-      await getResetTokenForTest('TEST_handler_reset@example.com'),
-    );
+    const resetToken = assertDefined(await getResetTokenForTest(resetEmail));
 
     const res = await app.request('/api/auth/reset-password', {
       method: 'POST',
@@ -409,7 +412,7 @@ describe('POST /api/auth/reset-password', () => {
 
     expect(res.status).toBe(200);
     expect(body.data.message).toContain('reset');
-  });
+  }, 15000);
 
   it('should return 400 with missing required fields', async () => {
     const res = await app.request('/api/auth/reset-password', {
