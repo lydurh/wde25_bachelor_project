@@ -20,6 +20,7 @@ import { AppointmentsPage } from '@/views/user/pages/appointments';
 import { ProfilePage } from '@/views/user/pages/profile';
 import { ForgotPasswordPage } from '@/views/auth/pages/forgot-password';
 import { ResetPasswordPage } from '@/views/auth/pages/reset-password';
+import { servicesLoader } from '@/lib/loaders/service';
 
 export const router = createBrowserRouter([
   {
@@ -58,7 +59,7 @@ export const router = createBrowserRouter([
     element: <BookingLayout />,
     children: [
       { index: true, element: <Navigate to="service" replace /> },
-      { path: 'service', element: <ServicesPage /> },
+      { path: 'service', element: <ServicesPage />, loader: servicesLoader },
       { path: 'time', element: <TimeSelectPage /> },
       { path: 'information', element: <InformationPage /> },
       { path: 'confirm', element: <ConfirmationPage /> },

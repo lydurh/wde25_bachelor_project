@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router';
+import { useLoaderData, useNavigate, useOutletContext } from 'react-router';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Add01Icon, Remove01Icon } from '@hugeicons/core-free-icons';
 
@@ -12,45 +12,18 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { LocationFeeLabel } from '@/views/booking/components/location-fee-label';
+// import { LocationFeeLabel } from '@/views/booking/components/location-fee-label';
 import type { BookingOutletContext } from '@/views/booking/types';
-
-const PLACEHOLDER_SERVICES = [
-  { id: 'dameklip', label: 'Dameklip', priceLabel: '450 kr' },
-  { id: 'herreklip', label: 'Herreklip', priceLabel: '400 kr' },
-  { id: 'boerneklip', label: 'Børneklip', priceLabel: '350 kr' },
-  { id: 'dameklip-foen', label: 'Dameklip & føn', priceLabel: '500 kr' },
-  { id: 'foentoering', label: 'Føntøring alene', priceLabel: '400 kr' },
-  { id: 'farve', label: 'Farve', priceLabel: 'Fra 500 kr' },
-  {
-    id: 'striber-hele-haaret',
-    label: 'Striber i hele håret',
-    priceLabel: '1000 kr',
-  },
-  {
-    id: 'striber-sider-top',
-    label: 'Striber i sider & top',
-    priceLabel: '750 kr',
-  },
-  {
-    id: 'striber-skilning-top',
-    label: 'Striber i skilning & top',
-    priceLabel: '500 kr',
-  },
-  {
-    id: 'farve-mellem-striber',
-    label: 'Farve i mellem striber',
-    priceLabel: 'Fra 200 kr',
-  },
-] as const;
-
-const LOCATION_FEE_KR = 50;
+import type { ServicesLoaderData } from '@/lib/loaders/service';
 
 export const ServicesPage = () => {
+  const loaderData = useLoaderData<ServicesLoaderData>();
   const navigate = useNavigate();
   const { setDraft } = useOutletContext<BookingOutletContext>();
   const [quantities, setQuantities] = useState<Record<string, number>>(() =>
-    Object.fromEntries(PLACEHOLDER_SERVICES.map((service) => [service.id, 0])),
+    Object.fromEntries(
+      loaderData.services.map((service) => [service.service_pk, 0]),
+    ),
   );
 
   const adjustQuantity = (id: string, delta: number) => {
@@ -61,11 +34,11 @@ export const ServicesPage = () => {
   };
 
   const handleContinue = () => {
-    const firstSelected = PLACEHOLDER_SERVICES.find(
-      (service) => (quantities[service.id] ?? 0) > 0,
+    const firstSelected = loaderData.services.find(
+      (service) => (quantities[service.service_pk] ?? 0) > 0,
     );
     if (firstSelected) {
-      setDraft({ serviceId: firstSelected.id });
+      setDraft({ serviceId: firstSelected.service_pk });
     }
     void navigate('time');
   };
@@ -79,24 +52,24 @@ export const ServicesPage = () => {
         <CardDescription>vælg antal services herunder</CardDescription>
       </CardHeader>
       <CardContent className="space-y-0 divide-y divide-border">
-        {PLACEHOLDER_SERVICES.map((service) => {
-          const quantity = quantities[service.id] ?? 0;
+        {loaderData.services.map((service) => {
+          const quantity = quantities[service.service_pk] ?? 0;
 
           return (
             <div
-              key={service.id}
+              key={service.service_pk}
               className="flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0"
             >
               <span className="text-sm font-medium">
-                {service.label} – {service.priceLabel}
+                {service.service_title} – {service.service_price}
               </span>
               <div className="flex items-center gap-1">
                 <Button
                   type="button"
                   variant="outline"
                   size="icon-sm"
-                  aria-label={`Øg antal ${service.label}`}
-                  onClick={() => adjustQuantity(service.id, 1)}
+                  aria-label={`Øg antal ${service.service_title}`}
+                  onClick={() => adjustQuantity(service.service_pk, 1)}
                 >
                   <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
                 </Button>
@@ -110,8 +83,8 @@ export const ServicesPage = () => {
                   type="button"
                   variant="outline"
                   size="icon-sm"
-                  aria-label={`Mindsk antal ${service.label}`}
-                  onClick={() => adjustQuantity(service.id, -1)}
+                  aria-label={`Mindsk antal ${service.service_title}`}
+                  onClick={() => adjustQuantity(service.service_pk, -1)}
                   disabled={quantity === 0}
                 >
                   <HugeiconsIcon icon={Remove01Icon} strokeWidth={2} />
@@ -121,9 +94,9 @@ export const ServicesPage = () => {
           );
         })}
         <div className="flex items-center justify-between gap-4 py-4">
-          <span className="text-sm font-medium">
+          {/* <span className="text-sm font-medium">
             <LocationFeeLabel /> – {LOCATION_FEE_KR} kr
-          </span>
+          </span> */}
         </div>
       </CardContent>
       <CardFooter>
