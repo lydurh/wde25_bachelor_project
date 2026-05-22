@@ -1,41 +1,49 @@
 import { useState } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router';
-
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router';
+import { HugeiconsIcon } from '@hugeicons/react';
 import {
-  isCustomerInfoComplete,
-  type BookingDraft,
-  type BookingOutletContext,
-} from '@/views/booking/types';
+  CheckmarkCircle02Icon,
+  Clock01Icon,
+  Contact01Icon,
+  ScissorIcon,
+} from '@hugeicons/core-free-icons';
+
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
+import type { BookingDraft, BookingOutletContext } from '@/views/booking/types';
 
 const BOOKING_STEPS = [
-  { path: 'service', label: 'Service' },
-  { path: 'time', label: 'Time' },
-  { path: 'information', label: 'Details' },
-  { path: 'confirm', label: 'Confirm' },
+  { value: 'service', label: 'Services', icon: ScissorIcon },
+  { value: 'time', label: 'Tid', icon: Clock01Icon },
+  {
+    value: 'information',
+    label: 'Information',
+    icon: Contact01Icon,
+  },
+  {
+    value: 'confirm',
+    label: 'Bekræftelse',
+    icon: CheckmarkCircle02Icon,
+  },
 ] as const;
 
-type BookingStepPath = (typeof BOOKING_STEPS)[number]['path'];
+type BookingStepValue = (typeof BOOKING_STEPS)[number]['value'];
 
-const stepValidators: Record<
-  BookingStepPath,
-  (draft: BookingDraft) => boolean
-> = {
-  service: (draft) => !!draft.serviceId,
-  time: (draft) => !!draft.slotISO,
-  information: (draft) => isCustomerInfoComplete(draft),
-  confirm: () => true,
-};
-
-function getStepIndex(pathname: string): number {
-  return BOOKING_STEPS.findIndex((step) => pathname.endsWith(`/${step.path}`));
+function getCurrentStep(pathname: string): BookingStepValue {
+  const match = BOOKING_STEPS.find((step) =>
+    pathname.endsWith(`/${step.value}`),
+  );
+  return match?.value ?? 'service';
 }
 
 export const BookingLayout = () => {
   const [draft, setDraftState] = useState<BookingDraft>({});
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
+  const currentStep = getCurrentStep(location.pathname);
+  const isInformationStep = currentStep === 'information';
+  const isConfirmationStep = currentStep === 'confirm';
 
   const setDraft = (patch: Partial<BookingDraft>) => {
     setDraftState((prev) => ({ ...prev, ...patch }));
@@ -45,85 +53,70 @@ export const BookingLayout = () => {
 
   const outletContext: BookingOutletContext = { draft, setDraft, resetDraft };
 
-  const currentIndex = getStepIndex(location.pathname);
-  const currentStep =
-    currentIndex >= 0 ? BOOKING_STEPS[currentIndex] : undefined;
-  const nextStep = BOOKING_STEPS[currentIndex + 1];
-  const previousStep = BOOKING_STEPS[currentIndex - 1];
-
-  const canGoPrevious = currentIndex > 0;
-  const canGoNext =
-    nextStep != null &&
-    currentStep != null &&
-    stepValidators[currentStep.path](draft);
-
-  const isLastStep = currentIndex === BOOKING_STEPS.length - 1;
-
-  const handleNext = () => {
-    if (!canGoNext || !nextStep) return;
-    void navigate(nextStep.path);
-  };
-
-  const handlePrevious = () => {
-    if (!canGoPrevious || !previousStep) return;
-    void navigate(previousStep.path);
-  };
-
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="border-b border-border bg-card px-6 py-4">
-        <h1 className="text-xl font-semibold">Book an Appointment</h1>
-        <nav
-          aria-label="Booking progress"
-          className="mt-4 flex flex-wrap gap-2"
+      <header>
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="size-10 shrink-0 rounded-md bg-muted" aria-hidden />
+            <span className="text-sm font-medium">logo text</span>
+          </div>
+          <nav
+            className="flex items-center gap-6 text-sm"
+            aria-label="Hovedmenu"
+          >
+            <Link
+              to="#"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Link 3
+            </Link>
+            <Link
+              to="#"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Link 4
+            </Link>
+          </nav>
+        </div>
+        <Separator />
+        <Tabs
+          value={currentStep}
+          onValueChange={(value) => {
+            void navigate(value);
+          }}
+          className="w-full mx-auto max-w-5xl px-6 py-4"
         >
-          {BOOKING_STEPS.map((step, index) => {
-            const isActive = index === currentIndex;
-            const isComplete = currentIndex > index;
-
-            return (
-              <span
-                key={step.path}
-                className={cn(
-                  'rounded-full px-3 py-1 text-sm',
-                  isActive && 'bg-primary text-primary-foreground',
-                  isComplete && !isActive && 'bg-muted text-muted-foreground',
-                  !isActive &&
-                    !isComplete &&
-                    'bg-muted/50 text-muted-foreground',
-                )}
+          <TabsList variant="line" className="mx-auto gap-6 justify-center">
+            {BOOKING_STEPS.map((step) => (
+              <TabsTrigger
+                key={step.value}
+                value={step.value}
+                className="flex-col gap-1 px-4 py-6 text-xs"
               >
+                <HugeiconsIcon icon={step.icon} strokeWidth={2} />
                 {step.label}
-              </span>
-            );
-          })}
-        </nav>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
       </header>
 
-      <main className="mx-auto w-full max-w-3xl flex-1 p-6">
+      <main
+        className={cn(
+          'mx-auto w-full flex-1 px-6 py-8',
+          isInformationStep && 'max-w-5xl',
+          !isInformationStep && !isConfirmationStep && 'max-w-3xl',
+          isConfirmationStep && 'max-w-lg',
+        )}
+      >
         <Outlet context={outletContext} />
       </main>
 
-      <footer className="border-t border-border bg-card">
-        <div className="mx-auto flex w-full max-w-3xl justify-between gap-4 p-6">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={!canGoPrevious}
-          >
-            Previous
-          </Button>
-          {!isLastStep ? (
-            <Button type="button" onClick={handleNext} disabled={!canGoNext}>
-              Next
-            </Button>
-          ) : (
-            <Button type="button" disabled>
-              Confirm
-            </Button>
-          )}
-        </div>
+      <footer className="mt-auto border-t border-border">
+        <p className="py-6 text-center text-xs text-muted-foreground">
+          © KEA EXAM PROJECT
+        </p>
       </footer>
     </div>
   );
