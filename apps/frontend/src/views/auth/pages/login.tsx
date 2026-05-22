@@ -1,47 +1,134 @@
+import { useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router';
+import { loginInputSchema } from '@repo/shared';
+import { api, ApiError } from '@/lib/api';
+import { auth } from '@/lib/auth';
+import { flattenZodErrors } from '@/lib/zod-form';
+import {
+  AuthFormBanner,
+  AuthFormField,
+} from '@/components/auth/auth-form-field';
+import type { User } from '@/types';
+
+type LoginResponse = { data: { token: string; user: User } };
+
 export const LoginPage = () => {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const verified = searchParams.get('verified') === '1';
+  const verifyError = searchParams.get('verifyError') === '1';
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+    setFieldErrors({});
+
+    const parsed = loginInputSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      setFieldErrors(flattenZodErrors(parsed.error.issues));
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const res = await api.post<LoginResponse>('/auth/login', parsed.data);
+      auth.setToken(res.data.token);
+
+      if (searchParams.has('verified') || searchParams.has('verifyError')) {
+        setSearchParams({}, { replace: true });
+      }
+
+      if (auth.isAdmin()) {
+        void navigate('/admin', { replace: true });
+      } else {
+        void navigate('/dashboard', { replace: true });
+      }
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        setFormError('Invalid email or password');
+      } else if (err instanceof ApiError) {
+        setFormError(err.message);
+      } else {
+        setFormError('Something went wrong. Please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <section className="min-h-screen flex items-center justify-center px-4 py-10 bg-background">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-border p-6">
         <h1 className="text-3xl font-semibold text-center mb-6">Login</h1>
 
-        <form className="flex flex-col gap-4" id="signup">
-          <div className="flex flex-col gap-2">
-            <label htmlFor="user_email" className="text-sm font-medium">
-              Email
-            </label>
-            <input
-              type="email"
-              name="user_email"
-              id="user_email"
-              required
-              className="w-full rounded-lg border border-input bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="user_password" className="text-sm font-medium">
-              Password
-            </label>
-            <input
-              type="password"
-              name="user_password"
-              id="user_password"
-              required
-              className="w-full rounded-lg border border-input bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
+        <div className="flex flex-col gap-4 mb-4">
+          {verified && (
+            <AuthFormBanner variant="success">
+              Email verified successfully. You can now log in.
+            </AuthFormBanner>
+          )}
+          {verifyError && (
+            <AuthFormBanner variant="error">
+              Verification link is invalid or has expired. Please sign up again
+              or contact support.
+            </AuthFormBanner>
+          )}
+          {formError && (
+            <AuthFormBanner variant="error">{formError}</AuthFormBanner>
+          )}
+        </div>
+
+        <form
+          className="flex flex-col gap-4"
+          onSubmit={(e) => {
+            void handleSubmit(e);
+          }}
+          noValidate
+        >
+          <AuthFormField
+            id="email"
+            name="email"
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            error={fieldErrors['email']}
+            disabled={isSubmitting}
+            required
+            autoComplete="email"
+          />
+          <AuthFormField
+            id="password"
+            name="password"
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            error={fieldErrors['password']}
+            disabled={isSubmitting}
+            required
+            autoComplete="current-password"
+          />
           <div>
-            <a
-              href="/forgot-password"
+            <Link
+              to="/forgot-password"
               className="text-sm text-primary hover:underline"
             >
               Forgot password?
-            </a>
+            </Link>
           </div>
           <button
             type="submit"
-            className="mt-2 rounded-lg bg-black px-4 py-3 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+            disabled={isSubmitting}
+            className="mt-2 rounded-lg bg-black px-4 py-3 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
           >
-            Login
+            {isSubmitting ? 'Logging in…' : 'Login'}
           </button>
         </form>
       </div>

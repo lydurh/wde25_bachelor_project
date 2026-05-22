@@ -1,47 +1,35 @@
 import { z } from 'zod';
-
-const safeString = z
-  .string()
-  .trim()
-  .min(1, 'Field is required')
-  .max(255, 'Field is too long')
-  .regex(/^[^<>]*$/, 'HTML tags are not allowed');
+import {
+  emailSchema,
+  nameSchema,
+  optionalNameSchema,
+  passwordSchema,
+  userRoleSchema,
+  uuidSchema,
+} from '../validators';
 
 export const getUserByIdParamsSchema = z.object({
-  id: z.string().min(1, 'User ID is required'),
+  id: uuidSchema,
 });
 
 export const createUserSchema = z.object({
-  user_email: z.string().email('Invalid email format').max(255),
-  user_first_name: safeString.min(1, 'First name is required').max(100),
-  user_last_name: safeString.max(100).optional().default(''),
-  user_password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .max(255, 'Password is too long')
-    .regex(/^[^<>\n\r]*$/, 'Invalid characters in password'),
-  user_role: z.string().max(50).optional(),
-  user_location_fk: z.string().uuid('Invalid location ID').optional(),
+  user_email: emailSchema,
+  user_first_name: nameSchema({ label: 'First name' }),
+  user_last_name: optionalNameSchema({ label: 'Last name' })
+    .optional()
+    .default(''),
+  user_password: passwordSchema,
+  user_role: userRoleSchema.optional(),
+  user_location_fk: uuidSchema.optional(),
 });
 
 export const updateUserSchema = z
   .object({
-    user_email: z.string().email('Invalid email format').max(255).optional(),
-    user_first_name: safeString
-      .min(1, 'First name is required')
-      .max(100)
-      .optional(),
-    user_last_name: safeString
-      .min(1, 'Last name is required')
-      .max(100)
-      .optional(),
-    user_location_fk: z.string().uuid('Invalid location ID').optional(),
-    user_password: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .max(255, 'Password is too long')
-      .regex(/^[^<>\n\r]*$/, 'Invalid characters in password')
-      .optional(),
+    user_email: emailSchema.optional(),
+    user_first_name: nameSchema({ label: 'First name' }).optional(),
+    user_last_name: optionalNameSchema({ label: 'Last name' }).optional(),
+    user_location_fk: uuidSchema.optional(),
+    user_password: passwordSchema.optional(),
     repeat_password: z.string().optional(),
   })
   .refine((body: Record<string, unknown>) => Object.keys(body).length > 0, {
