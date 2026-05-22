@@ -9,7 +9,7 @@ import { ClientRoute } from '@/components/auth/client-route';
 import { GuestRoute } from '@/components/auth/guest-route';
 import { LandingPage } from '@/views/landing/pages/landing';
 import { SignupPage } from '@/views/auth/pages/signup';
-import { TimeSelectPage } from '@/views/booking/pages/booking';
+import { TimeSelectPage } from '@/views/booking/pages/booking-time';
 import { AdminDashboardPage } from '@/views/admin/pages/dashboard';
 import { profileLoader } from '@/lib/loaders/profile';
 import { LoginPage } from '@/views/auth/pages/login';
