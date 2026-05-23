@@ -1,6 +1,14 @@
+import type { BookingServiceLine } from '@repo/shared';
+
+export type { BookingServiceLine };
+
 export type BookingDraft = {
-  serviceId?: string;
+  serviceQuantities?: Record<string, number>;
+  /** Snapshot of selected services when quantities are confirmed on the service step */
+  selectedServices?: BookingServiceLine[];
+  cumulatedServiceDuration?: number;
   slotISO?: string;
+  selectedDateId?: string;
   firstName?: string;
   lastName?: string;
   email?: string;
@@ -8,12 +16,8 @@ export type BookingDraft = {
   address?: string;
   city?: string;
   postalCode?: string;
-};
-
-export type BookingOutletContext = {
-  draft: BookingDraft;
-  setDraft: (patch: Partial<BookingDraft>) => void;
-  resetDraft: () => void;
+  comments?: string;
+  policyAccepted?: boolean;
 };
 
 export function isCustomerInfoComplete(draft: BookingDraft): boolean {
@@ -23,8 +27,6 @@ export function isCustomerInfoComplete(draft: BookingDraft): boolean {
     !!draft.lastName?.trim() &&
     !!email &&
     email.includes('@') &&
-    !!draft.address?.trim() &&
-    !!draft.city?.trim() &&
-    !!draft.postalCode?.trim()
+    !!draft.address?.trim()
   );
 }
