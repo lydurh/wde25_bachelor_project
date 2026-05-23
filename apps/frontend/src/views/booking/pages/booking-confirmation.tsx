@@ -1,46 +1,127 @@
-import { useNavigate } from 'react-router';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Cancel01Icon } from '@hugeicons/core-free-icons';
+import { format, parse } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import {
   Card,
-  CardAction,
   CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { getLinePriceKr, getTotalPriceKr } from '@repo/shared';
+import {
+  useBooking,
+  useBookingStepFooter,
+} from '@/views/booking/booking-context';
+
+const DATE_ID_FORMAT = 'yyyy-MM-dd';
+const SLOT_ISO_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
+
+function formatAppointmentDateTime(
+  dateId: string | undefined,
+  slotISO: string | undefined,
+): string | null {
+  if (!dateId || !slotISO) return null;
+
+  try {
+    const date = parse(dateId, DATE_ID_FORMAT, new Date());
+    const slot = parse(slotISO, SLOT_ISO_FORMAT, new Date());
+    return `${format(date, 'd. MMM yyyy')} kl. ${format(slot, 'HH:mm')}`;
+  } catch {
+    return `${dateId} kl. ${slotISO.slice(11, 16)}`;
+  }
+}
 
 export const ConfirmationPage = () => {
-  const navigate = useNavigate();
+  const { draft, handleContinue, continueDisabled, continueLabel } =
+    useBooking();
+
+  useBookingStepFooter({
+    disabled: false,
+    label: 'Book tid',
+  });
+
+  const selectedServices = draft.selectedServices ?? [];
+  const totalPriceKr = getTotalPriceKr(selectedServices);
+
+  const appointmentLabel = formatAppointmentDateTime(
+    draft.selectedDateId,
+    draft.slotISO,
+  );
+
+  const customerName = [draft.firstName, draft.lastName]
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(' ');
 
   return (
-    <Card className="relative text-center">
+    <Card className="h-fit">
       <CardHeader>
-        <CardAction>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Luk"
-            onClick={() => {
-              void navigate('/');
-            }}
-          >
-            <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
-          </Button>
-        </CardAction>
-        <CardTitle className="text-2xl font-semibold tracking-tight">
-          Tak for din booking
-        </CardTitle>
+        <CardTitle>Bekræft booking</CardTitle>
+        <CardDescription>Gennemgå dit valg, før du booker.</CardDescription>
       </CardHeader>
-      <CardContent>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          Din forespørgsel er sendt til frisøren og afventer godkendelse. Du har
-          modtaget en kvittering på e-mail, og vi giver dig besked, så snart din
-          tid er bekræftet.
-        </p>
+      <CardContent className="space-y-4">
+        <dl className="space-y-3 text-sm">
+          <div>
+            <dt className="text-muted-foreground">Ydelser</dt>
+            <dd className="space-y-1 font-medium">
+              {selectedServices.length === 0 ? (
+                <span>—</span>
+              ) : (
+                selectedServices.map((line) => (
+                  <div key={line.id}>
+                    {line.title}
+                    {line.quantity > 1 ? ` × ${line.quantity}` : ''} –{' '}
+                    {getLinePriceKr(line)} kr
+                  </div>
+                ))
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Dato og tid</dt>
+            <dd className="font-medium">{appointmentLabel ?? '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Kontakt</dt>
+            <dd className="space-y-0.5 font-medium">
+              {customerName ? <div>{customerName}</div> : null}
+              {draft.email?.trim() ? <div>{draft.email.trim()}</div> : null}
+              {draft.address?.trim() ? <div>{draft.address.trim()}</div> : null}
+              {!customerName &&
+              !draft.email?.trim() &&
+              !draft.address?.trim() ? (
+                <span>—</span>
+              ) : null}
+            </dd>
+          </div>
+          {draft.comments?.trim() ? (
+            <div>
+              <dt className="text-muted-foreground">Kommentar</dt>
+              <dd className="font-medium whitespace-pre-wrap">
+                {draft.comments.trim()}
+              </dd>
+            </div>
+          ) : null}
+        </dl>
+        <Separator />
+        <div className="flex items-center justify-between text-sm font-semibold">
+          <span>Total</span>
+          <span>{totalPriceKr} kr</span>
+        </div>
       </CardContent>
+      <CardFooter>
+        <Button
+          type="button"
+          className="w-full"
+          onClick={handleContinue}
+          disabled={continueDisabled}
+        >
+          {continueLabel}
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

@@ -1,33 +1,27 @@
-import { useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router';
-
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { LocationFeeLabel } from '@/views/booking/components/location-fee-label';
-import type { BookingOutletContext } from '@/views/booking/types';
+import {
+  useBooking,
+  useBookingStepFooter,
+} from '@/views/booking/booking-context';
+import { isInformationStepComplete } from '@/views/booking/booking-guards';
+import type { BookingDraft } from '@/views/booking/types';
 
 export const InformationPage = () => {
-  const navigate = useNavigate();
-  const { draft, setDraft } = useOutletContext<BookingOutletContext>();
-  const [comments, setComments] = useState('');
-  const [acceptedPolicy, setAcceptedPolicy] = useState(false);
+  const { draft, setDraft } = useBooking();
+
+  useBookingStepFooter({
+    disabled: !isInformationStepComplete(draft),
+    label: 'Fortsæt',
+  });
 
   const update =
     (
       field: keyof Pick<
-        BookingOutletContext['draft'],
+        BookingDraft,
         'firstName' | 'lastName' | 'email' | 'address'
       >,
     ) =>
@@ -35,12 +29,8 @@ export const InformationPage = () => {
       setDraft({ [field]: e.target.value });
     };
 
-  const handleBook = () => {
-    void navigate('confirm');
-  };
-
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+    <div className="w-full">
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl font-semibold tracking-tight">
@@ -104,73 +94,29 @@ export const InformationPage = () => {
                 <Textarea
                   id="booking-comments"
                   placeholder="Kommentar (ønsket hårfarve, allergier osv.)"
-                  value={comments}
-                  onChange={(e) => setComments(e.target.value)}
+                  value={draft.comments ?? ''}
+                  onChange={(e) => setDraft({ comments: e.target.value })}
                   rows={5}
                 />
               </Field>
-              <div className="flex items-start justify-end gap-3 pt-2">
+              <div className="flex items-start justify-start gap-3 pt-2">
+                <Checkbox
+                  id="booking-policy"
+                  checked={draft.policyAccepted ?? false}
+                  onCheckedChange={(checked) =>
+                    setDraft({ policyAccepted: checked === true })
+                  }
+                />
                 <FieldLabel
                   htmlFor="booking-policy"
                   className="max-w-sm text-right font-normal leading-snug text-muted-foreground"
                 >
                   Accepter vilkår og betingelser
                 </FieldLabel>
-                <Checkbox
-                  id="booking-policy"
-                  checked={acceptedPolicy}
-                  onCheckedChange={(checked) =>
-                    setAcceptedPolicy(checked === true)
-                  }
-                />
               </div>
             </FieldGroup>
           </form>
         </CardContent>
-      </Card>
-
-      <Card className="h-fit lg:sticky lg:top-6">
-        <CardHeader>
-          <CardTitle>Bekræft booking</CardTitle>
-          <CardDescription>Gennemgå dit valg, før du booker.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <dl className="space-y-3 text-sm">
-            <div>
-              <dt className="text-muted-foreground">Ydelser</dt>
-              <dd className="font-medium">2x – herreklip – 400 kr</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Dato og tid</dt>
-              <dd className="font-medium">30. april 2026 kl. 12</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Lokation</dt>
-              <dd className="font-medium">Guldbergsgade 29N, 2200 København</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">
-                <LocationFeeLabel />
-              </dt>
-              <dd className="font-medium">50 kr.</dd>
-            </div>
-          </dl>
-          <Separator />
-          <div className="flex items-center justify-between text-sm font-semibold">
-            <span>Total</span>
-            <span>850 kr</span>
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button
-            type="button"
-            className="w-full"
-            onClick={handleBook}
-            disabled={!acceptedPolicy}
-          >
-            Book tid
-          </Button>
-        </CardFooter>
       </Card>
     </div>
   );

@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { useLoaderData, useNavigate, useOutletContext } from 'react-router';
+import { useLoaderData } from 'react-router';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Add01Icon, Remove01Icon } from '@hugeicons/core-free-icons';
 
@@ -8,39 +7,50 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 // import { LocationFeeLabel } from '@/views/booking/components/location-fee-label';
-import type { BookingOutletContext } from '@/views/booking/types';
+import {
+  buildSelectedServiceLines,
+  getCumulatedServiceDurationFromQuantities,
+} from '@repo/shared';
 import type { ServicesLoaderData } from '@/lib/loaders/service';
+import { useBooking } from '@/views/booking/booking-context';
+
+function buildDefaultQuantities(
+  services: ServicesLoaderData['services'],
+  saved?: Record<string, number>,
+): Record<string, number> {
+  return Object.fromEntries(
+    services.map((service) => [
+      service.service_pk,
+      saved?.[service.service_pk] ?? 0,
+    ]),
+  );
+}
 
 export const ServicesPage = () => {
   const loaderData = useLoaderData<ServicesLoaderData>();
-  const navigate = useNavigate();
-  const { setDraft } = useOutletContext<BookingOutletContext>();
-  const [quantities, setQuantities] = useState<Record<string, number>>(() =>
-    Object.fromEntries(
-      loaderData.services.map((service) => [service.service_pk, 0]),
-    ),
+  const { draft, setDraft } = useBooking();
+  const quantities = buildDefaultQuantities(
+    loaderData.services,
+    draft.serviceQuantities,
   );
 
   const adjustQuantity = (id: string, delta: number) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [id]: Math.max(0, (prev[id] ?? 0) + delta),
-    }));
-  };
-
-  const handleContinue = () => {
-    const firstSelected = loaderData.services.find(
-      (service) => (quantities[service.service_pk] ?? 0) > 0,
-    );
-    if (firstSelected) {
-      setDraft({ serviceId: firstSelected.service_pk });
-    }
-    void navigate('time');
+    const next = {
+      ...quantities,
+      [id]: Math.max(0, (quantities[id] ?? 0) + delta),
+    };
+    setDraft({
+      serviceQuantities: next,
+      selectedServices: buildSelectedServiceLines(loaderData.services, next),
+      cumulatedServiceDuration: getCumulatedServiceDurationFromQuantities(
+        loaderData.services,
+        next,
+      ),
+    });
   };
 
   return (
@@ -68,11 +78,13 @@ export const ServicesPage = () => {
                   type="button"
                   variant="outline"
                   size="icon-sm"
-                  aria-label={`Øg antal ${service.service_title}`}
-                  onClick={() => adjustQuantity(service.service_pk, 1)}
+                  aria-label={`Mindsk antal ${service.service_title}`}
+                  onClick={() => adjustQuantity(service.service_pk, -1)}
+                  disabled={quantity === 0}
                 >
-                  <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
+                  <HugeiconsIcon icon={Remove01Icon} strokeWidth={2} />
                 </Button>
+
                 <span
                   className="min-w-8 text-center text-sm tabular-nums"
                   aria-live="polite"
@@ -83,11 +95,10 @@ export const ServicesPage = () => {
                   type="button"
                   variant="outline"
                   size="icon-sm"
-                  aria-label={`Mindsk antal ${service.service_title}`}
-                  onClick={() => adjustQuantity(service.service_pk, -1)}
-                  disabled={quantity === 0}
+                  aria-label={`Øg antal ${service.service_title}`}
+                  onClick={() => adjustQuantity(service.service_pk, 1)}
                 >
-                  <HugeiconsIcon icon={Remove01Icon} strokeWidth={2} />
+                  <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
                 </Button>
               </div>
             </div>
@@ -99,11 +110,6 @@ export const ServicesPage = () => {
           </span> */}
         </div>
       </CardContent>
-      <CardFooter>
-        <Button type="button" onClick={handleContinue}>
-          Fortsæt
-        </Button>
-      </CardFooter>
     </Card>
   );
 };
