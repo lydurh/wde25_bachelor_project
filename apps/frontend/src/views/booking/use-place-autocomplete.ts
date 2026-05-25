@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 
 const GOOGLE_API_KEY = import.meta.env['VITE_GOOGLE_MAPS_API_KEY'] as string;
 
@@ -13,6 +13,7 @@ const MAPS_INIT_CALLBACK = '__googleMapsInitCallback';
 
 type PlaceAutocompleteElementInstance = HTMLElement & {
   placeholder: string;
+  value: string;
 };
 
 type GoogleMapsPlaces = {
@@ -100,8 +101,21 @@ async function resolveAddressFromGmpSelect(
 export function usePlaceAutocomplete(
   containerRef: RefObject<HTMLDivElement | null>,
   onAddress: (address: string) => void,
+  options?: {
+    enabled?: boolean;
+    initialAddress?: string;
+  },
 ): void {
+  const enabled = options?.enabled ?? true;
+  const initialAddress = options?.initialAddress;
+
+  const elementRef = useRef<PlaceAutocompleteElementInstance | null>(null);
+  const initialAddressRef = useRef(initialAddress);
+  initialAddressRef.current = initialAddress;
+
   useEffect(() => {
+    if (!enabled) return;
+
     const container = containerRef.current;
     if (!container) return;
 
@@ -120,8 +134,14 @@ export function usePlaceAutocomplete(
         if (cancelled || !containerRef.current) return;
 
         autocomplete = element;
+        elementRef.current = element;
         element.placeholder = PLACEHOLDER;
         element.style.width = '100%';
+
+        if (initialAddressRef.current) {
+          element.value = initialAddressRef.current;
+        }
+
         element.addEventListener('gmp-select', onSelect);
         containerRef.current.appendChild(element);
       })
@@ -131,8 +151,18 @@ export function usePlaceAutocomplete(
 
     return () => {
       cancelled = true;
+      elementRef.current = null;
       autocomplete?.removeEventListener('gmp-select', onSelect);
       autocomplete?.remove();
     };
-  }, [containerRef, onAddress]);
+  }, [containerRef, onAddress, enabled]);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const element = elementRef.current;
+    if (!element || !initialAddress) return;
+
+    element.value = initialAddress;
+  }, [initialAddress, enabled]);
 }
