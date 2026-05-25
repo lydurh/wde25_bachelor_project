@@ -8,6 +8,7 @@ import { AuthLayout } from '@/components/layout/auth-layout';
 import { BookingLayout } from '@/components/layout/booking-layout';
 import { UserLayout } from '@/components/layout/user-layout';
 import { availabilityLoader } from '@/lib/loaders/availability';
+import { bookingUserLoader } from '@/lib/loaders/booking-user';
 import { profileLoader } from '@/lib/loaders/profile';
 import { servicesLoader } from '@/lib/loaders/service';
 import { AdminDashboardPage } from '@/views/admin/pages/dashboard';
@@ -58,7 +59,9 @@ export const router = createBrowserRouter([
 
   {
     path: '/book',
+    id: 'book',
     element: <BookingLayout />,
+    loader: bookingUserLoader,
     children: [
       { index: true, element: <InitialbookingPage /> },
       { path: 'service', element: <ServicesPage />, loader: servicesLoader },

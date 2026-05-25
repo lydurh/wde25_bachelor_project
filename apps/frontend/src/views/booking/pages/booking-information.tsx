@@ -11,7 +11,11 @@ import { isInformationStepComplete } from '@/views/booking/booking-guards';
 import type { BookingDraft } from '@/views/booking/types';
 
 export const InformationPage = () => {
-  const { draft, setDraft } = useBooking();
+  const { draft, setDraft, location, user } = useBooking();
+
+  // TODO: Remove this
+  console.log(location);
+  console.log(user);
 
   useBookingStepFooter({
     disabled: !isInformationStepComplete(draft),

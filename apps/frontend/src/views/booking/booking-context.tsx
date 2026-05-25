@@ -7,12 +7,18 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { useLocation, useMatches, useNavigate } from 'react-router';
+import {
+  useLocation,
+  useMatches,
+  useNavigate,
+  useRouteLoaderData,
+} from 'react-router';
 
 import {
   buildSelectedServiceLines,
   getCumulatedServiceDurationFromQuantities,
 } from '@repo/shared';
+import type { BookingUserLoaderData } from '@/lib/loaders/booking-user';
 import type { ServicesLoaderData } from '@/lib/loaders/service';
 import {
   getCurrentStep,
@@ -35,6 +41,8 @@ type BookingContextValue = {
   draft: BookingDraft;
   setDraft: (patch: Partial<BookingDraft>) => void;
   resetDraft: () => void;
+  user: BookingUserLoaderData['user'];
+  location: BookingUserLoaderData['location'];
   currentStep: BookingStepValue;
   continueLabel: string;
   continueDisabled: boolean;
@@ -53,6 +61,8 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   const [stepFooter, setStepFooterState] = useState<StepFooterConfig>({});
 
   const currentStep = getCurrentStep(location.pathname);
+
+  const bookingUserData = useRouteLoaderData<BookingUserLoaderData>('book');
 
   const servicesData = useMemo(() => {
     const match = matches.find((m) => m.pathname.endsWith('/service'));
@@ -124,6 +134,8 @@ export function BookingProvider({ children }: { children: ReactNode }) {
         draft,
         setDraft,
         resetDraft,
+        user: bookingUserData?.user ?? null,
+        location: bookingUserData?.location ?? null,
         currentStep,
         continueLabel,
         continueDisabled,
