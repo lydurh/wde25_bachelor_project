@@ -1,5 +1,6 @@
 export const BOOKING_STEPS = [
   { value: 'service', label: 'Services' },
+  { value: 'user', label: 'Bruger' },
   { value: 'location', label: 'Lokation' },
   { value: 'time', label: 'Tid' },
   { value: 'information', label: 'Information' },

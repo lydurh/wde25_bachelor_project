@@ -11,6 +11,7 @@ const PUBLIC_AUTH_PATHS = [
 
 type RequestOptions = {
   skipSessionRedirect?: boolean;
+  signal?: AbortSignal;
 };
 
 type ApiErrorBody = {
@@ -79,6 +80,9 @@ async function request<T>(
   };
   if (body !== undefined) {
     init.body = JSON.stringify(body);
+  }
+  if (options?.signal) {
+    init.signal = options.signal;
   }
 
   const res = await fetch(`${API_BASE}${path}`, init);

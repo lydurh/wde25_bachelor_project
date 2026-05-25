@@ -25,6 +25,7 @@ import { LandingPage } from '@/views/landing/pages/landing';
 import { AppointmentsPage } from '@/views/user/pages/appointments';
 import { ProfilePage } from '@/views/user/pages/profile';
 import { InitialbookingPage } from '@/views/booking/pages/booking-initial';
+import { AdminFetchUsersPage } from '@/views/booking/pages/booking-fetch-users';
 
 export const router = createBrowserRouter([
   {
@@ -63,10 +64,17 @@ export const router = createBrowserRouter([
     id: 'book',
     element: <BookingLayout />,
     loader: bookingUserLoader,
-    HydrateFallback: () => null,
     children: [
       { index: true, element: <InitialbookingPage /> },
       { path: 'service', element: <ServicesPage />, loader: servicesLoader },
+      {
+        path: 'user',
+        element: (
+          <AdminRoute>
+            <AdminFetchUsersPage />
+          </AdminRoute>
+        ),
+      },
       { path: 'location', element: <LocationPage /> },
       { path: 'information', element: <InformationPage /> },
       { path: 'time', element: <TimeSelectPage />, loader: availabilityLoader },
