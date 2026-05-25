@@ -90,7 +90,6 @@ export const authService = {
     }
 
     const coordinates = await geocoder(address, postal_code, city);
-    console.log(coordinates);
 
     const location = await locationsService.create({
       location_address: address,

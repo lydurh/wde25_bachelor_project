@@ -11,11 +11,7 @@ import { isInformationStepComplete } from '@/views/booking/booking-guards';
 import type { BookingDraft } from '@/views/booking/types';
 
 export const InformationPage = () => {
-  const { draft, setDraft, location, user } = useBooking();
-
-  // TODO: Remove this
-  console.log(location);
-  console.log(user);
+  const { draft, setDraft } = useBooking();
 
   useBookingStepFooter({
     disabled: !isInformationStepComplete(draft),
@@ -23,12 +19,7 @@ export const InformationPage = () => {
   });
 
   const update =
-    (
-      field: keyof Pick<
-        BookingDraft,
-        'firstName' | 'lastName' | 'email' | 'address'
-      >,
-    ) =>
+    (field: keyof Pick<BookingDraft, 'firstName' | 'lastName' | 'email'>) =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setDraft({ [field]: e.target.value });
     };
@@ -71,17 +62,6 @@ export const InformationPage = () => {
                   />
                 </Field>
               </div>
-              <Field>
-                <FieldLabel htmlFor="booking-address">Adresse</FieldLabel>
-                <Input
-                  id="booking-address"
-                  type="text"
-                  autoComplete="street-address"
-                  placeholder="Adresse / Lokation"
-                  value={draft.address ?? ''}
-                  onChange={update('address')}
-                />
-              </Field>
               <Field>
                 <FieldLabel htmlFor="booking-email">E-mail</FieldLabel>
                 <Input

@@ -14,6 +14,10 @@ export function hasSelectedServices(draft: BookingDraft): boolean {
   return Object.values(quantities).some((quantity) => quantity > 0);
 }
 
+export function hasLocationInput(draft: BookingDraft): boolean {
+  return !!draft.address?.trim();
+}
+
 export function hasTimeSelection(draft: BookingDraft): boolean {
   const dateId = draft.selectedDateId;
   const slot = draft.slotISO;
@@ -27,13 +31,17 @@ export function isInformationStepComplete(draft: BookingDraft): boolean {
 
 const canEnter: Record<BookingStepValue, (draft: BookingDraft) => boolean> = {
   service: () => true,
-  information: hasSelectedServices,
-  time: (draft) =>
-    hasSelectedServices(draft) && isInformationStepComplete(draft),
+  location: hasSelectedServices,
+  time: (draft) => hasSelectedServices(draft) && hasLocationInput(draft),
+  information: (draft) =>
+    hasSelectedServices(draft) &&
+    hasLocationInput(draft) &&
+    hasTimeSelection(draft),
   confirm: (draft) =>
     hasSelectedServices(draft) &&
-    isInformationStepComplete(draft) &&
-    hasTimeSelection(draft),
+    hasLocationInput(draft) &&
+    hasTimeSelection(draft) &&
+    isInformationStepComplete(draft),
 };
 
 export function canAccessBookingStep(

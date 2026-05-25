@@ -1,7 +1,8 @@
 export const BOOKING_STEPS = [
   { value: 'service', label: 'Services' },
-  { value: 'information', label: 'Information' },
+  { value: 'location', label: 'Lokation' },
   { value: 'time', label: 'Tid' },
+  { value: 'information', label: 'Information' },
   { value: 'confirm', label: 'Bekræftelse' },
 ] as const;
 

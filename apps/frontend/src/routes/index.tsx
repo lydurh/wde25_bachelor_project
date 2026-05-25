@@ -18,6 +18,7 @@ import { ResetPasswordPage } from '@/views/auth/pages/reset-password';
 import { SignupPage } from '@/views/auth/pages/signup';
 import { ConfirmationPage } from '@/views/booking/pages/booking-confirmation';
 import { InformationPage } from '@/views/booking/pages/booking-information';
+import { LocationPage } from '@/views/booking/pages/booking-location';
 import { ServicesPage } from '@/views/booking/pages/booking-service';
 import { TimeSelectPage } from '@/views/booking/pages/booking-time';
 import { LandingPage } from '@/views/landing/pages/landing';
@@ -65,6 +66,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <InitialbookingPage /> },
       { path: 'service', element: <ServicesPage />, loader: servicesLoader },
+      { path: 'location', element: <LocationPage /> },
       { path: 'information', element: <InformationPage /> },
       { path: 'time', element: <TimeSelectPage />, loader: availabilityLoader },
       { path: 'confirm', element: <ConfirmationPage /> },

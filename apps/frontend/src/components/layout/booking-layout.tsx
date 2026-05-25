@@ -2,6 +2,7 @@ import {
   CheckmarkCircle02Icon,
   Clock01Icon,
   Contact01Icon,
+  Location01Icon,
   ScissorIcon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -24,12 +25,13 @@ import {
 
 const BOOKING_TAB_STEPS = [
   { value: 'service', label: 'Services', icon: ScissorIcon },
+  { value: 'location', label: 'Lokation', icon: Location01Icon },
+  { value: 'time', label: 'Tid', icon: Clock01Icon },
   {
     value: 'information',
     label: 'Information',
     icon: Contact01Icon,
   },
-  { value: 'time', label: 'Tid', icon: Clock01Icon },
   {
     value: 'confirm',
     label: 'Bekræftelse',
@@ -41,7 +43,8 @@ const BOOKING_TAB_STEPS = [
   icon: typeof ScissorIcon;
 }>;
 
-const BOOKING_FLOW_PATH = /^\/book\/(service|information|time|confirm)\/?$/;
+const BOOKING_FLOW_PATH =
+  /^\/book\/(service|location|information|time|confirm)\/?$/;
 
 function BookingLayoutContent() {
   const location = useLocation();

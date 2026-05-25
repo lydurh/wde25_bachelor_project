@@ -26,6 +26,7 @@ import {
   type BookingStepValue,
 } from '@/views/booking/booking-steps';
 import {
+  hasLocationInput,
   hasSelectedServices,
   hasTimeSelection,
   isInformationStepComplete,
@@ -95,6 +96,9 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     if (currentStep === 'service') {
       return !hasSelectedServices(draft);
     }
+    if (currentStep === 'location') {
+      return stepFooter.disabled ?? !hasLocationInput(draft);
+    }
     if (currentStep === 'time') {
       return !hasTimeSelection(draft);
     }
@@ -104,6 +108,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   const continueLabel = stepFooter.label ?? 'Fortsæt';
   const showLayoutContinue =
     currentStep === 'service' ||
+    currentStep === 'location' ||
     currentStep === 'information' ||
     currentStep === 'time';
 

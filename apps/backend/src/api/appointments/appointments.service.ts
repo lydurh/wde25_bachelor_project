@@ -5,6 +5,8 @@ import {
   eq,
   type InferSelectModel,
   isNull,
+  locations,
+  ne,
 } from '@repo/db';
 import {
   type Appointment,
@@ -111,5 +113,34 @@ export const appointmentsService = {
       .returning();
 
     return row ? appointmentFromRow(row) : undefined;
+  },
+
+  async listByDateWithAddress(date: string) {
+    const rows = await db
+      .select({
+        time: appointments.appointment_time,
+        duration: appointments.appointment_duration,
+        address: locations.location_address,
+      })
+      .from(appointments)
+      .leftJoin(locations, eq(appointments.location_fk, locations.location_pk))
+      .where(
+        and(
+          eq(appointments.appointment_date, date),
+          notDeleted,
+          ne(appointments.appointment_status, 'cancelled'),
+        ),
+      );
+
+    return rows.map((row) => {
+      const time = typeof row.time === 'string' ? row.time : '';
+      const [h, m] = time.split(':').map(Number);
+      const startMinutes = (h ?? 0) * 60 + (m ?? 0);
+      return {
+        startMinutes,
+        endMinutes: startMinutes + (row.duration ?? 0),
+        address: row.address ?? '',
+      };
+    });
   },
 };

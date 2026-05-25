@@ -1,4 +1,4 @@
-import { db, users, isNull, eq, and } from '@repo/db';
+import { db, users, locations, isNull, eq, and } from '@repo/db';
 import type { UpdateUserInput, CreateUserInput } from '@repo/shared';
 import { toPublicUser } from '@repo/shared';
 
@@ -42,5 +42,28 @@ export const usersService = {
       .where(and(eq(users.user_pk, id), isNull(users.user_deleted_at)))
       .returning();
     return user ? toPublicUser(user) : undefined;
+  },
+
+  async getAdminLocation(): Promise<{ address: string }> {
+    const [row] = await db
+      .select({
+        address: locations.location_address,
+      })
+      .from(users)
+      .innerJoin(locations, eq(users.user_location_fk, locations.location_pk))
+      .where(
+        and(
+          eq(users.user_role, 'admin'),
+          isNull(users.user_deleted_at),
+          isNull(locations.location_deleted_at),
+        ),
+      )
+      .limit(1);
+
+    if (!row) {
+      throw new Error('No admin location found');
+    }
+
+    return { address: row.address };
   },
 };

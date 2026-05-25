@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLoaderData } from 'react-router';
 import { format, parse } from 'date-fns';
 import type { Availability } from '@repo/shared';
@@ -6,44 +6,18 @@ import type { Availability } from '@repo/shared';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { api } from '@/lib/api';
 import type { AvailabilityLoaderData } from '@/lib/loaders/availability';
 import { useBooking } from '@/views/booking/booking-context';
 
-const SLOT_INTERVAL = 30;
 const DATE_ID_FORMAT = 'yyyy-MM-dd';
 
-type TimeSlot = { iso: string; label: string };
-
-function parseMinutes(time: string): number {
-  const [hoursStr, minutesStr] = time.split(':');
-  const hours = Number(hoursStr ?? 0);
-  const minutes = Number(minutesStr ?? 0);
-  return hours * 60 + minutes;
-}
-
-function buildSlotsForDay(
-  rows: Availability[],
-  durationMinutes: number,
-): TimeSlot[] {
-  const slots = new Map<string, TimeSlot>();
-
-  for (const row of rows) {
-    const date = row.availability_date.slice(0, 10);
-    let start = parseMinutes(row.availability_start_time);
-    const end = parseMinutes(row.availability_end_time);
-    if (start >= end) continue;
-
-    for (; start + durationMinutes <= end; start += SLOT_INTERVAL) {
-      const h = String(Math.floor(start / 60)).padStart(2, '0');
-      const m = String(start % 60).padStart(2, '0');
-      const time = `${h}:${m}:00`;
-      const iso = `${date}T${time}`;
-      slots.set(iso, { iso, label: `${h}:${m}` });
-    }
-  }
-
-  return [...slots.values()].sort((a, b) => a.iso.localeCompare(b.iso));
-}
+type FeasibleSlot = {
+  iso: string;
+  label: string;
+  reachable: boolean;
+  driveMinutes: number;
+};
 
 function isBookable(row: Availability): boolean {
   return !row.availability_deleted_at && row.availability_type === 'available';
@@ -58,45 +32,67 @@ export const TimeSelectPage = () => {
   const { draft, setDraft } = useBooking();
 
   const selectedDateId = draft.selectedDateId ?? '';
-  const appointmentDurationMinutes =
-    draft.cumulatedServiceDuration ?? SLOT_INTERVAL;
+  const serviceDuration = draft.cumulatedServiceDuration ?? 30;
+  const customerAddress = draft.address ?? '';
 
-  const { availableDates, calendarBounds, selectedDate, slotsForDay } =
-    useMemo(() => {
-      const bookable = availabilities.filter(isBookable);
-      const dateIds = bookable.map((row) => row.availability_date.slice(0, 10));
-      const availableDates = new Set(dateIds);
-      const sorted = [...availableDates].sort();
+  const [slotsForDay, setSlotsForDay] = useState<FeasibleSlot[]>([]);
+  const [loading, setLoading] = useState(false);
 
-      const calendarBounds =
-        sorted.length === 0
-          ? { startMonth: new Date(), endMonth: new Date() }
-          : {
-              startMonth: parseDateId(sorted[0]!),
-              endMonth: parseDateId(sorted[sorted.length - 1]!),
-            };
+  const fetchSlots = useCallback(
+    async (date: string) => {
+      if (!customerAddress) return;
+      setLoading(true);
+      try {
+        const { data } = await api.post<{ data: FeasibleSlot[] }>(
+          '/availability/slots',
+          {
+            date,
+            serviceDuration,
+            customerAddress,
+          },
+        );
+        setSlotsForDay(data);
+      } catch {
+        setSlotsForDay([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [customerAddress, serviceDuration],
+  );
 
-      const selectedDate = selectedDateId
-        ? parseDateId(selectedDateId)
-        : undefined;
+  useEffect(() => {
+    if (selectedDateId) {
+      void fetchSlots(selectedDateId);
+    } else {
+      setSlotsForDay([]);
+    }
+  }, [selectedDateId, fetchSlots]);
 
-      const rowsForDay = selectedDateId
-        ? bookable.filter(
-            (row) => row.availability_date.slice(0, 10) === selectedDateId,
-          )
-        : [];
+  const { availableDates, calendarBounds, selectedDate } = useMemo(() => {
+    const bookable = availabilities.filter(isBookable);
+    const dateIds = bookable.map((row) => row.availability_date.slice(0, 10));
+    const availableDates = new Set(dateIds);
+    const sorted = [...availableDates].sort();
 
-      const slotsForDay = selectedDateId
-        ? buildSlotsForDay(rowsForDay, appointmentDurationMinutes)
-        : [];
+    const calendarBounds =
+      sorted.length === 0
+        ? { startMonth: new Date(), endMonth: new Date() }
+        : {
+            startMonth: parseDateId(sorted[0]!),
+            endMonth: parseDateId(sorted[sorted.length - 1]!),
+          };
 
-      return {
-        availableDates,
-        calendarBounds,
-        selectedDate,
-        slotsForDay,
-      };
-    }, [availabilities, selectedDateId, appointmentDurationMinutes]);
+    const selectedDate = selectedDateId
+      ? parseDateId(selectedDateId)
+      : undefined;
+
+    return {
+      availableDates,
+      calendarBounds,
+      selectedDate,
+    };
+  }, [availabilities, selectedDateId]);
 
   return (
     <Card className="max-h-[500px] overflow-y-auto">
@@ -129,6 +125,10 @@ export const TimeSelectPage = () => {
             <p className="col-span-full text-sm text-muted-foreground">
               Vælg en dato for at se ledige tider.
             </p>
+          ) : loading ? (
+            <p className="col-span-full text-sm text-muted-foreground">
+              Henter ledige tider...
+            </p>
           ) : slotsForDay.length === 0 ? (
             <p className="col-span-full text-sm text-muted-foreground">
               Ingen ledige tider på den valgte dato.
@@ -143,9 +143,15 @@ export const TimeSelectPage = () => {
                   type="button"
                   variant={isSelected ? 'default' : 'outline'}
                   className="w-full"
+                  disabled={!slot.reachable}
                   onClick={() => setDraft({ slotISO: slot.iso })}
                 >
                   {slot.label}
+                  {!slot.reachable && (
+                    <span className="ml-1 text-xs text-muted-foreground">
+                      (for langt)
+                    </span>
+                  )}
                 </Button>
               );
             })

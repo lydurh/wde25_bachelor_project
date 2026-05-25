@@ -26,7 +26,6 @@ export function isCustomerInfoComplete(draft: BookingDraft): boolean {
     !!draft.firstName?.trim() &&
     !!draft.lastName?.trim() &&
     !!email &&
-    email.includes('@') &&
-    !!draft.address?.trim()
+    email.includes('@')
   );
 }
