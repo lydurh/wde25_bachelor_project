@@ -1,6 +1,7 @@
 import {
   and,
   appointments,
+  appointmentServices,
   db,
   eq,
   type InferSelectModel,
@@ -99,7 +100,19 @@ export const appointmentsService = {
       })
       .returning();
 
-    return row ? appointmentFromRow(row) : null;
+    if (!row) return null;
+
+    if (input.services.length > 0) {
+      await db.insert(appointmentServices).values(
+        input.services.map((s) => ({
+          appointment_fk: row.appointment_pk,
+          service_fk: s.service_fk,
+          quantity: s.quantity,
+        })),
+      );
+    }
+
+    return appointmentFromRow(row);
   },
 
   async patch(id: string, input: UpdateAppointmentInput) {

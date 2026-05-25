@@ -17,7 +17,10 @@ import {
 import {
   buildSelectedServiceLines,
   getCumulatedServiceDurationFromQuantities,
+  getTotalPriceKr,
 } from '@repo/shared';
+import type { Appointment } from '@repo/shared';
+import { api } from '@/lib/api';
 import type { BookingUserLoaderData } from '@/lib/loaders/booking-user';
 import type { ServicesLoaderData } from '@/lib/loaders/service';
 import {
@@ -48,6 +51,7 @@ type BookingContextValue = {
   continueLabel: string;
   continueDisabled: boolean;
   showLayoutContinue: boolean;
+  isSubmitting: boolean;
   handleContinue: () => void;
   setStepFooter: (config: StepFooterConfig) => void;
 };
@@ -60,6 +64,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   const matches = useMatches();
   const [draft, setDraftState] = useState<BookingDraft>({});
   const [stepFooter, setStepFooterState] = useState<StepFooterConfig>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentStep = getCurrentStep(location.pathname);
 
@@ -127,11 +132,61 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       });
     }
 
+    if (currentStep === 'confirm') {
+      const user = bookingUserData?.user;
+      const loc = bookingUserData?.location;
+      const selectedServices = draft.selectedServices ?? [];
+      if (!user || !draft.slotISO || selectedServices.length === 0) return;
+
+      const date = draft.slotISO.slice(0, 10);
+      const time = draft.slotISO.slice(11, 19);
+      const totalPrice = getTotalPriceKr(selectedServices).toFixed(2);
+
+      setIsSubmitting(true);
+      void api
+        .post<{ data: Appointment }>('/appointments', {
+          appointment_user_fk: user.user_pk,
+          location_fk: loc?.location_pk ?? null,
+          appointment_date: date,
+          appointment_time: time,
+          appointment_notes: draft.comments?.trim() || null,
+          appointment_duration: draft.cumulatedServiceDuration ?? null,
+          appointment_total_price: totalPrice,
+          services: selectedServices.map((s) => ({
+            service_fk: s.id,
+            quantity: s.quantity,
+          })),
+        })
+        .then(() => {
+          resetDraft();
+          void navigate('/profile/appointments');
+        })
+        .catch((err: unknown) => {
+          console.error('Booking failed', err);
+        })
+        .finally(() => {
+          setIsSubmitting(false);
+        });
+      return;
+    }
+
     const next = getNextStep(currentStep);
     if (next) {
       void navigate(`/book/${next}`);
     }
-  }, [currentStep, draft.serviceQuantities, navigate, servicesData, setDraft]);
+  }, [
+    currentStep,
+    draft.serviceQuantities,
+    draft.slotISO,
+    draft.selectedServices,
+    draft.cumulatedServiceDuration,
+    draft.comments,
+    bookingUserData,
+    navigate,
+    servicesData,
+    setDraft,
+    resetDraft,
+  ]);
 
   return (
     <BookingContext.Provider
@@ -145,6 +200,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
         continueLabel,
         continueDisabled,
         showLayoutContinue,
+        isSubmitting,
         handleContinue,
         setStepFooter,
       }}

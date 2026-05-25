@@ -63,6 +63,7 @@ export const router = createBrowserRouter([
     id: 'book',
     element: <BookingLayout />,
     loader: bookingUserLoader,
+    HydrateFallback: () => null,
     children: [
       { index: true, element: <InitialbookingPage /> },
       { path: 'service', element: <ServicesPage />, loader: servicesLoader },

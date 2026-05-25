@@ -35,8 +35,13 @@ function formatAppointmentDateTime(
 }
 
 export const ConfirmationPage = () => {
-  const { draft, handleContinue, continueDisabled, continueLabel } =
-    useBooking();
+  const {
+    draft,
+    handleContinue,
+    continueDisabled,
+    continueLabel,
+    isSubmitting,
+  } = useBooking();
 
   useBookingStepFooter({
     disabled: false,
@@ -117,9 +122,9 @@ export const ConfirmationPage = () => {
           type="button"
           className="w-full"
           onClick={handleContinue}
-          disabled={continueDisabled}
+          disabled={continueDisabled || isSubmitting}
         >
-          {continueLabel}
+          {isSubmitting ? 'Booker...' : continueLabel}
         </Button>
       </CardFooter>
     </Card>
