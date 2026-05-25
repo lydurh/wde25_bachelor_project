@@ -1,23 +1,32 @@
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, path.resolve(__dirname, '../..'), 'VITE_');
+
+  return {
+    plugins: [react(), tailwindcss()],
+    define: {
+      'import.meta.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(
+        env['VITE_GOOGLE_MAPS_API_KEY'] ?? '',
+      ),
     },
-  },
-  server: {
-    port: 5173,
-    host: true,
-    proxy: {
-      '/api': {
-        target: 'http://backend:3000',
-        changeOrigin: true,
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
       },
     },
-  },
+    server: {
+      port: 5173,
+      host: true,
+      proxy: {
+        '/api': {
+          target: 'http://backend:3000',
+          changeOrigin: true,
+        },
+      },
+    },
+  };
 });
