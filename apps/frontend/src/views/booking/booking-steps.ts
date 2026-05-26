@@ -1,3 +1,12 @@
+import {
+  CheckmarkCircle02Icon,
+  Clock01Icon,
+  Location01Icon,
+  ScissorIcon,
+  User03Icon,
+} from '@hugeicons/core-free-icons';
+import type { IconSvgElement } from '@hugeicons/react';
+
 export const BOOKING_STEPS = [
   { value: 'service', label: 'Services' },
   { value: 'user', label: 'Bruger' },
@@ -7,6 +16,26 @@ export const BOOKING_STEPS = [
 ] as const;
 
 export type BookingStepValue = (typeof BOOKING_STEPS)[number]['value'];
+
+export const BOOKING_TAB_STEPS = [
+  { value: 'service', label: 'Services', icon: ScissorIcon },
+  { value: 'user', label: 'Bruger', icon: User03Icon },
+  { value: 'location', label: 'Lokation', icon: Location01Icon },
+  { value: 'time', label: 'Tid', icon: Clock01Icon },
+  {
+    value: 'confirm',
+    label: 'Bekræftelse',
+    icon: CheckmarkCircle02Icon,
+  },
+] as const satisfies ReadonlyArray<{
+  value: BookingStepValue;
+  label: string;
+  icon: IconSvgElement;
+}>;
+
+export function getBookingTabStep(value: BookingStepValue) {
+  return BOOKING_TAB_STEPS.find((step) => step.value === value);
+}
 
 const STEP_ORDER = BOOKING_STEPS.map((step) => step.value);
 

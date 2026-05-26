@@ -1,11 +1,4 @@
-import {
-  CheckmarkCircle02Icon,
-  Clock01Icon,
-  Location01Icon,
-  ScissorIcon,
-  User03Icon,
-} from '@hugeicons/core-free-icons';
-import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { useEffect, useMemo } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router';
 
@@ -22,25 +15,9 @@ import {
 } from '@/views/booking/booking-guards';
 import {
   BOOKING_STEPS,
+  BOOKING_TAB_STEPS,
   getCurrentStep,
-  type BookingStepValue,
 } from '@/views/booking/booking-steps';
-
-const BOOKING_TAB_STEPS = [
-  { value: 'service', label: 'Services', icon: ScissorIcon },
-  { value: 'user', label: 'Bruger', icon: User03Icon },
-  { value: 'location', label: 'Lokation', icon: Location01Icon },
-  { value: 'time', label: 'Tid', icon: Clock01Icon },
-  {
-    value: 'confirm',
-    label: 'Bekræftelse',
-    icon: CheckmarkCircle02Icon,
-  },
-] as const satisfies ReadonlyArray<{
-  value: BookingStepValue;
-  label: string;
-  icon: IconSvgElement;
-}>;
 
 const BOOKING_FLOW_PATH =
   /^\/book\/(service|user|location|information|time|confirm)\/?$/;
