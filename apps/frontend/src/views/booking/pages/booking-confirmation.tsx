@@ -10,7 +10,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { getLinePriceKr, getTotalPriceKr } from '@repo/shared';
+import {
+  BOOKING_LOCATION_FEE_KR,
+  getBookingTotalPriceKr,
+  getLinePriceKr,
+} from '@repo/shared';
+import { LocationFeeLabel } from '@/views/booking/components/location-fee-label';
 import {
   useBooking,
   useBookingStepFooter,
@@ -49,7 +54,11 @@ export const ConfirmationPage = () => {
   });
 
   const selectedServices = draft.selectedServices ?? [];
-  const totalPriceKr = getTotalPriceKr(selectedServices);
+  const locationFeeApplies = draft.locationFeeApplies ?? false;
+  const totalPriceKr = getBookingTotalPriceKr(
+    selectedServices,
+    locationFeeApplies,
+  );
 
   const appointmentLabel = formatAppointmentDateTime(
     draft.selectedDateId,
@@ -108,6 +117,14 @@ export const ConfirmationPage = () => {
               <dd className="font-medium whitespace-pre-wrap">
                 {draft.comments.trim()}
               </dd>
+            </div>
+          ) : null}
+          {locationFeeApplies ? (
+            <div>
+              <dt className="text-muted-foreground">
+                <LocationFeeLabel />
+              </dt>
+              <dd className="font-medium">{BOOKING_LOCATION_FEE_KR} kr</dd>
             </div>
           ) : null}
         </dl>

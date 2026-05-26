@@ -22,8 +22,6 @@ export async function bookingUserLoader(): Promise<BookingUserLoaderData> {
 
   // }
   const userRes = await api.get<{ data: User }>(`/users/${userId}`);
-
-  await api.get<{ data: User }>(`/users/${userId}`);
   const user = userRes.data;
 
   if (!user.user_location_fk) {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Location } from '@repo/shared';
+import { formatLocationAddress, type Location } from '@repo/shared';
 import { Home09Icon, LocationCheck01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,21 +21,16 @@ import {
   useBookingStepFooter,
 } from '@/views/booking/booking-context';
 import { hasLocationInput } from '@/views/booking/booking-guards';
+import { useLocationDistanceCheck } from '@/views/booking/use-location-distance-check';
 import { usePlaceAutocomplete } from '@/views/booking/use-place-autocomplete';
-
-function formatLocationAddress(location: Location): string {
-  const cityLine = [location.location_postal_code, location.location_city]
-    .filter(Boolean)
-    .join(' ');
-
-  return cityLine
-    ? `${location.location_address}, ${cityLine}`
-    : location.location_address;
-}
 
 function locationToDraftPatch(location: Location) {
   return {
-    address: formatLocationAddress(location),
+    address: formatLocationAddress({
+      location_address: location.location_address,
+      location_postal_code: location.location_postal_code,
+      location_city: location.location_city,
+    }),
     city: location.location_city,
     ...(location.location_postal_code
       ? { postalCode: location.location_postal_code }
@@ -51,8 +46,13 @@ export const LocationPage = () => {
     () => !!draft.selectedCustomer?.user_location_fk,
   );
 
+  useLocationDistanceCheck({
+    address: draft.address,
+    setDraft,
+  });
+
   useBookingStepFooter({
-    disabled: !hasLocationInput(draft),
+    disabled: !hasLocationInput(draft) || draft.distanceCheckStatus !== 'ready',
     label: 'Fortsæt',
   });
 
@@ -110,7 +110,11 @@ export const LocationPage = () => {
   });
 
   const usualAddressLabel = usualLocation
-    ? formatLocationAddress(usualLocation)
+    ? formatLocationAddress({
+        location_address: usualLocation.location_address,
+        location_postal_code: usualLocation.location_postal_code,
+        location_city: usualLocation.location_city,
+      })
     : null;
   const showCustomSearch = !useUsualAddress || !usualAddressLabel;
   const showSelectedAddress = !!draft.address?.trim() && !useUsualAddress;
@@ -175,6 +179,24 @@ export const LocationPage = () => {
                   <ItemDescription>{draft.address}</ItemDescription>
                 </ItemContent>
               </Item>
+            ) : null}
+
+            {draft.distanceCheckStatus === 'loading' ? (
+              <p className="text-sm text-muted-foreground">
+                Beregner afstand fra udgangspunkt...
+              </p>
+            ) : null}
+            {draft.distanceCheckStatus === 'error' ? (
+              <p className="text-sm text-destructive">
+                Kunne ikke beregne afstand. Prøv en anden adresse.
+              </p>
+            ) : null}
+            {draft.distanceCheckStatus === 'ready' &&
+            draft.locationFeeApplies ? (
+              <p className="text-sm text-muted-foreground">
+                Adressen ligger mere end 15 km fra udgangspunktet.
+                Udkørselsgebyr tillægges.
+              </p>
             ) : null}
           </FieldGroup>
         </CardContent>

@@ -1,3 +1,4 @@
+import { BOOKING_LOCATION_FEE_KR } from './constants';
 import type { Service } from '../types/service';
 
 export type BookingServiceLine = {
@@ -46,4 +47,14 @@ export function getLinePriceKr(line: BookingServiceLine): number {
 
 export function getTotalPriceKr(lines: BookingServiceLine[]): number {
   return lines.reduce((sum, line) => sum + getLinePriceKr(line), 0);
+}
+
+export function getBookingTotalPriceKr(
+  lines: BookingServiceLine[],
+  locationFeeApplies = false,
+): number {
+  const servicesTotal = getTotalPriceKr(lines);
+  return locationFeeApplies
+    ? servicesTotal + BOOKING_LOCATION_FEE_KR
+    : servicesTotal;
 }

@@ -17,7 +17,7 @@ import {
 import {
   buildSelectedServiceLines,
   getCumulatedServiceDurationFromQuantities,
-  getTotalPriceKr,
+  getBookingTotalPriceKr,
 } from '@repo/shared';
 import type { Appointment } from '@repo/shared';
 import { api } from '@/lib/api';
@@ -151,7 +151,10 @@ export function BookingProvider({ children }: { children: ReactNode }) {
 
       const date = draft.slotISO.slice(0, 10);
       const time = draft.slotISO.slice(11, 19);
-      const totalPrice = getTotalPriceKr(selectedServices).toFixed(2);
+      const totalPrice = getBookingTotalPriceKr(
+        selectedServices,
+        draft.locationFeeApplies ?? false,
+      ).toFixed(2);
 
       setIsSubmitting(true);
       void api
@@ -194,6 +197,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     draft.cumulatedServiceDuration,
     draft.comments,
     draft.selectedCustomer,
+    draft.locationFeeApplies,
     bookingUserData,
     navigate,
     servicesData,

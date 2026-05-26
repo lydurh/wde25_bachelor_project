@@ -1,6 +1,6 @@
 import { db, users, locations, isNull, eq, and, ilike, or } from '@repo/db';
 import type { UpdateUserInput, CreateUserInput } from '@repo/shared';
-import { toPublicUser } from '@repo/shared';
+import { formatLocationAddress, toPublicUser } from '@repo/shared';
 
 export const usersService = {
   async list() {
@@ -80,7 +80,9 @@ export const usersService = {
   async getAdminLocation(): Promise<{ address: string }> {
     const [row] = await db
       .select({
-        address: locations.location_address,
+        location_address: locations.location_address,
+        location_postal_code: locations.location_postal_code,
+        location_city: locations.location_city,
       })
       .from(users)
       .innerJoin(locations, eq(users.user_location_fk, locations.location_pk))
@@ -97,6 +99,12 @@ export const usersService = {
       throw new Error('No admin location found');
     }
 
-    return { address: row.address };
+    return {
+      address: formatLocationAddress({
+        location_address: row.location_address,
+        location_postal_code: row.location_postal_code,
+        location_city: row.location_city,
+      }),
+    };
   },
 };

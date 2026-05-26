@@ -23,3 +23,21 @@ export const createLocationSchema = z
   .strict();
 
 export type CreateLocationInput = z.infer<typeof createLocationSchema>;
+
+export const locationDistanceCheckInputSchema = z
+  .object({
+    destinationAddress: z.string().trim().min(1),
+  })
+  .strict();
+
+export const locationDistanceCheckResultSchema = z.object({
+  distanceKm: z.number().nonnegative(),
+  appliesLocationFee: z.boolean(),
+});
+
+export type LocationDistanceCheckInput = z.infer<
+  typeof locationDistanceCheckInputSchema
+>;
+export type LocationDistanceCheckResult = z.infer<
+  typeof locationDistanceCheckResultSchema
+>;

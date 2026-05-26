@@ -18,6 +18,10 @@ export type BookingDraft = {
   address?: string;
   city?: string;
   postalCode?: string;
+  /** Driving distance from admin origin (km), set after location step check */
+  distanceKm?: number | undefined;
+  locationFeeApplies?: boolean;
+  distanceCheckStatus?: 'idle' | 'loading' | 'ready' | 'error';
   comments?: string;
   policyAccepted?: boolean;
 };

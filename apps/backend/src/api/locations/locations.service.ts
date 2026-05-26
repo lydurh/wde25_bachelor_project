@@ -1,5 +1,7 @@
 import { db, locations, eq, isNull, and } from '@repo/db';
-import type { CreateLocationInput } from '@repo/shared';
+import { appliesLocationFee, type CreateLocationInput } from '@repo/shared';
+import { computeRouteDistanceKm } from '../../utils/routes';
+import { usersService } from '../users/users.service';
 
 export const locationsService = {
   list() {
@@ -28,5 +30,18 @@ export const locationsService = {
     const [location] = await db.insert(locations).values(data).returning();
 
     return location;
+  },
+
+  async checkDistanceFee(destinationAddress: string) {
+    const admin = await usersService.getAdminLocation();
+    const distanceKm = await computeRouteDistanceKm(
+      admin.address,
+      destinationAddress,
+    );
+
+    return {
+      distanceKm,
+      appliesLocationFee: appliesLocationFee(distanceKm),
+    };
   },
 };

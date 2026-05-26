@@ -28,7 +28,9 @@ export function LocationFeeLabel({ className }: LocationFeeLabelProps) {
             <HugeiconsIcon icon={InformationCircleIcon} strokeWidth={2} />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Gebyr for aftaler på din adresse.</TooltipContent>
+        <TooltipContent>
+          Gebyr når adressen ligger mere end 15 km fra udgangspunktet.
+        </TooltipContent>
       </Tooltip>
     </span>
   );
