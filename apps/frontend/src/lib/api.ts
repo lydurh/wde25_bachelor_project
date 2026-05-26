@@ -100,6 +100,51 @@ async function request<T>(
   return res.json() as Promise<T>;
 }
 
+/**
+ * Converts API errors to user-friendly messages.
+ * Logs full error details to console for developers.
+ */
+export const getErrorMessage = (err: unknown): string => {
+  // Log detailed error for developers
+  if (err instanceof ApiError) {
+    console.error(
+      `[API Error] Status: ${err.status} | Original Message: ${err.message}`,
+      err.issues,
+    );
+  } else if (err instanceof TypeError && err.message === 'Failed to fetch') {
+    console.error('[Network Error]', err);
+  } else {
+    console.error('[Unknown Error]', err);
+  }
+
+  // Return user-friendly message
+  if (err instanceof ApiError) {
+    if (err.status === 401 || err.status === 403) {
+      return 'Invalid email or password';
+    }
+    if (err.status === 409) {
+      return 'Email already registered';
+    }
+    if (err.status === 400) {
+      return 'Invalid request. Please check your details.';
+    }
+    if (err.status === 429) {
+      return 'Too many attempts. Please try again later.';
+    }
+    if (err.status >= 500) {
+      return 'Server error. Please try again later.';
+    }
+    return 'Something went wrong. Please try again.';
+  }
+
+  // Network error
+  if (err instanceof TypeError && err.message === 'Failed to fetch') {
+    return 'Network error. Please check your connection.';
+  }
+
+  return 'Something went wrong. Please try again.';
+};
+
 export const api = {
   async get<T>(path: string, options?: RequestOptions): Promise<T> {
     return request<T>('GET', path, undefined, options);

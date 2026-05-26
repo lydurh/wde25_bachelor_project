@@ -36,7 +36,7 @@ export const AuthNav = () => {
         <span className="text-muted-foreground hidden sm:inline">{email}</span>
       )}
       <Link
-        to={isAdmin ? '/admin' : '/dashboard'}
+        to={isAdmin ? '/admin' : '/profile'}
         className="text-primary hover:underline"
       >
         {isAdmin ? 'Admin' : 'My account'}
