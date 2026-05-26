@@ -154,10 +154,6 @@ export const LocationPage = () => {
             ) : null}
 
             <Field className={cn(!showCustomSearch && 'hidden')}>
-              {/* <FieldLabel htmlFor="booking-address-search">
-                <HugeiconsIcon icon={Search01Icon} strokeWidth={2} />
-                Søg efter adresse
-              </FieldLabel> */}
               <div
                 id="booking-address-search"
                 ref={autocompleteContainerRef}
