@@ -1,4 +1,4 @@
-import { db, users, locations, isNull, eq, and } from '@repo/db';
+import { db, users, locations, isNull, eq, and, ilike, or } from '@repo/db';
 import type { UpdateUserInput, CreateUserInput } from '@repo/shared';
 import { toPublicUser } from '@repo/shared';
 
@@ -8,6 +8,39 @@ export const usersService = {
       .select()
       .from(users)
       .where(isNull(users.user_deleted_at));
+    return rows.map(toPublicUser);
+  },
+
+  async listByEmail(email: string, limit = 10) {
+    const rows = await db
+      .select()
+      .from(users)
+      .where(and(eq(users.user_email, email), isNull(users.user_deleted_at)))
+      .limit(limit);
+    return rows.map(toPublicUser);
+  },
+
+  async listByName(nameQuery: string, limit = 20) {
+    const trimmed = nameQuery.trim();
+    if (!trimmed) {
+      return [];
+    }
+
+    const terms = trimmed.split(/\s+/).filter(Boolean);
+    const termConditions = terms.map((term) => {
+      const pattern = `%${term}%`;
+      return or(
+        ilike(users.user_first_name, pattern),
+        ilike(users.user_last_name, pattern),
+      );
+    });
+
+    const rows = await db
+      .select()
+      .from(users)
+      .where(and(isNull(users.user_deleted_at), ...termConditions))
+      .limit(limit);
+
     return rows.map(toPublicUser);
   },
 

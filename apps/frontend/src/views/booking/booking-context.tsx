@@ -29,8 +29,8 @@ import {
   type BookingStepValue,
 } from '@/views/booking/booking-steps';
 import {
-  hasLocationInput,
   hasSelectedServices,
+  hasSelectedUser,
   hasTimeSelection,
   isInformationStepComplete,
 } from '@/views/booking/booking-guards';
@@ -101,8 +101,11 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     if (currentStep === 'service') {
       return !hasSelectedServices(draft);
     }
+    if (currentStep === 'user') {
+      return !hasSelectedUser(draft);
+    }
     if (currentStep === 'location') {
-      return stepFooter.disabled ?? !hasLocationInput(draft);
+      return stepFooter.disabled ?? !draft.address?.trim();
     }
     if (currentStep === 'time') {
       return !hasTimeSelection(draft);
@@ -113,6 +116,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   const continueLabel = stepFooter.label ?? 'Fortsæt';
   const showLayoutContinue =
     currentStep === 'service' ||
+    currentStep === 'user' ||
     currentStep === 'location' ||
     currentStep === 'information' ||
     currentStep === 'time';
@@ -133,10 +137,12 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     }
 
     if (currentStep === 'confirm') {
-      const user = bookingUserData?.user;
       const loc = bookingUserData?.location;
       const selectedServices = draft.selectedServices ?? [];
-      if (!user || !draft.slotISO || selectedServices.length === 0) return;
+      const appointmentUserPk =
+        draft.selectedCustomer?.user_pk ?? bookingUserData?.user?.user_pk;
+      if (!appointmentUserPk || !draft.slotISO || selectedServices.length === 0)
+        return;
 
       const date = draft.slotISO.slice(0, 10);
       const time = draft.slotISO.slice(11, 19);
@@ -145,7 +151,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       setIsSubmitting(true);
       void api
         .post<{ data: Appointment }>('/appointments', {
-          appointment_user_fk: user.user_pk,
+          appointment_user_fk: appointmentUserPk,
           location_fk: loc?.location_pk ?? null,
           appointment_date: date,
           appointment_time: time,
@@ -181,6 +187,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     draft.selectedServices,
     draft.cumulatedServiceDuration,
     draft.comments,
+    draft.selectedCustomer,
     bookingUserData,
     navigate,
     servicesData,

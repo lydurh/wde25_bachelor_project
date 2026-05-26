@@ -4,8 +4,9 @@ import {
   Contact01Icon,
   Location01Icon,
   ScissorIcon,
+  User03Icon,
 } from '@hugeicons/core-free-icons';
-import { HugeiconsIcon } from '@hugeicons/react';
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
 import { useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router';
 
@@ -25,6 +26,7 @@ import {
 
 const BOOKING_TAB_STEPS = [
   { value: 'service', label: 'Services', icon: ScissorIcon },
+  { value: 'user', label: 'Bruger', icon: User03Icon },
   { value: 'location', label: 'Lokation', icon: Location01Icon },
   { value: 'time', label: 'Tid', icon: Clock01Icon },
   {
@@ -40,11 +42,11 @@ const BOOKING_TAB_STEPS = [
 ] as const satisfies ReadonlyArray<{
   value: BookingStepValue;
   label: string;
-  icon: typeof ScissorIcon;
+  icon: IconSvgElement;
 }>;
 
 const BOOKING_FLOW_PATH =
-  /^\/book\/(service|location|information|time|confirm)\/?$/;
+  /^\/book\/(service|user|location|information|time|confirm)\/?$/;
 
 function BookingLayoutContent() {
   const location = useLocation();

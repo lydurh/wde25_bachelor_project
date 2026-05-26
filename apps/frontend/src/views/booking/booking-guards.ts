@@ -14,6 +14,10 @@ export function hasSelectedServices(draft: BookingDraft): boolean {
   return Object.values(quantities).some((quantity) => quantity > 0);
 }
 
+export function hasSelectedUser(draft: BookingDraft): boolean {
+  return !!draft.selectedCustomer?.user_pk?.trim();
+}
+
 export function hasLocationInput(draft: BookingDraft): boolean {
   return !!draft.address?.trim();
 }
@@ -31,14 +35,20 @@ export function isInformationStepComplete(draft: BookingDraft): boolean {
 
 const canEnter: Record<BookingStepValue, (draft: BookingDraft) => boolean> = {
   service: () => true,
-  location: hasSelectedServices,
-  time: (draft) => hasSelectedServices(draft) && hasLocationInput(draft),
+  user: hasSelectedServices,
+  location: (draft) => hasSelectedServices(draft) && hasSelectedUser(draft),
+  time: (draft) =>
+    hasSelectedServices(draft) &&
+    hasSelectedUser(draft) &&
+    hasLocationInput(draft),
   information: (draft) =>
     hasSelectedServices(draft) &&
+    hasSelectedUser(draft) &&
     hasLocationInput(draft) &&
     hasTimeSelection(draft),
   confirm: (draft) =>
     hasSelectedServices(draft) &&
+    hasSelectedUser(draft) &&
     hasLocationInput(draft) &&
     hasTimeSelection(draft) &&
     isInformationStepComplete(draft),
