@@ -7,15 +7,18 @@ import {
   User03Icon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router';
 
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { auth } from '@/lib/auth';
 import { BookingProvider, useBooking } from '@/views/booking/booking-context';
 import {
   canAccessBookingStep,
+  canViewBookingStep,
+  createBookingGuardContext,
   getBookingRedirectForStep,
 } from '@/views/booking/booking-guards';
 import {
@@ -55,15 +58,24 @@ function BookingLayoutContent() {
   const currentStep = getCurrentStep(location.pathname);
   const {
     draft,
+    user,
     continueDisabled,
     continueLabel,
     handleContinue,
     showLayoutContinue,
   } = useBooking();
 
+  const guardContext = useMemo(
+    () => createBookingGuardContext(user?.user_pk),
+    [user?.user_pk],
+  );
+  const visibleTabSteps = BOOKING_TAB_STEPS.filter((step) =>
+    canViewBookingStep(step.value, guardContext),
+  );
+
   const handleTabChange = (value: string) => {
     const step = BOOKING_STEPS.find((s) => s.value === value)?.value;
-    if (!step || !canAccessBookingStep(step, draft)) {
+    if (!step || !canAccessBookingStep(step, draft, guardContext)) {
       return;
     }
     void navigate(`/book/${step}`);
@@ -72,11 +84,30 @@ function BookingLayoutContent() {
   useEffect(() => {
     if (!showBookingTabs) return;
 
-    const redirect = getBookingRedirectForStep(currentStep, draft);
+    if (currentStep === 'user' && auth.isAdmin() && !auth.isAuthenticated()) {
+      void navigate('/login', {
+        replace: true,
+        state: { from: location.pathname },
+      });
+      return;
+    }
+
+    const redirect = getBookingRedirectForStep(
+      currentStep,
+      draft,
+      guardContext,
+    );
     if (redirect) {
       void navigate(redirect, { replace: true });
     }
-  }, [currentStep, draft, navigate, showBookingTabs]);
+  }, [
+    currentStep,
+    draft,
+    guardContext,
+    location.pathname,
+    navigate,
+    showBookingTabs,
+  ]);
 
   return (
     <div className="w-full flex min-h-screen flex-col bg-background">
@@ -112,11 +143,13 @@ function BookingLayoutContent() {
             className="w-full mx-auto max-w-5xl px-6 py-4"
           >
             <TabsList variant="line" className="mx-auto gap-6 justify-center">
-              {BOOKING_TAB_STEPS.map((step) => (
+              {visibleTabSteps.map((step) => (
                 <TabsTrigger
                   key={step.value}
                   value={step.value}
-                  disabled={!canAccessBookingStep(step.value, draft)}
+                  disabled={
+                    !canAccessBookingStep(step.value, draft, guardContext)
+                  }
                   className="flex-col gap-1 px-4 py-6 text-xs"
                 >
                   <HugeiconsIcon icon={step.icon} strokeWidth={2} />

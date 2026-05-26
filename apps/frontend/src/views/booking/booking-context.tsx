@@ -25,10 +25,11 @@ import type { BookingUserLoaderData } from '@/lib/loaders/booking-user';
 import type { ServicesLoaderData } from '@/lib/loaders/service';
 import {
   getCurrentStep,
-  getNextStep,
   type BookingStepValue,
 } from '@/views/booking/booking-steps';
 import {
+  createBookingGuardContext,
+  getNextBookingStep,
   hasSelectedServices,
   hasSelectedUser,
   hasTimeSelection,
@@ -69,6 +70,10 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   const currentStep = getCurrentStep(location.pathname);
 
   const bookingUserData = useRouteLoaderData<BookingUserLoaderData>('book');
+  const guardContext = useMemo(
+    () => createBookingGuardContext(bookingUserData?.user?.user_pk),
+    [bookingUserData?.user?.user_pk],
+  );
 
   const servicesData = useMemo(() => {
     const match = matches.find((m) => m.pathname.endsWith('/service'));
@@ -102,7 +107,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       return !hasSelectedServices(draft);
     }
     if (currentStep === 'user') {
-      return !hasSelectedUser(draft);
+      return !hasSelectedUser(draft, guardContext);
     }
     if (currentStep === 'location') {
       return stepFooter.disabled ?? !draft.address?.trim();
@@ -111,7 +116,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       return !hasTimeSelection(draft);
     }
     return true;
-  }, [currentStep, draft, stepFooter.disabled]);
+  }, [currentStep, draft, guardContext, stepFooter.disabled]);
 
   const continueLabel = stepFooter.label ?? 'Fortsæt';
   const showLayoutContinue =
@@ -176,12 +181,13 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const next = getNextStep(currentStep);
+    const next = getNextBookingStep(currentStep, guardContext);
     if (next) {
       void navigate(`/book/${next}`);
     }
   }, [
     currentStep,
+    guardContext,
     draft.serviceQuantities,
     draft.slotISO,
     draft.selectedServices,

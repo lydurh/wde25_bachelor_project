@@ -67,14 +67,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <InitialbookingPage /> },
       { path: 'service', element: <ServicesPage />, loader: servicesLoader },
-      {
-        path: 'user',
-        element: (
-          <AdminRoute>
-            <AdminFetchUsersPage />
-          </AdminRoute>
-        ),
-      },
+      { path: 'user', element: <AdminFetchUsersPage /> },
       { path: 'location', element: <LocationPage /> },
       { path: 'information', element: <InformationPage /> },
       { path: 'time', element: <TimeSelectPage />, loader: availabilityLoader },
