@@ -41,3 +41,23 @@ export type LocationDistanceCheckInput = z.infer<
 export type LocationDistanceCheckResult = z.infer<
   typeof locationDistanceCheckResultSchema
 >;
+
+export const adminOriginSchema = z.object({
+  address: z.string().min(1),
+  lat: z.number(),
+  lng: z.number(),
+});
+
+export type AdminOrigin = z.infer<typeof adminOriginSchema>;
+
+export function parseAdminOrigin(value: unknown): AdminOrigin | null {
+  const result = adminOriginSchema.safeParse(value);
+  return result.success ? result.data : null;
+}
+
+export function toLocationBiasCenter(
+  adminOrigin: AdminOrigin | null,
+): { lat: number; lng: number } | null {
+  if (!adminOrigin) return null;
+  return { lat: adminOrigin.lat, lng: adminOrigin.lng };
+}

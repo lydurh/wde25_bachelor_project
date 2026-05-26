@@ -87,14 +87,18 @@ export {
 
 export type { Location } from './src/types/location';
 export type {
+  AdminOrigin,
   CreateLocationInput,
   LocationDistanceCheckInput,
   LocationDistanceCheckResult,
 } from './src/schemas/location';
 export {
+  adminOriginSchema,
   createLocationSchema,
   locationDistanceCheckInputSchema,
   locationDistanceCheckResultSchema,
+  parseAdminOrigin,
+  toLocationBiasCenter,
 } from './src/schemas/location';
 
 export type {

@@ -2,10 +2,31 @@ import { useEffect, useRef, type RefObject } from 'react';
 
 const GOOGLE_API_KEY = import.meta.env['VITE_GOOGLE_MAPS_API_KEY'] as string;
 
-const PLACE_AUTOCOMPLETE_OPTIONS = {
-  includedRegionCodes: ['dk'],
-  locationBias: { center: { lat: 55.6761, lng: 12.5683 }, radius: 50_000 },
+/** Copenhagen — fallback when admin origin coordinates are unavailable */
+const DEFAULT_LOCATION_BIAS = {
+  lat: 55.6761,
+  lng: 12.5683,
 } as const;
+
+const LOCATION_BIAS_RADIUS_METERS = 50_000;
+
+type PlaceAutocompleteOptions = {
+  includedRegionCodes: ['dk'];
+  locationBias: {
+    center: { lat: number; lng: number };
+    radius: number;
+  };
+};
+
+function buildPlaceAutocompleteOptions(center: {
+  lat: number;
+  lng: number;
+}): PlaceAutocompleteOptions {
+  return {
+    includedRegionCodes: ['dk'],
+    locationBias: { center, radius: LOCATION_BIAS_RADIUS_METERS },
+  };
+}
 
 const PLACEHOLDER = 'Søg efter adresse...';
 
@@ -19,7 +40,7 @@ type PlaceAutocompleteElementInstance = HTMLElement & {
 type GoogleMapsPlaces = {
   importLibrary(name: 'places'): Promise<{
     PlaceAutocompleteElement: new (
-      options: typeof PLACE_AUTOCOMPLETE_OPTIONS,
+      options: PlaceAutocompleteOptions,
     ) => PlaceAutocompleteElementInstance;
   }>;
 };
@@ -80,11 +101,13 @@ function loadGoogleMapsCore(): Promise<void> {
   return mapsCorePromise;
 }
 
-async function createPlaceAutocompleteElement(): Promise<PlaceAutocompleteElementInstance> {
+async function createPlaceAutocompleteElement(
+  options: PlaceAutocompleteOptions,
+): Promise<PlaceAutocompleteElementInstance> {
   const { PlaceAutocompleteElement } =
     await getGoogleMaps().importLibrary('places');
 
-  return new PlaceAutocompleteElement(PLACE_AUTOCOMPLETE_OPTIONS);
+  return new PlaceAutocompleteElement(options);
 }
 
 async function resolveAddressFromGmpSelect(
@@ -104,10 +127,12 @@ export function usePlaceAutocomplete(
   options?: {
     enabled?: boolean;
     initialAddress?: string;
+    locationBiasCenter?: { lat: number; lng: number } | null;
   },
 ): void {
   const enabled = options?.enabled ?? true;
   const initialAddress = options?.initialAddress;
+  const locationBiasCenter = options?.locationBiasCenter;
 
   const elementRef = useRef<PlaceAutocompleteElementInstance | null>(null);
   const initialAddressRef = useRef(initialAddress);
@@ -119,6 +144,9 @@ export function usePlaceAutocomplete(
     const container = containerRef.current;
     if (!container) return;
 
+    const biasCenter = locationBiasCenter ?? DEFAULT_LOCATION_BIAS;
+    const autocompleteOptions = buildPlaceAutocompleteOptions(biasCenter);
+
     let autocomplete: PlaceAutocompleteElementInstance | null = null;
     let cancelled = false;
 
@@ -129,7 +157,7 @@ export function usePlaceAutocomplete(
     };
 
     void loadGoogleMapsCore()
-      .then(() => createPlaceAutocompleteElement())
+      .then(() => createPlaceAutocompleteElement(autocompleteOptions))
       .then((element) => {
         if (cancelled || !containerRef.current) return;
 
@@ -155,7 +183,7 @@ export function usePlaceAutocomplete(
       autocomplete?.removeEventListener('gmp-select', onSelect);
       autocomplete?.remove();
     };
-  }, [containerRef, onAddress, enabled]);
+  }, [containerRef, onAddress, enabled, locationBiasCenter]);
 
   useEffect(() => {
     if (!enabled) return;

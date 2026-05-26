@@ -6,7 +6,8 @@
     "types": ["vite/client", "google.maps"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@repo/shared": ["../../packages/shared/index.ts"]
     }
   },
   "include": ["src"]

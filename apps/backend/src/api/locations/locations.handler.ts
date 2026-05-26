@@ -2,12 +2,14 @@ import type { Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { createFactory } from 'hono/factory';
 import { zValidator } from '@hono/zod-validator';
-import { locationsService } from './locations.service';
 import {
   createLocationSchema,
   locationDistanceCheckInputSchema,
+  type AdminOrigin,
   uuidSchema,
 } from '@repo/shared';
+import { usersService } from '../users/users.service';
+import { locationsService } from './locations.service';
 
 const factory = createFactory();
 
@@ -22,6 +24,24 @@ export const listLocations = async (c: Context) => {
   const data = await locationsService.list();
 
   return c.json({ data });
+};
+
+export const getAdminOrigin = async (c: Context) => {
+  try {
+    const data: AdminOrigin = await usersService.getAdminLocation();
+    return c.json({ data });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'No admin location found') {
+      throw new HTTPException(503, { message: error.message });
+    }
+    if (
+      error instanceof Error &&
+      error.message === 'Admin location is missing coordinates'
+    ) {
+      throw new HTTPException(503, { message: error.message });
+    }
+    throw error;
+  }
 };
 
 export const getLocation = async (c: Context) => {
@@ -56,7 +76,8 @@ export const checkLocationDistance = factory.createHandlers(
     } catch (error) {
       if (
         error instanceof Error &&
-        error.message === 'No admin location found'
+        (error.message === 'No admin location found' ||
+          error.message === 'Admin location is missing coordinates')
       ) {
         throw new HTTPException(503, { message: error.message });
       }

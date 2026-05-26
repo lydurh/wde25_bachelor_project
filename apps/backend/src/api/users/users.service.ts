@@ -1,6 +1,16 @@
 import { db, users, locations, isNull, eq, and, ilike, or } from '@repo/db';
 import type { UpdateUserInput, CreateUserInput } from '@repo/shared';
-import { formatLocationAddress, toPublicUser } from '@repo/shared';
+import {
+  type AdminOrigin,
+  formatLocationAddress,
+  toPublicUser,
+} from '@repo/shared';
+
+function parseCoordinate(value: string | null): number | null {
+  if (value == null) return null;
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
 
 export const usersService = {
   async list() {
@@ -77,12 +87,14 @@ export const usersService = {
     return user ? toPublicUser(user) : undefined;
   },
 
-  async getAdminLocation(): Promise<{ address: string }> {
+  async getAdminLocation(): Promise<AdminOrigin> {
     const [row] = await db
       .select({
         location_address: locations.location_address,
         location_postal_code: locations.location_postal_code,
         location_city: locations.location_city,
+        location_latitude: locations.location_latitude,
+        location_longitude: locations.location_longitude,
       })
       .from(users)
       .innerJoin(locations, eq(users.user_location_fk, locations.location_pk))
@@ -99,12 +111,20 @@ export const usersService = {
       throw new Error('No admin location found');
     }
 
+    const lat = parseCoordinate(row.location_latitude);
+    const lng = parseCoordinate(row.location_longitude);
+    if (lat == null || lng == null) {
+      throw new Error('Admin location is missing coordinates');
+    }
+
     return {
       address: formatLocationAddress({
         location_address: row.location_address,
         location_postal_code: row.location_postal_code,
         location_city: row.location_city,
       }),
+      lat,
+      lng,
     };
   },
 };

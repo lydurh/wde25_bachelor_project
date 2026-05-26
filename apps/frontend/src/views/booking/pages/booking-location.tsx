@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/item';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { toLocationBiasCenter } from '@repo/shared';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import {
@@ -39,7 +40,7 @@ function locationToDraftPatch(location: Location) {
 }
 
 export const LocationPage = () => {
-  const { draft, setDraft } = useBooking();
+  const { draft, setDraft, adminOrigin } = useBooking();
   const autocompleteContainerRef = useRef<HTMLDivElement>(null);
   const [usualLocation, setUsualLocation] = useState<Location | null>(null);
   const [useUsualAddress, setUseUsualAddress] = useState(
@@ -105,8 +106,11 @@ export const LocationPage = () => {
     [setDraft],
   );
 
+  const locationBiasCenter = toLocationBiasCenter(adminOrigin);
+
   usePlaceAutocomplete(autocompleteContainerRef, onAddressSelected, {
     enabled: !useUsualAddress,
+    locationBiasCenter,
   });
 
   const usualAddressLabel = usualLocation

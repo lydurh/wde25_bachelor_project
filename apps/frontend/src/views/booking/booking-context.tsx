@@ -48,6 +48,7 @@ type BookingContextValue = {
   resetDraft: () => void;
   user: BookingUserLoaderData['user'];
   location: BookingUserLoaderData['location'];
+  adminOrigin: BookingUserLoaderData['adminOrigin'];
   currentStep: BookingStepValue;
   continueLabel: string;
   continueDisabled: boolean;
@@ -70,6 +71,8 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   const currentStep = getCurrentStep(location.pathname);
 
   const bookingUserData = useRouteLoaderData<BookingUserLoaderData>('book');
+  const adminOrigin: BookingUserLoaderData['adminOrigin'] =
+    bookingUserData?.adminOrigin ?? null;
   const guardContext = useMemo(
     () => createBookingGuardContext(bookingUserData?.user?.user_pk),
     [bookingUserData?.user?.user_pk],
@@ -213,6 +216,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
         resetDraft,
         user: bookingUserData?.user ?? null,
         location: bookingUserData?.location ?? null,
+        adminOrigin,
         currentStep,
         continueLabel,
         continueDisabled,
