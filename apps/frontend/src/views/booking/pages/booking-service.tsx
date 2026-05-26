@@ -1,6 +1,16 @@
 import { useLoaderData } from 'react-router';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Add01Icon, Remove01Icon } from '@hugeicons/core-free-icons';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Field, FieldGroup } from '@/components/ui/field';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -53,14 +63,62 @@ export const ServicesPage = () => {
     });
   };
 
+  const handleComment = (e: React.SubmitEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const textarea = e.currentTarget.elements.namedItem(
+      'user_note',
+    ) as HTMLTextAreaElement | null;
+
+    if (!textarea) return;
+
+    setDraft({
+      comments: textarea.value,
+    });
+  };
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-2xl font-semibold tracking-tight">
-          Ydelser
-        </CardTitle>
-        <CardDescription>vælg antal services herunder</CardDescription>
+      <CardHeader className="flex justify-between">
+        <div>
+          <CardTitle className="text-2xl font-semibold tracking-tight">
+            Ydelser
+          </CardTitle>
+          <CardDescription>vælg antal services herunder</CardDescription>
+        </div>
+        <Dialog>
+          <form onSubmit={handleComment}>
+            <DialogTrigger asChild>
+              <Button variant="outline">Tilføj Kommentar</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-sm">
+              <FieldGroup>
+                <Field>
+                  <Label htmlFor="name-1">Kommentar</Label>
+                  <Textarea
+                    name="user_note"
+                    id="user_note"
+                    value={draft.comments ?? ''}
+                    onChange={(e) =>
+                      setDraft({ comments: e.currentTarget.value })
+                    }
+                    placeholder="Kommentar (ønsket hårfarve, allergier osv.)"
+                  />
+                </Field>
+              </FieldGroup>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline">Anuller</Button>
+                </DialogClose>
+                <DialogClose asChild>
+                  <Button type="submit">Gem</Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </form>
+        </Dialog>
       </CardHeader>
+
       <CardContent className="space-y-0 divide-y divide-border">
         {loaderData.services.map((service) => {
           const quantity = quantities[service.service_pk] ?? 0;
@@ -104,11 +162,6 @@ export const ServicesPage = () => {
             </div>
           );
         })}
-        <div className="flex items-center justify-between gap-4 py-4">
-          {/* <span className="text-sm font-medium">
-            <LocationFeeLabel /> – {LOCATION_FEE_KR} kr
-          </span> */}
-        </div>
       </CardContent>
     </Card>
   );

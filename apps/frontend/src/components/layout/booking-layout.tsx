@@ -1,7 +1,6 @@
 import {
   CheckmarkCircle02Icon,
   Clock01Icon,
-  Contact01Icon,
   Location01Icon,
   ScissorIcon,
   User03Icon,
@@ -32,11 +31,6 @@ const BOOKING_TAB_STEPS = [
   { value: 'user', label: 'Bruger', icon: User03Icon },
   { value: 'location', label: 'Lokation', icon: Location01Icon },
   { value: 'time', label: 'Tid', icon: Clock01Icon },
-  {
-    value: 'information',
-    label: 'Information',
-    icon: Contact01Icon,
-  },
   {
     value: 'confirm',
     label: 'Bekræftelse',

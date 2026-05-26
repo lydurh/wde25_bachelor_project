@@ -3,7 +3,6 @@ export const BOOKING_STEPS = [
   { value: 'user', label: 'Bruger' },
   { value: 'location', label: 'Lokation' },
   { value: 'time', label: 'Tid' },
-  { value: 'information', label: 'Information' },
   { value: 'confirm', label: 'Bekræftelse' },
 ] as const;
 

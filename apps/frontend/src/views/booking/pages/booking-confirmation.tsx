@@ -46,6 +46,7 @@ export const ConfirmationPage = () => {
     continueDisabled,
     continueLabel,
     isSubmitting,
+    bookingCustomer,
   } = useBooking();
 
   useBookingStepFooter({
@@ -101,6 +102,10 @@ export const ConfirmationPage = () => {
           <div>
             <dt className="text-muted-foreground">Kontakt</dt>
             <dd className="space-y-0.5 font-medium">
+              <p>{bookingCustomer?.user_first_name}</p>
+              <p>{bookingCustomer?.user_last_name}</p>
+              <p>{bookingCustomer?.user_email}</p>
+
               {customerName ? <div>{customerName}</div> : null}
               {draft.email?.trim() ? <div>{draft.email.trim()}</div> : null}
               {draft.address?.trim() ? <div>{draft.address.trim()}</div> : null}

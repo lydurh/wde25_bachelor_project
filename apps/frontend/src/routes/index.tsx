@@ -17,7 +17,6 @@ import { LoginPage } from '@/views/auth/pages/login';
 import { ResetPasswordPage } from '@/views/auth/pages/reset-password';
 import { SignupPage } from '@/views/auth/pages/signup';
 import { ConfirmationPage } from '@/views/booking/pages/booking-confirmation';
-import { InformationPage } from '@/views/booking/pages/booking-information';
 import { LocationPage } from '@/views/booking/pages/booking-location';
 import { ServicesPage } from '@/views/booking/pages/booking-service';
 import { TimeSelectPage } from '@/views/booking/pages/booking-time';
@@ -69,7 +68,6 @@ export const router = createBrowserRouter([
       { path: 'service', element: <ServicesPage />, loader: servicesLoader },
       { path: 'user', element: <AdminFetchUsersPage /> },
       { path: 'location', element: <LocationPage /> },
-      { path: 'information', element: <InformationPage /> },
       { path: 'time', element: <TimeSelectPage />, loader: availabilityLoader },
       { path: 'confirm', element: <ConfirmationPage /> },
     ],

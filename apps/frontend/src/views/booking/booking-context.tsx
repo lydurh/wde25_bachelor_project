@@ -33,7 +33,6 @@ import {
   hasSelectedServices,
   hasSelectedUser,
   hasTimeSelection,
-  isInformationStepComplete,
 } from '@/views/booking/booking-guards';
 import type { BookingDraft } from '@/views/booking/types';
 
@@ -115,9 +114,6 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     if (currentStep === 'confirm') {
       return stepFooter.disabled ?? false;
     }
-    if (currentStep === 'information') {
-      return stepFooter.disabled ?? !isInformationStepComplete(draft);
-    }
     if (currentStep === 'service') {
       return !hasSelectedServices(draft);
     }
@@ -138,7 +134,6 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     currentStep === 'service' ||
     currentStep === 'user' ||
     currentStep === 'location' ||
-    currentStep === 'information' ||
     currentStep === 'time';
 
   const handleContinue = useCallback(() => {
