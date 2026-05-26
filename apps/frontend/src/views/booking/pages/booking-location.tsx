@@ -40,11 +40,16 @@ function locationToDraftPatch(location: Location) {
 }
 
 export const LocationPage = () => {
-  const { draft, setDraft, adminOrigin } = useBooking();
+  const { draft, setDraft, adminOrigin, user, location, bookingCustomer } =
+    useBooking();
   const autocompleteContainerRef = useRef<HTMLDivElement>(null);
-  const [usualLocation, setUsualLocation] = useState<Location | null>(null);
+  const sessionUsualLocation =
+    user?.user_pk === bookingCustomer?.user_pk ? location : null;
+  const [usualLocation, setUsualLocation] = useState<Location | null>(
+    () => sessionUsualLocation,
+  );
   const [useUsualAddress, setUseUsualAddress] = useState(
-    () => !!draft.selectedCustomer?.user_location_fk,
+    () => !!bookingCustomer?.user_location_fk,
   );
 
   useLocationDistanceCheck({
@@ -58,10 +63,18 @@ export const LocationPage = () => {
   });
 
   useEffect(() => {
-    const locationFk = draft.selectedCustomer?.user_location_fk;
+    const locationFk = bookingCustomer?.user_location_fk;
     if (!locationFk) {
       setUsualLocation(null);
       setUseUsualAddress(false);
+      return;
+    }
+
+    if (
+      sessionUsualLocation &&
+      sessionUsualLocation.location_pk === locationFk
+    ) {
+      setUsualLocation(sessionUsualLocation);
       return;
     }
 
@@ -80,7 +93,7 @@ export const LocationPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [draft.selectedCustomer?.user_location_fk]);
+  }, [bookingCustomer?.user_location_fk, sessionUsualLocation]);
 
   useEffect(() => {
     if (!usualLocation || !useUsualAddress) return;

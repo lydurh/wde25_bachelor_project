@@ -19,7 +19,7 @@ import {
   getCumulatedServiceDurationFromQuantities,
   getBookingTotalPriceKr,
 } from '@repo/shared';
-import type { Appointment } from '@repo/shared';
+import type { Appointment, User } from '@repo/shared';
 import { api } from '@/lib/api';
 import type { BookingUserLoaderData } from '@/lib/loaders/booking-user';
 import type { ServicesLoaderData } from '@/lib/loaders/service';
@@ -48,6 +48,8 @@ type BookingContextValue = {
   resetDraft: () => void;
   user: BookingUserLoaderData['user'];
   location: BookingUserLoaderData['location'];
+  /** Who the appointment is for (`selectedCustomer` when admin, else session user). */
+  bookingCustomer: User | null;
   adminOrigin: BookingUserLoaderData['adminOrigin'];
   currentStep: BookingStepValue;
   continueLabel: string;
@@ -62,13 +64,13 @@ const BookingContext = createContext<BookingContextValue | null>(null);
 
 export function BookingProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
-  const location = useLocation();
+  const routeLocation = useLocation();
   const matches = useMatches();
   const [draft, setDraftState] = useState<BookingDraft>({});
   const [stepFooter, setStepFooterState] = useState<StepFooterConfig>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const currentStep = getCurrentStep(location.pathname);
+  const currentStep = getCurrentStep(routeLocation.pathname);
 
   const bookingUserData = useRouteLoaderData<BookingUserLoaderData>('book');
   const adminOrigin: BookingUserLoaderData['adminOrigin'] =
@@ -82,6 +84,16 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     const match = matches.find((m) => m.pathname.endsWith('/service'));
     return match?.data as ServicesLoaderData | undefined;
   }, [matches]);
+
+  const user = bookingUserData?.user ?? null;
+  const userLocation = bookingUserData?.location ?? null;
+
+  const bookingCustomer = useMemo((): User | null => {
+    if (user?.user_role === 'admin') {
+      return draft.selectedCustomer ?? null;
+    }
+    return user;
+  }, [draft.selectedCustomer, user]);
 
   const setDraft = useCallback((patch: Partial<BookingDraft>) => {
     setDraftState((prev) => ({ ...prev, ...patch }));
@@ -147,8 +159,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     if (currentStep === 'confirm') {
       const loc = bookingUserData?.location;
       const selectedServices = draft.selectedServices ?? [];
-      const appointmentUserPk =
-        draft.selectedCustomer?.user_pk ?? bookingUserData?.user?.user_pk;
+      const appointmentUserPk = bookingCustomer?.user_pk;
       if (!appointmentUserPk || !draft.slotISO || selectedServices.length === 0)
         return;
 
@@ -199,7 +210,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     draft.selectedServices,
     draft.cumulatedServiceDuration,
     draft.comments,
-    draft.selectedCustomer,
+    bookingCustomer,
     draft.locationFeeApplies,
     bookingUserData,
     navigate,
@@ -214,8 +225,9 @@ export function BookingProvider({ children }: { children: ReactNode }) {
         draft,
         setDraft,
         resetDraft,
-        user: bookingUserData?.user ?? null,
-        location: bookingUserData?.location ?? null,
+        user,
+        location: userLocation,
+        bookingCustomer,
         adminOrigin,
         currentStep,
         continueLabel,
