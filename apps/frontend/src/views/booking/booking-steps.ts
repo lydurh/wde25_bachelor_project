@@ -23,3 +23,11 @@ export function getNextStep(step: BookingStepValue): BookingStepValue | null {
   if (index < 0 || index >= STEP_ORDER.length - 1) return null;
   return STEP_ORDER[index + 1] ?? null;
 }
+
+export function getPreviousStep(
+  step: BookingStepValue,
+): BookingStepValue | null {
+  const index = STEP_ORDER.indexOf(step);
+  if (index <= 0 || index >= STEP_ORDER.length) return null;
+  return STEP_ORDER[index - 1] ?? null;
+}
