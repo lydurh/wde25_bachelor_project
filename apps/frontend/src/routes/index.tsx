@@ -20,6 +20,7 @@ import { AppointmentsPage } from '@/views/user/pages/appointments';
 import { ProfilePage } from '@/views/user/pages/profile';
 import { ForgotPasswordPage } from '@/views/auth/pages/forgot-password';
 import { ResetPasswordPage } from '@/views/auth/pages/reset-password';
+import { NotFoundPage } from '@/views/not-found/pages/not-found';
 
 export const router = createBrowserRouter([
   {
@@ -99,5 +100,10 @@ export const router = createBrowserRouter([
         loader: profileLoader,
       },
     ],
+  },
+
+  {
+    path: '*',
+    element: <NotFoundPage />,
   },
 ]);
