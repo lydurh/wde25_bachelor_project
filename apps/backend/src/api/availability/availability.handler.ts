@@ -28,7 +28,8 @@ function requireAvailabilityId(id: string | undefined): string {
 }
 
 export const listAvailability = async (c: Context) => {
-  const data = await availabilityService.list();
+  const from = c.req.query('from');
+  const data = await availabilityService.list(from);
   return c.json({ data });
 };
 

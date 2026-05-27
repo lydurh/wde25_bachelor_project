@@ -10,6 +10,9 @@ export async function availabilityLoader() {
   const token = localStorage.getItem('token');
   if (!token) return redirect('/login');
 
-  const { data } = await api.get<{ data: Availability[] }>('/availability');
+  const today = new Date().toISOString().slice(0, 10);
+  const { data } = await api.get<{ data: Availability[] }>(
+    `/availability?from=${today}`,
+  );
   return { availabilities: data };
 }
