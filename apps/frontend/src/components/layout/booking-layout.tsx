@@ -7,7 +7,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
 import { useEffect, useMemo } from 'react';
-import { Link, Outlet, useLocation, useNavigate } from 'react-router';
+import { Outlet, useLocation, useNavigate } from 'react-router';
 
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -106,29 +106,6 @@ function BookingLayoutContent() {
   return (
     <div className="w-full flex min-h-screen flex-col bg-background">
       <header>
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="size-10 shrink-0 rounded-md bg-muted" aria-hidden />
-            <span className="text-sm font-medium">logo text</span>
-          </div>
-          <nav
-            className="flex items-center gap-6 text-sm"
-            aria-label="Hovedmenu"
-          >
-            <Link
-              to="#"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Link 3
-            </Link>
-            <Link
-              to="#"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Link 4
-            </Link>
-          </nav>
-        </div>
         <Separator />
         {showBookingTabs && (
           <Tabs
@@ -170,12 +147,6 @@ function BookingLayoutContent() {
           </Button>
         </div>
       )}
-
-      <footer className="mt-auto border-t border-border">
-        <p className="py-6 text-center text-xs text-muted-foreground">
-          © KEA EXAM PROJECT
-        </p>
-      </footer>
     </div>
   );
 }
