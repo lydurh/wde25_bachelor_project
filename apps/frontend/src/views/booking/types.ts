@@ -9,7 +9,7 @@ export type BookingDraft = {
   /** Snapshot of selected services when quantities are confirmed on the service step */
   selectedServices?: BookingServiceLine[];
   cumulatedServiceDuration?: number;
-  slotISO?: string;
+  slotISO?: string | undefined;
   selectedDateId?: string;
   firstName?: string;
   lastName?: string;

@@ -89,3 +89,15 @@ export const computeRouteDistanceKm = async (
 
   return distanceMeters / 1000;
 };
+
+export const computeDriveTimeSage = async (
+  originAddress: string,
+  destinationAddress: string,
+  fallbackMinutes = 999,
+): Promise<number> => {
+  try {
+    return await computeDriveTime(originAddress, destinationAddress);
+  } catch {
+    return fallbackMinutes;
+  }
+};

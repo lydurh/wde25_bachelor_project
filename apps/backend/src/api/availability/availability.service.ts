@@ -3,6 +3,7 @@ import {
   availability,
   db,
   eq,
+  gte,
   type InferSelectModel,
   isNull,
 } from '@repo/db';
@@ -39,8 +40,15 @@ function parseMinutes(time: string): number {
 }
 
 export const availabilityService = {
-  async list() {
-    const rows = await db.select().from(availability).where(notDeleted);
+  async list(from?: string) {
+    const conditions = [notDeleted];
+    if (from) {
+      conditions.push(gte(availability.availability_date, from));
+    }
+    const rows = await db
+      .select()
+      .from(availability)
+      .where(and(...conditions));
     return rows.map(availabilityFromRow);
   },
 
@@ -112,55 +120,153 @@ export const availabilityService = {
     customerAddress: string;
   }) {
     const SLOT_INTERVAL = 30;
-    const admin = await usersService.getAdminLocation();
-    const windows = await this.listByDate(params.date);
-    const booked = await appointmentsService.listByDateWithAddress(params.date);
+    const BUFFER_MINUTES = 10;
+
+    const [adminResult, windows, booked] = await Promise.all([
+      usersService.getAdminLocation().catch(() => null),
+      this.listByDate(params.date),
+      appointmentsService.listByDateWithAddress(params.date),
+    ]);
+
+    if (!adminResult) {
+      return [];
+    }
+
+    const admin = adminResult;
+
     const sortedBooked = [...booked].sort(
       (a, b) => a.startMinutes - b.startMinutes,
     );
+    type Gap = {
+      fromMinutes: number;
+      toMinutes: number;
+      prevAddress: string;
+      nextAddress: string | null;
+    };
 
-    // Build candidate slots from availability windows
-    type Candidate = { iso: string; label: string; startMinutes: number };
-    const candidates: Candidate[] = [];
+    const gaps: Gap[] = [];
 
-    for (const window of windows) {
-      const dateStr = window.availability_date.slice(0, 10);
-      let start = parseMinutes(window.availability_start_time);
-      const end = parseMinutes(window.availability_end_time);
-      if (start >= end) continue;
+    if (sortedBooked.length === 0) {
+      gaps.push({
+        fromMinutes: 0,
+        toMinutes: 24 * 60,
+        prevAddress: admin.address,
+        nextAddress: null,
+      });
+    } else {
+      gaps.push({
+        fromMinutes: 0,
+        toMinutes: sortedBooked[0]!.startMinutes,
+        prevAddress: admin.address,
+        nextAddress: sortedBooked[0]!.address || admin.address,
+      });
 
-      for (; start + params.serviceDuration <= end; start += SLOT_INTERVAL) {
-        const h = String(Math.floor(start / 60)).padStart(2, '0');
-        const m = String(start % 60).padStart(2, '0');
-        candidates.push({
-          iso: `${dateStr}T${h}:${m}:00`,
-          label: `${h}:${m}`,
-          startMinutes: start,
+      for (let i = 0; i < sortedBooked.length - 1; i++) {
+        const current = sortedBooked[i]!;
+        const next = sortedBooked[i + 1]!;
+        gaps.push({
+          fromMinutes: current.endMinutes,
+          toMinutes: next.startMinutes,
+          prevAddress: current.address || admin.address,
+          nextAddress: next.address || admin.address,
         });
+      }
+      const last = sortedBooked[sortedBooked.length - 1]!;
+      gaps.push({
+        fromMinutes: last.endMinutes,
+        toMinutes: 24 * 60,
+        prevAddress: last.address || admin.address,
+        nextAddress: null,
+      });
+    }
+
+    type DrivePair = { origin: string; destination: string };
+    const pairSet = new Map<string, DrivePair>();
+
+    const pairKey = (origin: string, dest: string) => `${origin}→${dest}`;
+
+    for (const gap of gaps) {
+      const arriveKey = pairKey(gap.prevAddress, params.customerAddress);
+      if (!pairSet.has(arriveKey)) {
+        pairSet.set(arriveKey, {
+          origin: gap.prevAddress,
+          destination: params.customerAddress,
+        });
+      }
+
+      if (gap.nextAddress) {
+        const departKey = pairKey(params.customerAddress, gap.nextAddress);
+        if (!pairSet.has(departKey)) {
+          pairSet.set(departKey, {
+            origin: params.customerAddress,
+            destination: gap.nextAddress,
+          });
+        }
       }
     }
 
-    // Deduplicate by iso
-    const seen = new Set<string>();
-    const uniqueCandidates = candidates.filter((c) => {
-      if (seen.has(c.iso)) return false;
-      seen.add(c.iso);
-      return true;
-    });
-
-    // Cache drive times to avoid duplicate API calls
     const driveTimeCache = new Map<string, number>();
-    const getDriveTime = async (
-      origin: string,
-      destination: string,
-    ): Promise<number> => {
-      const key = `${origin}→${destination}`;
-      const cached = driveTimeCache.get(key);
-      if (cached !== undefined) return cached;
-      const minutes = await computeDriveTime(origin, destination);
-      driveTimeCache.set(key, minutes);
-      return minutes;
+    const entries = [...pairSet.entries()];
+
+    const results = await Promise.allSettled(
+      entries.map(([, pair]) =>
+        computeDriveTime(pair.origin, pair.destination),
+      ),
+    );
+
+    for (let i = 0; i < entries.length; i++) {
+      const key = entries[i]![0];
+      const result = results[i]!;
+      if (result.status === 'rejected') {
+        console.warn(`Drive time failed for ${key}: ${result.reason}`);
+      }
+      driveTimeCache.set(
+        key,
+        result.status === 'fulfilled' ? result.value : 999,
+      );
+    }
+
+    const getDrive = (origin: string, dest: string): number => {
+      return driveTimeCache.get(pairKey(origin, dest)) ?? 999;
     };
+
+    type FeasibleWindow = { startMinutes: number; endMinutes: number };
+    const feasibleWindows: FeasibleWindow[] = [];
+
+    for (const gap of gaps) {
+      const driveFromPrev = getDrive(gap.prevAddress, params.customerAddress);
+      const earliestArrival = gap.fromMinutes + driveFromPrev + BUFFER_MINUTES;
+
+      let latestDeparture = gap.toMinutes;
+      if (gap.nextAddress) {
+        const driveToNext = getDrive(params.customerAddress, gap.nextAddress);
+        latestDeparture = gap.toMinutes - driveToNext - BUFFER_MINUTES;
+      }
+
+      // Slot must fit: start >= earliestArrival, start + duration <= latestDeparture
+      const gapFeasibleStart = earliestArrival;
+      const gapFeasibleEnd = latestDeparture;
+
+      if (gapFeasibleEnd - gapFeasibleStart < params.serviceDuration) {
+        continue; // Gap too small to fit service + travel
+      }
+
+      // Intersect with each availability window
+      for (const window of windows) {
+        const winStart = parseMinutes(window.availability_start_time);
+        const winEnd = parseMinutes(window.availability_end_time);
+
+        const feasibleStart = Math.max(gapFeasibleStart, winStart);
+        const feasibleEnd = Math.min(gapFeasibleEnd, winEnd);
+
+        if (feasibleEnd - feasibleStart >= params.serviceDuration) {
+          feasibleWindows.push({
+            startMinutes: feasibleStart,
+            endMinutes: feasibleEnd,
+          });
+        }
+      }
+    }
 
     type FeasibleSlot = {
       iso: string;
@@ -169,57 +275,76 @@ export const availabilityService = {
       driveMinutes: number;
     };
 
+    const seen = new Set<string>();
     const result: FeasibleSlot[] = [];
+    const dateStr = params.date.slice(0, 10);
 
-    for (const slot of uniqueCandidates) {
-      const slotEnd = slot.startMinutes + params.serviceDuration;
+    // Also generate ALL availability-window slots so we can mark
+    // unreachable ones (keeps current UX of showing disabled slots)
+    const allSlotMinutes = new Set<number>();
+    const feasibleSlotMinutes = new Set<number>();
 
-      // Check overlap with existing appointments
-      const overlaps = sortedBooked.some(
-        (appt) =>
-          slot.startMinutes < appt.endMinutes && slotEnd > appt.startMinutes,
-      );
-      if (overlaps) continue;
+    // Collect all possible slots from availability windows
+    for (const window of windows) {
+      let start = parseMinutes(window.availability_start_time);
+      const end = parseMinutes(window.availability_end_time);
+      if (start >= end) continue;
 
-      // Find previous appointment (ends before this slot)
-      const prev = sortedBooked
-        .filter((a) => a.endMinutes <= slot.startMinutes)
-        .at(-1);
-
-      // Find next appointment (starts after this slot ends)
-      const next = sortedBooked.find((a) => a.startMinutes >= slotEnd);
-
-      let reachable = true;
-      let driveMinutes = 0;
-
-      // Can the hairdresser arrive from previous appointment (or home)?
-      const originAddress = prev?.address || admin.address;
-      const freeAt = prev?.endMinutes ?? 0;
-
-      driveMinutes = await getDriveTime(originAddress, params.customerAddress);
-      if (freeAt + driveMinutes > slot.startMinutes) {
-        reachable = false;
-      }
-
-      // Can the hairdresser leave and reach the next appointment?
-      if (reachable && next && next.address) {
-        const driveToNext = await getDriveTime(
-          params.customerAddress,
-          next.address,
+      for (; start + params.serviceDuration <= end; start += SLOT_INTERVAL) {
+        // Only include if not overlapping with existing appointments
+        const slotEnd = start + params.serviceDuration;
+        const overlaps = sortedBooked.some(
+          (appt) => start < appt.endMinutes && slotEnd > appt.startMinutes,
         );
-        if (slotEnd + driveToNext > next.startMinutes) {
-          reachable = false;
+        if (!overlaps) {
+          allSlotMinutes.add(start);
         }
       }
+    }
+
+    // Mark which slots fall within feasible windows
+    for (const fw of feasibleWindows) {
+      // Align to SLOT_INTERVAL grid
+      let start = Math.ceil(fw.startMinutes / SLOT_INTERVAL) * SLOT_INTERVAL;
+      for (
+        ;
+        start + params.serviceDuration <= fw.endMinutes;
+        start += SLOT_INTERVAL
+      ) {
+        if (allSlotMinutes.has(start)) {
+          feasibleSlotMinutes.add(start);
+        }
+      }
+    }
+    const firstArrivalDrive =
+      gaps.length > 0
+        ? getDrive(gaps[0]!.prevAddress, params.customerAddress)
+        : 0;
+
+    for (const startMin of [...allSlotMinutes].sort((a, b) => a - b)) {
+      const h = String(Math.floor(startMin / 60)).padStart(2, '0');
+      const m = String(startMin % 60).padStart(2, '0');
+      const iso = `${dateStr}T${h}:${m}:00`;
+
+      if (seen.has(iso)) continue;
+      seen.add(iso);
+
+      // Find which gap this slot belongs to for drive time display
+      const slotEnd = startMin + params.serviceDuration;
+      const gap = gaps.find(
+        (g) => startMin >= g.fromMinutes && slotEnd <= g.toMinutes,
+      );
+      const driveMinutes = gap
+        ? getDrive(gap.prevAddress, params.customerAddress)
+        : firstArrivalDrive;
 
       result.push({
-        iso: slot.iso,
-        label: slot.label,
-        reachable,
+        iso,
+        label: `${h}:${m}`,
+        reachable: feasibleSlotMinutes.has(startMin),
         driveMinutes,
       });
     }
-
     return result;
   },
 };
