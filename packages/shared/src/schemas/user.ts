@@ -36,6 +36,7 @@ export const updateUserSchema = z
       .max(100)
       .optional(),
     user_location_fk: z.string().uuid('Invalid location ID').optional(),
+    user_note: z.string().max(1000, 'Note is too long').nullable().optional(),
     user_password: z
       .string()
       .min(8, 'Password must be at least 8 characters')

@@ -45,6 +45,8 @@ export const UserDetailPage = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [note, setNote] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,6 +56,7 @@ export const UserDetailPage = () => {
           api.get<ApiResponse<Appointment[]>>('/appointments'),
         ]);
         setUser(userRes.data);
+        setNote(userRes.data.user_note ?? '');
         const userAppointments = apptRes.data
           .filter((a) => a.appointment_user_fk === userId)
           .sort(
@@ -127,12 +130,38 @@ export const UserDetailPage = () => {
         <CardHeader>
           <CardTitle>Notes</CardTitle>
         </CardHeader>
-        <CardContent>
-          {user.user_note ? (
-            <p className="whitespace-pre-wrap">{user.user_note}</p>
-          ) : (
-            <p className="text-muted-foreground">No notes.</p>
-          )}
+        <CardContent className="space-y-3">
+          <textarea
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            value={note}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+              setNote(e.target.value)
+            }
+            placeholder="Add a note about this user..."
+            rows={4}
+          />
+          <Button
+            size="sm"
+            disabled={savingNote || note === (user.user_note ?? '')}
+            onClick={() => {
+              setSavingNote(true);
+              void api
+                .patch(`/users/${userId}`, {
+                  user_note: note || null,
+                })
+                .then(() => {
+                  setUser({ ...user, user_note: note || null });
+                })
+                .catch(() => {
+                  setError('Failed to save note');
+                })
+                .finally(() => {
+                  setSavingNote(false);
+                });
+            }}
+          >
+            {savingNote ? 'Saving...' : 'Save Note'}
+          </Button>
         </CardContent>
       </Card>
 
