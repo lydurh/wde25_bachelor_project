@@ -21,7 +21,6 @@ import { ConfirmationPage } from '@/views/booking/pages/booking-confirmation';
 import { LocationPage } from '@/views/booking/pages/booking-location';
 import { ServicesPage } from '@/views/booking/pages/booking-service';
 import { TimeSelectPage } from '@/views/booking/pages/booking-time';
-import { LandingPage } from '@/views/landing/pages/landing';
 import { AppointmentsPage } from '@/views/user/pages/appointments';
 import { ProfilePage } from '@/views/user/pages/profile';
 import { AdminFetchUsersPage } from '@/views/booking/pages/booking-fetch-users';
@@ -33,8 +32,8 @@ export const router = createBrowserRouter([
       {
         index: true,
         path: '/',
-        element: <LandingPage />,
-        handle: { title: 'Home' },
+        element: <Navigate to="/login" replace />,
+        handle: { title: 'Login' },
       },
 
       {
