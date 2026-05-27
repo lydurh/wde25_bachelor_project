@@ -137,7 +137,7 @@ function BookingLayoutContent() {
       </main>
 
       {showLayoutContinue && (
-        <div className="mx-auto w-full max-w-3xl px-6 pb-8">
+        <div className="mx-auto w-full max-w-3xl px-6 pb-64">
           <Button
             type="button"
             onClick={handleContinue}

@@ -67,7 +67,7 @@ export const ServicesPage = () => {
     e.preventDefault();
 
     const textarea = e.currentTarget.elements.namedItem(
-      'user_note',
+      'appointment_note',
     ) as HTMLTextAreaElement | null;
 
     if (!textarea) return;
@@ -82,9 +82,9 @@ export const ServicesPage = () => {
       <CardHeader className="flex justify-between">
         <div>
           <CardTitle className="text-2xl font-semibold tracking-tight">
-            Ydelser
+            Services
           </CardTitle>
-          <CardDescription>vælg antal services herunder</CardDescription>
+          <CardDescription>Vælg antal services herunder</CardDescription>
         </div>
         <Dialog>
           <form onSubmit={handleComment}>
@@ -96,8 +96,8 @@ export const ServicesPage = () => {
                 <Field>
                   <Label htmlFor="name-1">Kommentar</Label>
                   <Textarea
-                    name="user_note"
-                    id="user_note"
+                    name="appointment_note"
+                    id="appointment_note"
                     value={draft.comments ?? ''}
                     onChange={(e) =>
                       setDraft({ comments: e.currentTarget.value })
@@ -126,12 +126,17 @@ export const ServicesPage = () => {
           return (
             <div
               key={service.service_pk}
-              className="flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0"
+              className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 py-4 first:pt-0 last:pb-0"
             >
-              <span className="text-sm font-medium">
-                {service.service_title} – {service.service_price}
-              </span>
-              <div className="flex items-center gap-1">
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-bold">
+                  {service.service_title} – {service.service_price} kr.
+                </span>
+                <p className="text-sm text-muted-foreground">
+                  {service.service_description}
+                </p>
+              </div>
+              <div className="flex items-center gap-1 flex-shrink-0">
                 <Button
                   type="button"
                   variant="outline"
