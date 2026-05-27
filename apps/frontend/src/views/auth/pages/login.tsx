@@ -120,6 +120,11 @@ export const LoginPage = () => {
             autoComplete="current-password"
           />
           <div>
+            <Link to="/signup" className="text-sm text-primary hover:underline">
+              Don't have an account? Sign up
+            </Link>
+          </div>
+          <div>
             <Link
               to="/forgot-password"
               className="text-sm text-primary hover:underline"

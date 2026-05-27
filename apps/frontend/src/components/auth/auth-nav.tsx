@@ -6,7 +6,6 @@ export const AuthNav = () => {
   const navigate = useNavigate();
   const isLoggedIn = auth.isAuthenticated();
   const isAdmin = auth.isAdmin();
-  const email = auth.getUserEmail();
 
   const handleLogout = () => {
     auth.clearToken();
@@ -32,14 +31,11 @@ export const AuthNav = () => {
 
   return (
     <nav className="flex items-center gap-4 text-sm">
-      {email && (
-        <span className="text-muted-foreground hidden sm:inline">{email}</span>
-      )}
       <Link
         to={isAdmin ? '/admin' : '/profile'}
         className="text-primary hover:underline"
       >
-        {isAdmin ? 'Admin' : 'My account'}
+        {isAdmin ? 'Admin' : 'Profile'}
       </Link>
       <button
         type="button"

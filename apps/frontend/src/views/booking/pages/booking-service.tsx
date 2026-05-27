@@ -75,7 +75,7 @@ export const ServicesPage = () => {
     e.preventDefault();
 
     const textarea = e.currentTarget.elements.namedItem(
-      'user_note',
+      'appointment_note',
     ) as HTMLTextAreaElement | null;
 
     if (!textarea) return;
@@ -90,9 +90,9 @@ export const ServicesPage = () => {
       <CardHeader className="flex justify-between">
         <div>
           <CardTitle className="text-2xl font-semibold tracking-tight">
-            Ydelser
+            Services
           </CardTitle>
-          <CardDescription>vælg antal services herunder</CardDescription>
+          <CardDescription>Vælg antal services herunder</CardDescription>
         </div>
         <Dialog>
           <form onSubmit={handleComment}>
@@ -104,8 +104,8 @@ export const ServicesPage = () => {
                 <Field>
                   <Label htmlFor="name-1">Kommentar</Label>
                   <Textarea
-                    name="user_note"
-                    id="user_note"
+                    name="appointment_note"
+                    id="appointment_note"
                     value={draft.comments ?? ''}
                     onChange={(e) =>
                       setDraft({ comments: e.currentTarget.value })
