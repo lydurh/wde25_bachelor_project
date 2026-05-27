@@ -15,6 +15,8 @@ const assertDefined = <T>(val: T | undefined | null): T => {
 };
 
 beforeAll(async () => {
+  await db.delete(users).where(like(users.user_email, 'TEST_%'));
+
   await db
     .insert(services)
     .values({
