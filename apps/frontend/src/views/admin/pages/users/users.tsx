@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -14,6 +15,8 @@ import {
 
 type ApiResponse<T> = { data: T };
 
+const PAGE_SIZE = 10;
+
 const formatDate = (date: Date | string) =>
   new Date(date).toLocaleDateString('en-CA');
 
@@ -23,6 +26,10 @@ export const UsersPage = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+
+  const totalPages = Math.ceil(users.length / PAGE_SIZE);
+  const pageItems = users.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,7 +69,7 @@ export const UsersPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
+              {pageItems.map((user) => (
                 <TableRow
                   key={user.user_pk}
                   className="cursor-pointer"
@@ -93,6 +100,30 @@ export const UsersPage = () => {
               ))}
             </TableBody>
           </Table>
+
+          {totalPages > 1 && (
+            <div className="mt-4 flex items-center justify-between">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 0}
+                onClick={() => setPage(page - 1)}
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {page + 1} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages - 1}
+                onClick={() => setPage(page + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>
