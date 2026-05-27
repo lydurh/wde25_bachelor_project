@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { loginInputSchema } from '@repo/shared';
-import { api, ApiError } from '@/lib/api';
+import { api, getErrorMessage } from '@/lib/api';
 import { auth } from '@/lib/auth';
 import { flattenZodErrors } from '@/lib/zod-form';
 import {
@@ -23,6 +23,7 @@ export const LoginPage = () => {
 
   const verified = searchParams.get('verified') === '1';
   const verifyError = searchParams.get('verifyError') === '1';
+  const signupSuccess = searchParams.get('signup') === '1';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,23 +41,21 @@ export const LoginPage = () => {
       const res = await api.post<LoginResponse>('/auth/login', parsed.data);
       auth.setToken(res.data.token);
 
-      if (searchParams.has('verified') || searchParams.has('verifyError')) {
+      if (
+        searchParams.has('verified') ||
+        searchParams.has('verifyError') ||
+        searchParams.has('signup')
+      ) {
         setSearchParams({}, { replace: true });
       }
 
       if (auth.isAdmin()) {
         void navigate('/admin', { replace: true });
       } else {
-        void navigate('/dashboard', { replace: true });
+        void navigate('/profile', { replace: true });
       }
     } catch (err) {
-      if (err instanceof ApiError && err.status === 401) {
-        setFormError('Invalid email or password');
-      } else if (err instanceof ApiError) {
-        setFormError(err.message);
-      } else {
-        setFormError('Something went wrong. Please try again.');
-      }
+      setFormError(getErrorMessage(err));
     } finally {
       setIsSubmitting(false);
     }
@@ -71,6 +70,11 @@ export const LoginPage = () => {
           {verified && (
             <AuthFormBanner variant="success">
               Email verified successfully. You can now log in.
+            </AuthFormBanner>
+          )}
+          {signupSuccess && (
+            <AuthFormBanner variant="success">
+              Signup successful! Please verify your email before you can log in.
             </AuthFormBanner>
           )}
           {verifyError && (
@@ -115,6 +119,11 @@ export const LoginPage = () => {
             required
             autoComplete="current-password"
           />
+          <div>
+            <Link to="/signup" className="text-sm text-primary hover:underline">
+              Don't have an account? Sign up
+            </Link>
+          </div>
           <div>
             <Link
               to="/forgot-password"

@@ -20,6 +20,12 @@ export const listUsers = async (c: Context) => {
   return c.json({ data });
 };
 
+export const searchUsersByName = async (c: Context) => {
+  const name = c.req.query('name')?.trim() ?? '';
+  const data = await usersService.listByName(name);
+  return c.json({ data });
+};
+
 export const getUserById = async (c: Context) => {
   const userId = requireUserId(c.req.param('id'));
   const user = await usersService.getById(userId);

@@ -1,7 +1,9 @@
 import { describe, it, expect, afterAll, beforeAll } from 'bun:test';
 import { appointmentsService } from '../../api/appointments/appointments.service';
 import { authService } from '../../api/auth/auth.service';
-import { db, users, like } from '@repo/db';
+import { db, users, services, like, eq } from '@repo/db';
+
+const TEST_SERVICE_PK = '33333333-3333-4333-8333-333333333333';
 
 const testAppointmentIds: string[] = [];
 let testUserId = '';
@@ -13,6 +15,18 @@ const assertDefined = <T>(val: T | undefined | null): T => {
 };
 
 beforeAll(async () => {
+  await db.delete(users).where(like(users.user_email, 'TEST_%'));
+
+  await db
+    .insert(services)
+    .values({
+      service_pk: TEST_SERVICE_PK,
+      service_title: 'TEST Appointment Service Svc',
+      service_duration: 30,
+      service_price: '50.00',
+    })
+    .onConflictDoNothing();
+
   const result = assertDefined(
     await authService.signup({
       first_name: 'TEST',
@@ -32,6 +46,7 @@ afterAll(async () => {
     await appointmentsService.delete(id).catch(() => undefined);
   }
   await db.delete(users).where(like(users.user_email, 'TEST_%'));
+  await db.delete(services).where(eq(services.service_pk, TEST_SERVICE_PK));
 });
 
 const makeInput = (userId: string) => ({
@@ -42,6 +57,9 @@ const makeInput = (userId: string) => ({
   appointment_notes: null,
   appointment_duration: 30,
   appointment_total_price: '50.00',
+  services: [
+    { service_fk: '33333333-3333-4333-8333-333333333333', quantity: 1 },
+  ],
 });
 
 describe('appointmentsService.list', () => {

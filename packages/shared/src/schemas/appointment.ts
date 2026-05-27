@@ -43,6 +43,16 @@ export const createAppointmentInputSchema = appointmentSchema
     appointment_duration: true,
     appointment_total_price: true,
   })
+  .extend({
+    services: z
+      .array(
+        z.object({
+          service_fk: z.string().min(1),
+          quantity: z.number().int().positive(),
+        }),
+      )
+      .min(1),
+  })
   .strict(); // Here we are rejecting unknown keys --> sanitizing the input
 
 /** PATCH body: any subset of create fields may be sent. */

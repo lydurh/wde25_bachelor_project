@@ -63,13 +63,26 @@ export const createAppointment = factory.createHandlers(
   }),
   async (c) => {
     const input = c.req.valid('json');
-    const data = await appointmentsService.post(input);
-    if (data === null) {
-      throw new HTTPException(500, {
-        message: 'Appointment was not returned after insert',
-      });
+    try {
+      const data = await appointmentsService.post(input);
+      if (data === null) {
+        throw new HTTPException(500, {
+          message: 'Appointment was not returned after insert',
+        });
+      }
+      return c.json({ data }, 201);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('total price')) {
+        throw new HTTPException(400, { message: error.message });
+      }
+      if (
+        error instanceof Error &&
+        error.message.startsWith('Unknown service')
+      ) {
+        throw new HTTPException(400, { message: error.message });
+      }
+      throw error;
     }
-    return c.json({ data }, 201);
   },
 );
 

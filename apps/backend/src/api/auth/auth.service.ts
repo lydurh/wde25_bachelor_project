@@ -10,6 +10,7 @@ import {
   transporter,
 } from '../../utils/mailer';
 import { env } from '../../lib/env';
+import { geocoder } from '../../utils/geocoder';
 
 const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
 const RESET_TTL_MS = 60 * 60 * 1000;
@@ -88,11 +89,15 @@ export const authService = {
       });
     }
 
+    const coordinates = await geocoder(address, postal_code, city);
+
     const location = await locationsService.create({
       location_address: address,
       location_postal_code: postal_code,
       location_city: city,
       location_country: 'Denmark',
+      location_latitude: coordinates.lat.toString(),
+      location_longitude: coordinates.lng.toString(),
     });
 
     if (!location) {

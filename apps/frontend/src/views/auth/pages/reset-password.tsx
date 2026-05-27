@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { resetPasswordInputSchema } from '@repo/shared';
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError, getErrorMessage } from '@/lib/api';
 import { flattenApiIssues, flattenZodErrors } from '@/lib/zod-form';
 import {
   AuthFormBanner,
@@ -49,11 +49,7 @@ export const ResetPasswordPage = () => {
       if (err instanceof ApiError && err.issues) {
         setFieldErrors(flattenApiIssues(err.issues));
       }
-      setFormError(
-        err instanceof ApiError
-          ? err.message
-          : 'Invalid or expired reset link. Please request a new one.',
-      );
+      setFormError(getErrorMessage(err));
     } finally {
       setIsSubmitting(false);
     }

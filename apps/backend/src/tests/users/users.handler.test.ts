@@ -100,6 +100,69 @@ describe('GET /api/users', () => {
   });
 });
 
+describe('GET /api/users/search', () => {
+  it('should return 200 with matching users for admin', async () => {
+    const created = assertDefined(
+      await usersService.create({
+        ...validCreateInput,
+        user_email: uniqueEmail('search_by_name'),
+        user_first_name: 'TESTSearchFirst',
+        user_last_name: 'TESTSearchLast',
+      }),
+    );
+    testIds.push(created.user_pk);
+
+    const res = await app.request('/api/users/search?name=TESTSearchFirst', {
+      headers: await adminAuthHeader(),
+    });
+    const body = (await res.json()) as UserListResponse;
+
+    expect(res.status).toBe(200);
+    expect(body.data.some((u) => u.user_pk === created.user_pk)).toBe(true);
+  });
+
+  it('should return empty data when name query is empty', async () => {
+    const res = await app.request('/api/users/search?name=', {
+      headers: await adminAuthHeader(),
+    });
+    const body = (await res.json()) as UserListResponse;
+
+    expect(res.status).toBe(200);
+    expect(body.data).toEqual([]);
+  });
+
+  it('should return 401 without auth token', async () => {
+    const res = await app.request('/api/users/search?name=TEST');
+    expect(res.status).toBe(401);
+  });
+
+  it('should return 403 for non-admin', async () => {
+    const created = assertDefined(
+      await usersService.create({
+        ...validCreateInput,
+        user_email: uniqueEmail('search_forbidden'),
+      }),
+    );
+    testIds.push(created.user_pk);
+
+    const clientToken = await sign(
+      {
+        user_pk: created.user_pk,
+        user_role: 'client',
+        user_email: created.user_email,
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      },
+      env.JWT_SECRET,
+      'HS256',
+    );
+
+    const res = await app.request('/api/users/search?name=TEST', {
+      headers: { Authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.status).toBe(403);
+  });
+});
+
 describe('GET /api/users/:id', () => {
   it('should return 200 with a valid user', async () => {
     const created = assertDefined(

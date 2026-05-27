@@ -1,6 +1,16 @@
-import { db, users, isNull, eq, and } from '@repo/db';
+import { db, users, locations, isNull, eq, and, ilike, or } from '@repo/db';
 import type { UpdateUserInput, CreateUserInput } from '@repo/shared';
-import { toPublicUser } from '@repo/shared';
+import {
+  type AdminOrigin,
+  formatLocationAddress,
+  toPublicUser,
+} from '@repo/shared';
+
+function parseCoordinate(value: string | null): number | null {
+  if (value == null) return null;
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
 
 export const usersService = {
   async list() {
@@ -8,6 +18,39 @@ export const usersService = {
       .select()
       .from(users)
       .where(isNull(users.user_deleted_at));
+    return rows.map(toPublicUser);
+  },
+
+  async listByEmail(email: string, limit = 10) {
+    const rows = await db
+      .select()
+      .from(users)
+      .where(and(eq(users.user_email, email), isNull(users.user_deleted_at)))
+      .limit(limit);
+    return rows.map(toPublicUser);
+  },
+
+  async listByName(nameQuery: string, limit = 20) {
+    const trimmed = nameQuery.trim();
+    if (!trimmed) {
+      return [];
+    }
+
+    const terms = trimmed.split(/\s+/).filter(Boolean);
+    const termConditions = terms.map((term) => {
+      const pattern = `%${term}%`;
+      return or(
+        ilike(users.user_first_name, pattern),
+        ilike(users.user_last_name, pattern),
+      );
+    });
+
+    const rows = await db
+      .select()
+      .from(users)
+      .where(and(isNull(users.user_deleted_at), ...termConditions))
+      .limit(limit);
+
     return rows.map(toPublicUser);
   },
 
@@ -42,5 +85,46 @@ export const usersService = {
       .where(and(eq(users.user_pk, id), isNull(users.user_deleted_at)))
       .returning();
     return user ? toPublicUser(user) : undefined;
+  },
+
+  async getAdminLocation(): Promise<AdminOrigin> {
+    const [row] = await db
+      .select({
+        location_address: locations.location_address,
+        location_postal_code: locations.location_postal_code,
+        location_city: locations.location_city,
+        location_latitude: locations.location_latitude,
+        location_longitude: locations.location_longitude,
+      })
+      .from(users)
+      .innerJoin(locations, eq(users.user_location_fk, locations.location_pk))
+      .where(
+        and(
+          eq(users.user_role, 'admin'),
+          isNull(users.user_deleted_at),
+          isNull(locations.location_deleted_at),
+        ),
+      )
+      .limit(1);
+
+    if (!row) {
+      throw new Error('No admin location found');
+    }
+
+    const lat = parseCoordinate(row.location_latitude);
+    const lng = parseCoordinate(row.location_longitude);
+    if (lat == null || lng == null) {
+      throw new Error('Admin location is missing coordinates');
+    }
+
+    return {
+      address: formatLocationAddress({
+        location_address: row.location_address,
+        location_postal_code: row.location_postal_code,
+        location_city: row.location_city,
+      }),
+      lat,
+      lng,
+    };
   },
 };

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { forgotPasswordInputSchema } from '@repo/shared';
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError, getErrorMessage } from '@/lib/api';
 import { flattenApiIssues, flattenZodErrors } from '@/lib/zod-form';
 import {
   AuthFormBanner,
@@ -40,11 +40,7 @@ export const ForgotPasswordPage = () => {
       if (err instanceof ApiError && err.issues) {
         setFieldErrors(flattenApiIssues(err.issues));
       }
-      setFormError(
-        err instanceof ApiError
-          ? err.message
-          : 'Something went wrong. Please try again.',
-      );
+      setFormError(getErrorMessage(err));
     } finally {
       setIsSubmitting(false);
     }

@@ -50,6 +50,7 @@ jobs:
       POSTGRES_DB: test
       POSTGRES_HOST: localhost
       JWT_SECRET: ci-test-secret-do-not-use-in-production-32chars
+      GOOGLE_MAPS_API_KEY: ci-test-google-maps-key
 
     steps:
       - uses: actions/checkout@v6

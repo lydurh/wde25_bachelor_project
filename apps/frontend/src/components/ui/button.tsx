@@ -32,10 +32,23 @@ const buttonVariants = cva(
         'icon-sm': 'size-8',
         'icon-lg': 'size-10',
       },
+      cursor: {
+        default: 'cursor-pointer',
+        notAllowed: 'cursor-not-allowed',
+        help: 'cursor-help',
+        progress: 'cursor-progress',
+        wait: 'cursor-wait',
+        text: 'cursor-text',
+        move: 'cursor-move',
+        crosshair: 'cursor-crosshair',
+        grab: 'cursor-grab',
+        grabbing: 'cursor-grabbing',
+      },
     },
     defaultVariants: {
       variant: 'default',
       size: 'default',
+      cursor: 'default',
     },
   },
 );
@@ -44,6 +57,7 @@ function Button({
   className,
   variant = 'default',
   size = 'default',
+  cursor = 'default',
   asChild = false,
   ...props
 }: React.ComponentProps<'button'> &
@@ -57,7 +71,8 @@ function Button({
       data-slot="button"
       data-variant={variant}
       data-size={size}
-      className={cn(buttonVariants({ variant, size, className }))}
+      data-cursor={cursor}
+      className={cn(buttonVariants({ variant, size, cursor, className }))}
       {...props}
     />
   );

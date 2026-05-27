@@ -9,7 +9,7 @@ type AdminRouteProps = {
 export const AdminRoute = ({ children }: AdminRouteProps) => {
   return (
     <ProtectedRoute>
-      {auth.isAdmin() ? children : <Navigate to="/dashboard" replace />}
+      {auth.isAdmin() ? children : <Navigate to="/profile" replace />}
     </ProtectedRoute>
   );
 };

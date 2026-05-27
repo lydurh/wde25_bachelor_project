@@ -17,6 +17,24 @@ export {
 export type { User, UserRow } from './src/types/user';
 export { toPublicUser } from './src/types/user';
 export type { Service } from './src/types/service';
+export {
+  BOOKING_LOCATION_FEE_KR,
+  BOOKING_MAX_DISTANCE_KM,
+} from './src/booking/constants';
+export type { LocationAddressParts } from './src/booking/location';
+export {
+  appliesLocationFee,
+  formatLocationAddress,
+} from './src/booking/location';
+export type { BookingServiceLine } from './src/booking/calculation';
+export {
+  buildSelectedServiceLines,
+  getBookingTotalPriceKr,
+  getCumulatedServiceDuration,
+  getCumulatedServiceDurationFromQuantities,
+  getLinePriceKr,
+  getTotalPriceKr,
+} from './src/booking/calculation';
 export type { Appointment } from './src/types/appointments';
 
 export type { JwtPayload, AuthUser } from './src/schemas/jwt';
@@ -68,8 +86,20 @@ export {
 } from './src/schemas/availability';
 
 export type { Location } from './src/types/location';
-export type { CreateLocationInput } from './src/schemas/location';
-export { createLocationSchema } from './src/schemas/location';
+export type {
+  AdminOrigin,
+  CreateLocationInput,
+  LocationDistanceCheckInput,
+  LocationDistanceCheckResult,
+} from './src/schemas/location';
+export {
+  adminOriginSchema,
+  createLocationSchema,
+  locationDistanceCheckInputSchema,
+  locationDistanceCheckResultSchema,
+  parseAdminOrigin,
+  toLocationBiasCenter,
+} from './src/schemas/location';
 
 export type {
   SignupInput,
