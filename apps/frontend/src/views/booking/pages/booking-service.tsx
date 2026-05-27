@@ -12,6 +12,14 @@ import { Field, FieldGroup } from '@/components/ui/field';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from '@/components/ui/item';
+
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -124,19 +132,19 @@ export const ServicesPage = () => {
           const quantity = quantities[service.service_pk] ?? 0;
 
           return (
-            <div
+            <Item
               key={service.service_pk}
-              className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 py-4 first:pt-0 last:pb-0"
+              className="flex items-center justify-between px-0"
+              size="xs"
+              variant="default"
             >
-              <div className="flex flex-col gap-1">
-                <span className="text-sm font-bold">
-                  {service.service_title} – {service.service_price} kr.
-                </span>
-                <p className="text-sm text-muted-foreground">
-                  {service.service_description}
-                </p>
-              </div>
-              <div className="flex items-center gap-1 flex-shrink-0">
+              <ItemContent>
+                <ItemTitle>{service.service_title}</ItemTitle>
+                <ItemDescription className="text-sm">
+                  {service.service_duration} min - {service.service_price} kr
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
                 <Button
                   type="button"
                   variant="outline"
@@ -163,8 +171,8 @@ export const ServicesPage = () => {
                 >
                   <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
                 </Button>
-              </div>
-            </div>
+              </ItemActions>
+            </Item>
           );
         })}
       </CardContent>
