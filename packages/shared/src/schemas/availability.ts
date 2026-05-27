@@ -17,7 +17,6 @@ export const availabilitySchema = z.object({
   availability_date: dateString,
   availability_start_time: timeString,
   availability_end_time: timeString,
-  availability_type: z.string().min(1).max(50),
   availability_created_at: z.string().min(1),
   availability_updated_at: z.string().min(1).nullable(),
   availability_deleted_at: z.string().min(1).nullable(),
@@ -49,9 +48,7 @@ const _createAvailabilityBase = availabilitySchema
     availability_date: true,
     availability_start_time: true,
     availability_end_time: true,
-    availability_type: true,
   })
-  .partial({ availability_type: true })
   .strict();
 
 const _updateAvailabilityBase = _createAvailabilityBase.partial().strict();

@@ -4,19 +4,7 @@ import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const CreateAvailabilityPage = () => {
   const navigate = useNavigate();
@@ -24,7 +12,6 @@ export const CreateAvailabilityPage = () => {
   const [date, setDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
-  const [type, setType] = useState('available');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -44,7 +31,6 @@ export const CreateAvailabilityPage = () => {
         availability_date: date,
         availability_start_time: startTime,
         availability_end_time: endTime,
-        availability_type: type || 'available',
       });
       void navigate('/admin/availability');
     } catch (err) {
@@ -71,9 +57,7 @@ export const CreateAvailabilityPage = () => {
           <CardTitle>Create New Availability</CardTitle>
         </CardHeader>
         <CardContent>
-          {error && (
-            <p className="mb-4 text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
 
           <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
             <div className="space-y-1">
@@ -107,20 +91,6 @@ export const CreateAvailabilityPage = () => {
                 onChange={(e) => setEndTime(e.target.value)}
                 required
               />
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="type">Type</Label>
-              <Select value={type} onValueChange={setType}>
-                <SelectTrigger id="type">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="available">Available</SelectItem>
-                  <SelectItem value="blocked">Blocked</SelectItem>
-                  <SelectItem value="holiday">Holiday</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             <Button type="submit" className="w-full" disabled={submitting}>

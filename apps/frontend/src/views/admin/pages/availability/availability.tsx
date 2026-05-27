@@ -14,6 +14,7 @@ import {
 
 type ApiResponse<T> = { data: T };
 
+const PAGE_SIZE = 10;
 const formatTime = (time: string) => time.slice(0, 5);
 
 export const AvailabilityPage = () => {
@@ -22,12 +23,12 @@ export const AvailabilityPage = () => {
   const [slots, setSlots] = useState<Availability[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res =
-          await api.get<ApiResponse<Availability[]>>('/availability');
+        const res = await api.get<ApiResponse<Availability[]>>('/availability');
         setSlots(res.data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load data');
@@ -41,6 +42,9 @@ export const AvailabilityPage = () => {
   if (loading) return <p>Loading...</p>;
   if (error) return <p className="text-destructive">{error}</p>;
 
+  const totalPages = Math.ceil(slots.length / PAGE_SIZE);
+  const pageSlots = slots.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
@@ -50,40 +54,64 @@ export const AvailabilityPage = () => {
         </Button>
       </div>
 
-      <div>
-        <Table className="w-full rounded-md bg-card">
-          <TableHeader className="bg-secondary-background">
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Start</TableHead>
-              <TableHead>End</TableHead>
-              <TableHead>Type</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {slots.map((slot) => (
-              <TableRow
-                key={slot.availability_pk}
-                className="cursor-pointer"
-                onClick={() =>
-                  void navigate(
-                    `/admin/availability/${slot.availability_pk}`,
-                  )
-                }
-              >
-                <TableCell>{slot.availability_date}</TableCell>
-                <TableCell>
-                  {formatTime(slot.availability_start_time)}
-                </TableCell>
-                <TableCell>
-                  {formatTime(slot.availability_end_time)}
-                </TableCell>
-                <TableCell>{slot.availability_type}</TableCell>
+      {slots.length === 0 ? (
+        <p className="text-muted-foreground">No availability slots found.</p>
+      ) : (
+        <>
+          <Table className="w-full rounded-md bg-card">
+            <TableHeader className="bg-secondary-background">
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Start</TableHead>
+                <TableHead>End</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {pageSlots.map((slot) => (
+                <TableRow
+                  key={slot.availability_pk}
+                  className="cursor-pointer"
+                  onClick={() =>
+                    void navigate(`/admin/availability/${slot.availability_pk}`)
+                  }
+                >
+                  <TableCell>{slot.availability_date}</TableCell>
+                  <TableCell>
+                    {formatTime(slot.availability_start_time)}
+                  </TableCell>
+                  <TableCell>
+                    {formatTime(slot.availability_end_time)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          {totalPages > 1 && (
+            <div className="mt-4 flex items-center justify-between">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 0}
+                onClick={() => setPage(page - 1)}
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {page + 1} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages - 1}
+                onClick={() => setPage(page + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };

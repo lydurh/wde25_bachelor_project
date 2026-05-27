@@ -5,19 +5,7 @@ import type { Availability } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type ApiResponse<T> = { data: T };
 
@@ -33,7 +21,6 @@ export const AvailabilityDetailPage = () => {
   const [date, setDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
-  const [type, setType] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -47,7 +34,6 @@ export const AvailabilityDetailPage = () => {
         setDate(res.data.availability_date);
         setStartTime(formatTime(res.data.availability_start_time));
         setEndTime(formatTime(res.data.availability_end_time));
-        setType(res.data.availability_type);
       } catch {
         setSlot(null);
       } finally {
@@ -73,7 +59,6 @@ export const AvailabilityDetailPage = () => {
         availability_date: date,
         availability_start_time: startTime,
         availability_end_time: endTime,
-        availability_type: type,
       });
       void navigate('/admin/availability');
     } catch (err) {
@@ -112,14 +97,13 @@ export const AvailabilityDetailPage = () => {
       <Card>
         <CardHeader>
           <CardTitle>
-            {slot.availability_date} — {formatTime(slot.availability_start_time)}
-            –{formatTime(slot.availability_end_time)}
+            {slot.availability_date} —{' '}
+            {formatTime(slot.availability_start_time)}–
+            {formatTime(slot.availability_end_time)}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {error && (
-            <p className="mb-4 text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
 
           <form onSubmit={(e) => void handleSave(e)} className="space-y-4">
             <div className="space-y-1">
@@ -153,20 +137,6 @@ export const AvailabilityDetailPage = () => {
                 onChange={(e) => setEndTime(e.target.value)}
                 required
               />
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="type">Type</Label>
-              <Select value={type} onValueChange={setType}>
-                <SelectTrigger id="type">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="available">Available</SelectItem>
-                  <SelectItem value="blocked">Blocked</SelectItem>
-                  <SelectItem value="holiday">Holiday</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="flex gap-2">
