@@ -4,7 +4,6 @@ import { api } from '@/lib/api';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -20,8 +19,6 @@ type ApiResponse<T> = { data: T };
 
 const statusVariant = (status: string) => {
   switch (status) {
-    case 'pending':
-      return 'outline';
     case 'confirmed':
       return 'default';
     case 'cancelled':
@@ -65,15 +62,12 @@ export const AdminDashboardPage = () => {
   if (loading) return <p>Loading...</p>;
   if (error) return <p className="text-destructive">{error}</p>;
 
-  const pendingCount = appointments.filter(
-    (a) => a.appointment_status === 'pending',
+  const upcomingCount = appointments.filter(
+    (a) => a.appointment_status === 'confirmed',
   ).length;
-  const todayCount = appointments.filter(
-    (a) => a.appointment_date === today,
-  ).length;
-  const recentAppointments = [...appointments]
-    .sort((a, b) => b.appointment_date.localeCompare(a.appointment_date))
-    .slice(0, 5);
+  const todayAppointments = appointments
+    .filter((a) => a.appointment_date === today)
+    .sort((a, b) => a.appointment_time.localeCompare(b.appointment_time));
 
   const getUserName = (userId: string) => {
     const user = users.find((u) => u.user_pk === userId);
@@ -91,59 +85,56 @@ export const AdminDashboardPage = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pending Appointments
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{pendingCount}</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-3 gap-4">
+        <Link to="/admin/appointments">
+          <Card className="transition-colors hover:bg-accent">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Upcoming Appointments
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">{upcomingCount}</p>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Today&apos;s Appointments
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{todayCount}</p>
-          </CardContent>
-        </Card>
+        <Link to="/admin/services">
+          <Card className="transition-colors hover:bg-accent">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Services
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">{services.length}</p>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Services
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{services.length}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Users
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{users.length}</p>
-          </CardContent>
-        </Card>
+        <Link to="/admin/users">
+          <Card className="transition-colors hover:bg-accent">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Users
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">{users.length}</p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       <Separator />
 
       {/* Recent Appointments */}
       <div>
-        <h2 className="mb-3 text-lg font-semibold">Recent Appointments</h2>
-        {recentAppointments.length === 0 ? (
-          <p className="text-muted-foreground">No appointments yet.</p>
+        <h2 className="mb-3 text-lg font-semibold">
+          Today&apos;s Appointments
+        </h2>
+        {todayAppointments.length === 0 ? (
+          <p className="text-muted-foreground">No appointments today.</p>
         ) : (
           <Table>
             <TableHeader>
@@ -155,7 +146,7 @@ export const AdminDashboardPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recentAppointments.map((appt) => (
+              {todayAppointments.map((appt) => (
                 <TableRow key={appt.appointment_pk}>
                   <TableCell>{getUserName(appt.appointment_user_fk)}</TableCell>
                   <TableCell>{appt.appointment_date}</TableCell>
@@ -170,24 +161,6 @@ export const AdminDashboardPage = () => {
             </TableBody>
           </Table>
         )}
-      </div>
-
-      <Separator />
-
-      {/* Quick Actions */}
-      <div>
-        <h2 className="mb-3 text-lg font-semibold">Quick Actions</h2>
-        <div className="flex gap-3">
-          <Button variant="outline" asChild>
-            <Link to="/admin/services">+ New Service</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/admin/availability">+ Add Availability</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/admin/users">View Users</Link>
-          </Button>
-        </div>
       </div>
     </div>
   );
