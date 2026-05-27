@@ -1,5 +1,6 @@
 import { describe, it, expect, afterAll } from 'bun:test';
 import { servicesService } from '../../api/services/services.service';
+import { db, services, eq } from '@repo/db';
 
 const testIds: string[] = [];
 
@@ -10,7 +11,7 @@ const assertDefined = <T>(val: T | undefined): T => {
 
 afterAll(async () => {
   for (const id of testIds) {
-    await servicesService.remove(id);
+    await db.delete(services).where(eq(services.service_pk, id));
   }
 });
 

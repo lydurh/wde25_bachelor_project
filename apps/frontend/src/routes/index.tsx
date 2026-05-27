@@ -7,8 +7,13 @@ import { UserLayout } from '@/components/layout/user-layout';
 import { LandingPage } from '@/views/landing/pages/landing';
 import { SignupPage } from '@/views/auth/pages/signup';
 import { TimeSelectPage } from '@/views/booking/pages/booking';
-import { AdminDashboardPage } from '@/views/admin/pages/dashboard';
-import { ServicesPage } from '@/views/admin/pages/services';
+import { AdminDashboardPage } from '@/views/admin/pages/dashboard/dashboard';
+import { ServicesPage } from '@/views/admin/pages/services/services';
+import { ServicePage } from '@/views/admin/pages/services/service';
+import { CreateServicePage } from '@/views/admin/pages/services/create-service';
+import { AvailabilityPage } from '@/views/admin/pages/availability/availability';
+import { CreateAvailabilityPage } from '@/views/admin/pages/availability/create-availability';
+import { AvailabilityDetailPage } from '@/views/admin/pages/availability/availability-detail';
 import { ProfilePage } from '@/views/user/pages/profile';
 import { LoginPage } from '@/views/auth/pages/login';
 
@@ -32,6 +37,14 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <AdminDashboardPage /> },
       { path: 'services', element: <ServicesPage /> },
+      { path: 'services/new', element: <CreateServicePage /> },
+      { path: 'services/:serviceId', element: <ServicePage /> },
+      { path: 'availability', element: <AvailabilityPage /> },
+      { path: 'availability/new', element: <CreateAvailabilityPage /> },
+      {
+        path: 'availability/:availabilityId',
+        element: <AvailabilityDetailPage />,
+      },
     ],
   },
   {
