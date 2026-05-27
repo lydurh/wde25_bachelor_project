@@ -15,8 +15,9 @@ let adminToken: string;
 beforeAll(async () => {
   adminToken = await sign(
     {
-      sub: 'test-admin',
-      role: 'admin',
+      user_pk: 'a0000000-0000-4000-8000-000000000001',
+      user_role: 'admin',
+      user_email: 'TEST_admin@example.com',
       exp: Math.floor(Date.now() / 1000) + 3600,
     },
     env.JWT_SECRET,

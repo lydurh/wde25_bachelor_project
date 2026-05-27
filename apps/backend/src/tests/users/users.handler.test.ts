@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll, beforeAll } from 'bun:test';
+import { describe, it, expect, afterAll } from 'bun:test';
 import { sign } from 'hono/jwt';
 import { app } from '../../app';
 import { env } from '../../lib/env';
@@ -10,7 +10,6 @@ type UserResponse = { data: User };
 type UserListResponse = { data: User[] };
 
 const testIds: string[] = [];
-let adminToken: string;
 
 const assertDefined = <T>(val: T | undefined): T => {
   expect(val).toBeDefined();
@@ -20,16 +19,23 @@ const assertDefined = <T>(val: T | undefined): T => {
 const uniqueEmail = (suffix: string) =>
   `TEST_users_handler_${suffix}@example.com`;
 
-beforeAll(async () => {
-  adminToken = await sign(
+/** Valid UUID v4 for JWT tests (nil UUIDs fail uuidSchema). */
+const ADMIN_TEST_USER_PK = 'a0000000-0000-4000-8000-000000000001';
+
+const signAdminToken = async (): Promise<string> =>
+  sign(
     {
-      sub: 'test-admin',
-      role: 'admin',
+      user_pk: ADMIN_TEST_USER_PK,
+      user_role: 'admin',
+      user_email: 'admin@test.com',
       exp: Math.floor(Date.now() / 1000) + 3600,
     },
     env.JWT_SECRET,
     'HS256',
   );
+
+const adminAuthHeader = async (): Promise<{ Authorization: string }> => ({
+  Authorization: `Bearer ${await signAdminToken()}`,
 });
 
 afterAll(async () => {
@@ -49,14 +55,14 @@ const validCreateInput = {
 describe('GET /api/users', () => {
   it('should return 200 with auth token', async () => {
     const res = await app.request('/api/users', {
-      headers: { Authorization: `Bearer ${adminToken}` },
+      headers: await adminAuthHeader(),
     });
     expect(res.status).toBe(200);
   });
 
   it('should return a data array', async () => {
     const res = await app.request('/api/users', {
-      headers: { Authorization: `Bearer ${adminToken}` },
+      headers: await adminAuthHeader(),
     });
     const body = (await res.json()) as UserListResponse;
     expect(Array.isArray(body.data)).toBe(true);
@@ -65,6 +71,32 @@ describe('GET /api/users', () => {
   it('should return 401 without auth token', async () => {
     const res = await app.request('/api/users');
     expect(res.status).toBe(401);
+  });
+
+  it('should return 403 when a client requests the user list', async () => {
+    const created = assertDefined(
+      await usersService.create({
+        ...validCreateInput,
+        user_email: uniqueEmail('list_forbidden'),
+      }),
+    );
+    testIds.push(created.user_pk);
+
+    const clientToken = await sign(
+      {
+        user_pk: created.user_pk,
+        user_role: 'client',
+        user_email: created.user_email,
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      },
+      env.JWT_SECRET,
+      'HS256',
+    );
+
+    const res = await app.request('/api/users', {
+      headers: { Authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.status).toBe(403);
   });
 });
 
@@ -79,7 +111,7 @@ describe('GET /api/users/:id', () => {
     testIds.push(created.user_pk);
 
     const res = await app.request(`/api/users/${created.user_pk}`, {
-      headers: { Authorization: `Bearer ${adminToken}` },
+      headers: await adminAuthHeader(),
     });
     const body = (await res.json()) as UserResponse;
 
@@ -90,14 +122,14 @@ describe('GET /api/users/:id', () => {
   it('should return 404 for non-existent ID', async () => {
     const res = await app.request(
       '/api/users/00000000-0000-0000-0000-000000000000',
-      { headers: { Authorization: `Bearer ${adminToken}` } },
+      { headers: await adminAuthHeader() },
     );
     expect(res.status).toBe(404);
   });
 
   it('should return 400 for invalid UUID format', async () => {
     const res = await app.request('/api/users/not-a-uuid', {
-      headers: { Authorization: `Bearer ${adminToken}` },
+      headers: await adminAuthHeader(),
     });
     expect(res.status).toBe(400);
   });
@@ -122,7 +154,7 @@ describe('POST /api/users', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${adminToken}`,
+        ...(await adminAuthHeader()),
       },
       body: JSON.stringify({
         ...validCreateInput,
@@ -141,7 +173,7 @@ describe('POST /api/users', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${adminToken}`,
+        ...(await adminAuthHeader()),
       },
       body: JSON.stringify({ user_first_name: 'TEST' }),
     });
@@ -153,7 +185,7 @@ describe('POST /api/users', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${adminToken}`,
+        ...(await adminAuthHeader()),
       },
       body: JSON.stringify({
         ...validCreateInput,
@@ -168,7 +200,7 @@ describe('POST /api/users', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${adminToken}`,
+        ...(await adminAuthHeader()),
       },
       body: JSON.stringify({
         ...validCreateInput,
@@ -206,14 +238,14 @@ describe('PATCH /api/users/:id', () => {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${adminToken}`,
+        ...(await adminAuthHeader()),
       },
-      body: JSON.stringify({ user_first_name: 'TEST_Patched' }),
+      body: JSON.stringify({ user_first_name: 'Patched' }),
     });
     const body = (await res.json()) as UserResponse;
 
     expect(res.status).toBe(200);
-    expect(body.data.user_first_name).toBe('TEST_Patched');
+    expect(body.data.user_first_name).toBe('Patched');
   });
 
   it('should return 404 for non-existent ID', async () => {
@@ -223,7 +255,7 @@ describe('PATCH /api/users/:id', () => {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${adminToken}`,
+          ...(await adminAuthHeader()),
         },
         body: JSON.stringify({ user_first_name: 'Nope' }),
       },
@@ -244,7 +276,7 @@ describe('PATCH /api/users/:id', () => {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${adminToken}`,
+        ...(await adminAuthHeader()),
       },
       body: JSON.stringify({ user_email: 'not-an-email' }),
     });
@@ -281,8 +313,9 @@ describe('DELETE /api/users/:id', () => {
 
     const selfToken = await sign(
       {
-        sub: created.user_pk,
-        role: 'client',
+        user_pk: created.user_pk,
+        user_role: 'client',
+        user_email: created.user_email,
         exp: Math.floor(Date.now() / 1000) + 3600,
       },
       env.JWT_SECRET,
@@ -307,7 +340,7 @@ describe('DELETE /api/users/:id', () => {
 
     const res = await app.request(`/api/users/${created.user_pk}`, {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${adminToken}` },
+      headers: await adminAuthHeader(),
     });
     expect(res.status).toBe(200);
   });
@@ -323,11 +356,11 @@ describe('DELETE /api/users/:id', () => {
 
     await app.request(`/api/users/${created.user_pk}`, {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${adminToken}` },
+      headers: await adminAuthHeader(),
     });
 
     const listRes = await app.request('/api/users', {
-      headers: { Authorization: `Bearer ${adminToken}` },
+      headers: await adminAuthHeader(),
     });
     const listBody = (await listRes.json()) as UserListResponse;
     const found = listBody.data.find((u) => u.user_pk === created.user_pk);
@@ -353,8 +386,9 @@ describe('DELETE /api/users/:id', () => {
 
     const otherToken = await sign(
       {
-        sub: otherUser.user_pk,
-        role: 'client',
+        user_pk: otherUser.user_pk,
+        user_role: 'client',
+        user_email: otherUser.user_email,
         exp: Math.floor(Date.now() / 1000) + 3600,
       },
       env.JWT_SECRET,
@@ -373,7 +407,7 @@ describe('DELETE /api/users/:id', () => {
       '/api/users/00000000-0000-0000-0000-000000000000',
       {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${adminToken}` },
+        headers: await adminAuthHeader(),
       },
     );
     expect(res.status).toBe(404);

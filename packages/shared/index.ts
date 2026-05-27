@@ -1,13 +1,26 @@
 export { z } from 'zod';
 export type { ZodSchema } from 'zod';
 
-export { uuidSchema } from './src/schemas/common';
+export {
+  uuidSchema,
+  emailSchema,
+  passwordSchema,
+  loginPasswordSchema,
+  nameSchema,
+  optionalNameSchema,
+  postalCodeSchema,
+  safeString,
+  userRoleSchema,
+  escapeHtml,
+} from './src/validators';
 
 export type { User, UserRow, AdminUser } from './src/types/user';
 export { toPublicUser, toAdminUser } from './src/types/user';
 export type { Service } from './src/types/service';
 export type { Appointment } from './src/types/appointments';
-export type { JwtPayload } from './src/types/jwt';
+
+export type { JwtPayload, AuthUser } from './src/schemas/jwt';
+export { jwtPayloadSchema } from './src/schemas/jwt';
 
 export type {
   CreateServiceInput,

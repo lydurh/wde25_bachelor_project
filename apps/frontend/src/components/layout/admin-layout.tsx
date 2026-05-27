@@ -42,9 +42,14 @@ export const AdminLayout = () => {
           ))}
         </nav>
       </aside>
-      <main className="flex-1 p-6">
-        <Outlet />
-      </main>
+      <div className="flex flex-1 flex-col">
+        <header className="flex justify-end border-b border-border bg-card px-6 py-4">
+          <AuthNav />
+        </header>
+        <main className="flex-1 p-6">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 };

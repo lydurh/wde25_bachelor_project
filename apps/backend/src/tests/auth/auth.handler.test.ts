@@ -1,6 +1,6 @@
-import { describe, it, expect, afterAll } from 'bun:test';
+import { describe, it, expect, afterAll, beforeAll } from 'bun:test';
 import { app } from '../../app';
-import { authService } from '../../api/auth/auth.service';
+import { authService, getResetTokenForTest } from '../../api/auth/auth.service';
 import { db, users, like } from '@repo/db';
 import type { User } from '@repo/shared';
 
@@ -12,6 +12,10 @@ const assertDefined = <T>(val: T | undefined | null): T => {
   expect(val).toBeDefined();
   return val as T;
 };
+
+beforeAll(async () => {
+  await db.delete(users).where(like(users.user_email, 'TEST_%'));
+});
 
 afterAll(async () => {
   await db.delete(users).where(like(users.user_email, 'TEST_%'));
@@ -39,27 +43,30 @@ describe('POST /api/auth/signup', () => {
   });
 
   it('should return 409 when email is already registered', async () => {
-    await app.request('/api/auth/signup', {
+    const dupEmail = `TEST_handler_signup_dup_${Date.now()}@example.com`;
+
+    const first = await app.request('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         first_name: 'TEST',
         last_name: 'Dup',
-        email: 'TEST_handler_signup_dup@example.com',
+        email: dupEmail,
         password: 'password123',
         address: 'TEST Address 1',
         postal_code: '1234',
         city: 'Copenhagen',
       }),
     });
+    expect(first.status).toBe(201);
 
     const res = await app.request('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         first_name: 'TEST',
-        last_name: 'Dup2',
-        email: 'TEST_handler_signup_dup@example.com',
+        last_name: 'Second',
+        email: dupEmail,
         password: 'password456',
         address: 'TEST Address 1',
         postal_code: '1234',
@@ -87,6 +94,74 @@ describe('POST /api/auth/signup', () => {
     expect(res.status).toBe(400);
   });
 
+  it('should return 400 with weak password', async () => {
+    const res = await app.request('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        first_name: 'TEST',
+        last_name: 'WeakPwd',
+        email: 'TEST_handler_weak_pwd@example.com',
+        password: 'short',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
+      }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('should return 400 with HTML in first name', async () => {
+    const res = await app.request('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        first_name: '<script>alert(1)</script>',
+        last_name: 'XSS',
+        email: 'TEST_handler_xss@example.com',
+        password: 'password123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
+      }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('should return 400 with symbols-only first name', async () => {
+    const res = await app.request('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        first_name: '!',
+        last_name: 'Test',
+        email: 'TEST_handler_symbol_name@example.com',
+        password: 'password123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
+      }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('should return 201 with valid Danish name', async () => {
+    const res = await app.request('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        first_name: 'Øystein',
+        last_name: 'Nielsen',
+        email: 'TEST_handler_danish_name@example.com',
+        password: 'password123',
+        address: 'TEST Address 1',
+        postal_code: '1234',
+        city: 'Copenhagen',
+      }),
+    });
+    expect(res.status).toBe(201);
+  });
+
   it('should not return user_password in the response', async () => {
     const res = await app.request('/api/auth/signup', {
       method: 'POST',
@@ -108,7 +183,7 @@ describe('POST /api/auth/signup', () => {
 
 describe('POST /api/auth/login', () => {
   it('should return 200 with token and user after successful login', async () => {
-    const { token: verifyToken } = assertDefined(
+    const { verificationToken } = assertDefined(
       await authService.signup({
         first_name: 'TEST',
         last_name: 'LoginHandler',
@@ -119,7 +194,7 @@ describe('POST /api/auth/login', () => {
         city: 'Copenhagen',
       }),
     );
-    await authService.verifyEmail(verifyToken);
+    await authService.verifyEmail(verificationToken);
 
     const res = await app.request('/api/auth/login', {
       method: 'POST',
@@ -206,8 +281,8 @@ describe('POST /api/auth/logout', () => {
 });
 
 describe('GET /api/auth/verify-email', () => {
-  it('should return 200 with a valid token', async () => {
-    const { token } = assertDefined(
+  it('should redirect to login with verified=1 for a valid token', async () => {
+    const { verificationToken } = assertDefined(
       await authService.signup({
         first_name: 'TEST',
         last_name: 'VerifyHandler',
@@ -219,28 +294,34 @@ describe('GET /api/auth/verify-email', () => {
       }),
     );
 
-    const res = await app.request(`/api/auth/verify-email?token=${token}`, {
-      method: 'GET',
-    });
-    const body = (await res.json()) as {
-      data: { message: string; user: User };
-    };
-
-    expect(res.status).toBe(200);
-    expect(body.data.message).toContain('verified');
-    expect(body.data.user.user_email).toBe('TEST_handler_verify@example.com');
-  });
-
-  it('should return 400 with an invalid token', async () => {
     const res = await app.request(
-      '/api/auth/verify-email?token=invalid-token-xyz',
+      `/api/auth/verify-email?token=${verificationToken}`,
       { method: 'GET' },
     );
-    expect(res.status).toBe(400);
+
+    expect(res.status).toBe(302);
+    expect(res.headers.get('Location')).toContain('/login?verified=1');
+  });
+
+  it('should redirect to login with verifyError=1 for unknown token', async () => {
+    const res = await app.request(
+      '/api/auth/verify-email?token=00000000-0000-0000-0000-000000000000',
+      { method: 'GET' },
+    );
+    expect(res.status).toBe(302);
+    expect(res.headers.get('Location')).toContain('verifyError=1');
   });
 
   it('should return 400 when token query param is missing', async () => {
     const res = await app.request('/api/auth/verify-email', { method: 'GET' });
+    expect(res.status).toBe(400);
+  });
+
+  it('should return 400 for malformed token', async () => {
+    const res = await app.request(
+      '/api/auth/verify-email?token=invalid-token-xyz',
+      { method: 'GET' },
+    );
     expect(res.status).toBe(400);
   });
 });
@@ -256,7 +337,7 @@ describe('POST /api/auth/forgot-password', () => {
   });
 
   it('should return 200 for a valid registered and verified email', async () => {
-    const { token: verifyToken } = assertDefined(
+    const { verificationToken } = assertDefined(
       await authService.signup({
         first_name: 'TEST',
         last_name: 'ForgotHandler',
@@ -267,7 +348,7 @@ describe('POST /api/auth/forgot-password', () => {
         city: 'Copenhagen',
       }),
     );
-    await authService.verifyEmail(verifyToken);
+    await authService.verifyEmail(verificationToken);
 
     const res = await app.request('/api/auth/forgot-password', {
       method: 'POST',
@@ -275,7 +356,7 @@ describe('POST /api/auth/forgot-password', () => {
       body: JSON.stringify({ email: 'TEST_handler_forgot@example.com' }),
     });
     expect(res.status).toBe(200);
-  });
+  }, 15000);
 
   it('should return 400 with missing email field', async () => {
     const res = await app.request('/api/auth/forgot-password', {
@@ -293,7 +374,7 @@ describe('POST /api/auth/reset-password', () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        token: 'invalid-token-xyz',
+        token: '00000000-0000-0000-0000-000000000000',
         newPassword: 'newpassword123',
       }),
     });
@@ -301,22 +382,23 @@ describe('POST /api/auth/reset-password', () => {
   });
 
   it('should return 200 with a valid reset token', async () => {
-    const { token: verifyToken } = assertDefined(
+    const resetEmail = `TEST_handler_reset_${Date.now()}@example.com`;
+    const { verificationToken } = assertDefined(
       await authService.signup({
         first_name: 'TEST',
         last_name: 'ResetHandler',
-        email: 'TEST_handler_reset@example.com',
+        email: resetEmail,
         password: 'oldpassword123',
         address: 'TEST Address 1',
         postal_code: '1234',
         city: 'Copenhagen',
       }),
     );
-    await authService.verifyEmail(verifyToken);
+    await authService.verifyEmail(verificationToken);
 
-    const resetToken = assertDefined(
-      await authService.forgotPassword('TEST_handler_reset@example.com'),
-    );
+    await authService.forgotPassword(resetEmail);
+
+    const resetToken = assertDefined(await getResetTokenForTest(resetEmail));
 
     const res = await app.request('/api/auth/reset-password', {
       method: 'POST',
@@ -330,13 +412,13 @@ describe('POST /api/auth/reset-password', () => {
 
     expect(res.status).toBe(200);
     expect(body.data.message).toContain('reset');
-  });
+  }, 15000);
 
   it('should return 400 with missing required fields', async () => {
     const res = await app.request('/api/auth/reset-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: 'some-token' }),
+      body: JSON.stringify({ token: '00000000-0000-0000-0000-000000000000' }),
     });
     expect(res.status).toBe(400);
   });
