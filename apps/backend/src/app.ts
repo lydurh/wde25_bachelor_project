@@ -11,4 +11,6 @@ app.onError(errorHandler);
 
 app.route('/api', api);
 
+app.notFound((c) => c.json({ error: 'Not Found' }, 404));
+
 export { app };
