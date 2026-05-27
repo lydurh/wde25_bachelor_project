@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import type { AdminUser, Appointment } from '@/types';
+import type { AdminUser, Appointment, Location } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,6 +43,7 @@ export const UserDetailPage = () => {
 
   const [user, setUser] = useState<AdminUser | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState('');
@@ -51,12 +52,14 @@ export const UserDetailPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [userRes, apptRes] = await Promise.all([
+        const [userRes, apptRes, locRes] = await Promise.all([
           api.get<ApiResponse<AdminUser>>(`/users/${userId}`),
           api.get<ApiResponse<Appointment[]>>('/appointments'),
+          api.get<ApiResponse<Location[]>>('/locations'),
         ]);
         setUser(userRes.data);
         setNote(userRes.data.user_note ?? '');
+        setLocations(locRes.data);
         const userAppointments = apptRes.data
           .filter((a) => a.appointment_user_fk === userId)
           .sort(
@@ -109,7 +112,13 @@ export const UserDetailPage = () => {
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Location</span>
-            <span>{user.user_location_fk ?? '—'}</span>
+            <span>
+              {user.user_location_fk
+                ? (locations.find(
+                    (l) => l.location_pk === user.user_location_fk,
+                  )?.location_address ?? '—')
+                : '—'}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Verified</span>
