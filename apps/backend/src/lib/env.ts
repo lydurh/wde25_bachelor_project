@@ -9,7 +9,7 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
   FRONTEND_URL: z.string().default('http://localhost:5173'),
   PUBLIC_API_URL: z.string().default('http://localhost:3000'),
-  JWT_EXPIRES_IN_SECONDS: z.coerce.number().default(900),
+  JWT_EXPIRES_IN_SECONDS: z.coerce.number().default(86400), //24 hours
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
     .default('development'),
