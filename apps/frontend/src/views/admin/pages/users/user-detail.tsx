@@ -1,0 +1,187 @@
+import { useParams, useNavigate } from 'react-router';
+import { useEffect, useState } from 'react';
+import { api } from '@/lib/api';
+import type { AdminUser, Appointment } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+
+type ApiResponse<T> = { data: T };
+
+const formatDate = (date: Date | string) =>
+  new Date(date).toLocaleDateString('en-CA');
+
+const formatTime = (time: string) => time.slice(0, 5);
+
+const statusVariant = (
+  status: string,
+): 'default' | 'secondary' | 'outline' | 'destructive' => {
+  switch (status) {
+    case 'confirmed':
+      return 'default';
+    case 'completed':
+      return 'outline';
+    case 'cancelled':
+      return 'destructive';
+    default:
+      return 'secondary';
+  }
+};
+
+export const UserDetailPage = () => {
+  const { userId } = useParams();
+  const navigate = useNavigate();
+
+  const [user, setUser] = useState<AdminUser | null>(null);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [userRes, apptRes] = await Promise.all([
+          api.get<ApiResponse<AdminUser>>(`/users/${userId}`),
+          api.get<ApiResponse<Appointment[]>>('/appointments'),
+        ]);
+        setUser(userRes.data);
+        const userAppointments = apptRes.data
+          .filter((a) => a.appointment_user_fk === userId)
+          .sort(
+            (a, b) =>
+              new Date(b.appointment_date).getTime() -
+              new Date(a.appointment_date).getTime(),
+          );
+        setAppointments(userAppointments);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    void fetchData();
+  }, [userId]);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p className="text-destructive">{error}</p>;
+  if (!user) return <p>User not found.</p>;
+
+  return (
+    <div className="mx-auto max-w-2xl">
+      <Button
+        variant="ghost"
+        className="mb-4"
+        onClick={() => void navigate('/admin/users')}
+      >
+        &larr; Back to Users
+      </Button>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>
+            {user.user_first_name} {user.user_last_name}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Email</span>
+            <span>{user.user_email}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Role</span>
+            <Badge
+              variant={user.user_role === 'admin' ? 'default' : 'secondary'}
+            >
+              {user.user_role}
+            </Badge>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Location</span>
+            <span>{user.user_location_fk ?? '—'}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Verified</span>
+            <span>
+              {user.user_verified_at
+                ? `Verified on ${formatDate(user.user_verified_at)}`
+                : 'Not verified'}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Joined</span>
+            <span>{formatDate(user.user_created_at)}</span>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Notes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {user.user_note ? (
+            <p className="whitespace-pre-wrap">{user.user_note}</p>
+          ) : (
+            <p className="text-muted-foreground">No notes.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Separator className="my-6" />
+
+      <div>
+        <h2 className="mb-4 text-lg font-semibold">
+          Appointments ({appointments.length})
+        </h2>
+
+        {appointments.length === 0 ? (
+          <p className="text-muted-foreground">No appointments found.</p>
+        ) : (
+          <Table className="w-full rounded-md bg-card">
+            <TableHeader className="bg-secondary-background">
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Time</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Duration</TableHead>
+                <TableHead>Price</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {appointments.map((appt) => (
+                <TableRow key={appt.appointment_pk}>
+                  <TableCell>{appt.appointment_date}</TableCell>
+                  <TableCell>{formatTime(appt.appointment_time)}</TableCell>
+                  <TableCell>
+                    <Badge variant={statusVariant(appt.appointment_status)}>
+                      {appt.appointment_status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {appt.appointment_duration
+                      ? `${appt.appointment_duration} min`
+                      : '—'}
+                  </TableCell>
+                  <TableCell>
+                    {appt.appointment_total_price
+                      ? `$${appt.appointment_total_price}`
+                      : '—'}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+    </div>
+  );
+};

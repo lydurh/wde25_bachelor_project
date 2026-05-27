@@ -39,3 +39,18 @@ export function toPublicUser(row: UserRow): User {
     user_updated_at: row.user_updated_at,
   };
 }
+
+/** Admin-facing user type — includes notes and verification but still strips password. */
+export type AdminUser = User & {
+  user_note: string | null;
+  user_verified_at: Date | null;
+};
+
+/** Convert a DB row to an admin-safe user (no password or deleted_at). */
+export function toAdminUser(row: UserRow): AdminUser {
+  return {
+    ...toPublicUser(row),
+    user_note: row.user_note,
+    user_verified_at: row.user_verified_at,
+  };
+}

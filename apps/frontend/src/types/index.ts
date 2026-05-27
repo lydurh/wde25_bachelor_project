@@ -17,6 +17,7 @@ export type {
   UpdateAvailabilityInput,
   UpdateServiceInput,
   UpdateUserInput,
+  AdminUser,
   User,
   UserRow,
   VerifyEmailQuery,

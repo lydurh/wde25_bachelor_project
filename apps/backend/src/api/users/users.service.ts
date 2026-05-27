@@ -1,6 +1,6 @@
 import { db, users, isNull, eq, and } from '@repo/db';
 import type { UpdateUserInput, CreateUserInput } from '@repo/shared';
-import { toPublicUser } from '@repo/shared';
+import { toPublicUser, toAdminUser } from '@repo/shared';
 
 export const usersService = {
   async list() {
@@ -8,7 +8,7 @@ export const usersService = {
       .select()
       .from(users)
       .where(isNull(users.user_deleted_at));
-    return rows.map(toPublicUser);
+    return rows.map(toAdminUser);
   },
 
   async getById(id: string) {
@@ -18,7 +18,7 @@ export const usersService = {
       .where(and(eq(users.user_pk, id), isNull(users.user_deleted_at)))
       .limit(1);
 
-    return user ? toPublicUser(user) : undefined;
+    return user ? toAdminUser(user) : undefined;
   },
 
   async create(data: CreateUserInput) {
