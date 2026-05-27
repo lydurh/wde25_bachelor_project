@@ -14,6 +14,11 @@ import { CreateServicePage } from '@/views/admin/pages/services/create-service';
 import { AvailabilityPage } from '@/views/admin/pages/availability/availability';
 import { CreateAvailabilityPage } from '@/views/admin/pages/availability/create-availability';
 import { AvailabilityDetailPage } from '@/views/admin/pages/availability/availability-detail';
+import { UsersPage } from '@/views/admin/pages/users/users';
+import { UserDetailPage } from '@/views/admin/pages/users/user-detail';
+import { SettingsPage } from '@/views/admin/pages/settings/settings';
+import { AppointmentsPage } from '@/views/admin/pages/appointments/appointments';
+import { AppointmentDetailPage } from '@/views/admin/pages/appointments/appointment-detail';
 import { ProfilePage } from '@/views/user/pages/profile';
 import { LoginPage } from '@/views/auth/pages/login';
 
@@ -45,6 +50,14 @@ export const router = createBrowserRouter([
         path: 'availability/:availabilityId',
         element: <AvailabilityDetailPage />,
       },
+      { path: 'users', element: <UsersPage /> },
+      { path: 'users/:userId', element: <UserDetailPage /> },
+      { path: 'appointments', element: <AppointmentsPage /> },
+      {
+        path: 'appointments/:appointmentId',
+        element: <AppointmentDetailPage />,
+      },
+      { path: 'settings', element: <SettingsPage /> },
     ],
   },
   {
