@@ -4,8 +4,10 @@ import { app } from '../../app';
 import { env } from '../../lib/env';
 import { authService } from '../../api/auth/auth.service';
 import { appointmentsService } from '../../api/appointments/appointments.service';
-import { db, users, like } from '@repo/db';
+import { db, users, services, like, eq } from '@repo/db';
 import type { Appointment } from '@repo/shared';
+
+const TEST_SERVICE_PK = '33333333-3333-4333-8333-333333333333';
 
 type AppointmentResponse = { data: Appointment };
 type AppointmentListResponse = { data: Appointment[] };
@@ -21,6 +23,16 @@ const assertDefined = <T>(val: T | undefined | null): T => {
 };
 
 beforeAll(async () => {
+  await db
+    .insert(services)
+    .values({
+      service_pk: TEST_SERVICE_PK,
+      service_title: 'TEST Appointment Handler Service',
+      service_duration: 45,
+      service_price: '75.00',
+    })
+    .onConflictDoNothing();
+
   const signupResult = assertDefined(
     await authService.signup({
       first_name: 'TEST',
@@ -51,6 +63,7 @@ afterAll(async () => {
     await appointmentsService.delete(id).catch(() => undefined);
   }
   await db.delete(users).where(like(users.user_email, 'TEST_%'));
+  await db.delete(services).where(eq(services.service_pk, TEST_SERVICE_PK));
 });
 
 const makeBody = (userId: string) => ({
