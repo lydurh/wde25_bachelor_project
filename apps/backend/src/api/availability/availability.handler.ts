@@ -6,10 +6,19 @@ import {
   createAvailabilityInputSchema,
   updateAvailabilityInputSchema,
   uuidSchema,
+  z,
 } from '@repo/shared';
 import { availabilityService } from './availability.service';
 
 const factory = createFactory();
+
+const slotsRequestSchema = z
+  .object({
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD'),
+    serviceDuration: z.number().int().positive(),
+    customerAddress: z.string().min(1),
+  })
+  .strict();
 
 function requireAvailabilityId(id: string | undefined): string {
   if (!id || !uuidSchema.safeParse(id).success) {
@@ -19,7 +28,8 @@ function requireAvailabilityId(id: string | undefined): string {
 }
 
 export const listAvailability = async (c: Context) => {
-  const data = await availabilityService.list();
+  const from = c.req.query('from');
+  const data = await availabilityService.list(from);
   return c.json({ data });
 };
 
@@ -87,3 +97,26 @@ export const deleteAvailability = async (c: Context) => {
   }
   return c.json({ data }, 200);
 };
+
+export const getSlots = factory.createHandlers(
+  zValidator('json', slotsRequestSchema, (result, c) => {
+    if (!result.success) {
+      throw new HTTPException(400, {
+        res: c.json(
+          { error: 'Invalid input', issues: result.error.issues },
+          400,
+        ),
+      });
+    }
+    return undefined;
+  }),
+  async (c) => {
+    const input = c.req.valid('json');
+    const slots = await availabilityService.getFeasibleSlots({
+      date: input.date,
+      serviceDuration: input.serviceDuration,
+      customerAddress: input.customerAddress,
+    });
+    return c.json({ data: slots });
+  },
+);

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { signupInputSchema, type User } from '@repo/shared';
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError, getErrorMessage } from '@/lib/api';
 import { flattenApiIssues, flattenZodErrors } from '@/lib/zod-form';
 import {
   AuthFormBanner,
@@ -67,20 +67,12 @@ export const SignupPage = () => {
     setIsSubmitting(true);
     try {
       await api.post<SignupResponse>('/auth/signup', parsed.data);
-      void navigate('/login', { replace: true });
+      void navigate('/login?signup=1', { replace: true });
     } catch (err) {
-      if (err instanceof ApiError) {
-        if (err.status === 409) {
-          setFormError('Email already registered');
-        } else if (err.issues) {
-          setFieldErrors(flattenApiIssues(err.issues));
-          setFormError(err.message);
-        } else {
-          setFormError(err.message);
-        }
-      } else {
-        setFormError('Signup failed. Please check your details and try again.');
+      if (err instanceof ApiError && err.issues) {
+        setFieldErrors(flattenApiIssues(err.issues));
       }
+      setFormError(getErrorMessage(err));
     } finally {
       setIsSubmitting(false);
     }

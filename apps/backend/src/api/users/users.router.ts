@@ -4,6 +4,7 @@ import type { AuthUser } from '@repo/shared';
 import {
   listUsers,
   getUserById,
+  searchUsersByName,
   createUser,
   updateUser,
   deleteUser,
@@ -30,6 +31,7 @@ const selfOrAdmin = createMiddleware<AuthVars>(async (c, next) => {
 const usersRoutes = new Hono();
 
 usersRoutes.get('/', authMiddleware, adminMiddleware, listUsers);
+usersRoutes.get('/search', authMiddleware, adminMiddleware, searchUsersByName);
 usersRoutes.get('/:id', authMiddleware, selfOrAdmin, getUserById);
 usersRoutes.post('/', authMiddleware, adminMiddleware, ...createUser);
 usersRoutes.patch('/:id', authMiddleware, adminMiddleware, ...updateUser);

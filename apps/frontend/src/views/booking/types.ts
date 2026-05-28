@@ -1,6 +1,16 @@
+import type { BookingServiceLine, User } from '@repo/shared';
+
+export type { BookingServiceLine };
+
 export type BookingDraft = {
-  serviceId?: string;
-  slotISO?: string;
+  /** Customer chosen by admin on the user step (appointment is booked for this person) */
+  selectedCustomer?: User | null;
+  serviceQuantities?: Record<string, number>;
+  /** Snapshot of selected services when quantities are confirmed on the service step */
+  selectedServices?: BookingServiceLine[];
+  cumulatedServiceDuration?: number;
+  slotISO?: string | undefined;
+  selectedDateId?: string;
   firstName?: string;
   lastName?: string;
   email?: string;
@@ -8,12 +18,12 @@ export type BookingDraft = {
   address?: string;
   city?: string;
   postalCode?: string;
-};
-
-export type BookingOutletContext = {
-  draft: BookingDraft;
-  setDraft: (patch: Partial<BookingDraft>) => void;
-  resetDraft: () => void;
+  /** Driving distance from admin origin (km), set after location step check */
+  distanceKm?: number | undefined;
+  locationFeeApplies?: boolean;
+  distanceCheckStatus?: 'idle' | 'loading' | 'ready' | 'error';
+  comments?: string;
+  policyAccepted?: boolean;
 };
 
 export function isCustomerInfoComplete(draft: BookingDraft): boolean {
@@ -22,9 +32,6 @@ export function isCustomerInfoComplete(draft: BookingDraft): boolean {
     !!draft.firstName?.trim() &&
     !!draft.lastName?.trim() &&
     !!email &&
-    email.includes('@') &&
-    !!draft.address?.trim() &&
-    !!draft.city?.trim() &&
-    !!draft.postalCode?.trim()
+    email.includes('@')
   );
 }

@@ -7,12 +7,14 @@ import {
   deleteAvailability,
   createAvailability,
   updateAvailability,
+  getSlots,
 } from './availability.handler';
 
 export const availabilityRoutes = new Hono();
 
 availabilityRoutes.get('/', listAvailability);
 availabilityRoutes.get('/:id', getAvailability);
+availabilityRoutes.post('/slots', authMiddleware, ...getSlots);
 availabilityRoutes.post(
   '/',
   authMiddleware,

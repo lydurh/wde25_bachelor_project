@@ -1,101 +1,222 @@
-import { useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLoaderData } from 'react-router';
+import { format, parse, startOfDay } from 'date-fns';
+import type { Availability } from '@repo/shared';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+  Alert02Icon,
+  InformationCircleIcon,
+  Clock01Icon,
+} from '@hugeicons/core-free-icons';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import type { BookingOutletContext } from '@/views/booking/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { api } from '@/lib/api';
+import type { AvailabilityLoaderData } from '@/lib/loaders/availability';
+import { useBooking } from '@/views/booking/booking-context';
 
-const DISABLED_DATES = [new Date(2026, 4, 1)];
+const DATE_ID_FORMAT = 'yyyy-MM-dd';
 
-function parseDateId(id: string): Date {
-  const [yearStr, monthStr, dayStr] = id.split('-');
-  return new Date(Number(yearStr), Number(monthStr) - 1, Number(dayStr));
+type FeasibleSlot = {
+  iso: string;
+  label: string;
+  reachable: boolean;
+  driveMinutes: number;
+};
+
+function isBookable(row: Availability): boolean {
+  return !row.availability_deleted_at && row.availability_type === 'available';
 }
 
-function toDateId(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+function parseDateId(dateId: string): Date {
+  return parse(dateId, DATE_ID_FORMAT, new Date());
 }
-
-const PLACEHOLDER_SLOTS = [
-  { iso: '2026-04-27T10:00:00.000Z', label: '10:00' },
-  { iso: '2026-04-27T11:00:00.000Z', label: '11:00' },
-  { iso: '2026-04-27T12:30:00.000Z', label: '12:30' },
-  { iso: '2026-04-27T14:00:00.000Z', label: '14:00' },
-] as const;
 
 export const TimeSelectPage = () => {
-  const navigate = useNavigate();
-  const { draft, setDraft } = useOutletContext<BookingOutletContext>();
-  const [selectedDateId, setSelectedDateId] = useState('2026-04-27');
-  const selectedDate = parseDateId(selectedDateId);
+  const { availabilities } = useLoaderData<AvailabilityLoaderData>();
+  const { draft, setDraft } = useBooking();
 
-  const handleContinue = () => {
-    if (draft.slotISO) {
-      void navigate('information');
+  const selectedDateId = draft.selectedDateId ?? '';
+  const serviceDuration = draft.cumulatedServiceDuration ?? 30;
+  const customerAddress = draft.address ?? '';
+
+  const [slotsForDay, setSlotsForDay] = useState<FeasibleSlot[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [slotError, setSlotError] = useState(false);
+
+  const fetchSlots = useCallback(
+    async (date: string) => {
+      if (!customerAddress) return;
+      setLoading(true);
+      setSlotError(false);
+      try {
+        const { data } = await api.post<{ data: FeasibleSlot[] }>(
+          '/availability/slots',
+          {
+            date,
+            serviceDuration,
+            customerAddress,
+          },
+        );
+        setSlotsForDay(data);
+      } catch {
+        setSlotsForDay([]);
+        setSlotError(true);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [customerAddress, serviceDuration],
+  );
+
+  useEffect(() => {
+    if (selectedDateId) {
+      void fetchSlots(selectedDateId);
+    } else {
+      setSlotsForDay([]);
     }
-  };
+  }, [selectedDateId, fetchSlots]);
+
+  const { availableDates, calendarBounds, selectedDate } = useMemo(() => {
+    const bookable = availabilities.filter(isBookable);
+    const dateIds = bookable.map((row) => row.availability_date.slice(0, 10));
+    const availableDates = new Set(dateIds);
+    const sorted = [...availableDates].sort();
+
+    const calendarBounds =
+      sorted.length === 0
+        ? { startMonth: new Date(), endMonth: new Date() }
+        : {
+            startMonth: parseDateId(sorted[0]!),
+            endMonth: parseDateId(sorted[sorted.length - 1]!),
+          };
+
+    const selectedDate = selectedDateId
+      ? parseDateId(selectedDateId)
+      : undefined;
+
+    return {
+      availableDates,
+      calendarBounds,
+      selectedDate,
+    };
+  }, [availabilities, selectedDateId]);
 
   return (
-    <Card>
+    <Card className="max-h-[500px] overflow-y-auto">
       <CardHeader>
         <CardTitle className="text-2xl font-semibold tracking-tight">
           Hvornår
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-8">
-        <Calendar
-          mode="single"
-          captionLayout="dropdown"
-          selected={selectedDate}
-          onSelect={(date) => {
-            if (date) {
-              setSelectedDateId(toDateId(date));
-            }
-          }}
-          defaultMonth={selectedDate}
-          startMonth={new Date(2026, 3, 1)}
-          endMonth={new Date(2026, 4, 31)}
-          disabled={DISABLED_DATES}
-          className="rounded-md border"
-        />
+      <CardContent className="grid grid-cols-1 gap-12 md:grid-cols-2">
+        <div>
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(date) => {
+              if (date) {
+                setDraft({
+                  selectedDateId: format(date, DATE_ID_FORMAT),
+                  slotISO: undefined,
+                });
+              }
+            }}
+            defaultMonth={selectedDate ?? calendarBounds.startMonth}
+            startMonth={calendarBounds.startMonth}
+            endMonth={calendarBounds.endMonth}
+            disabled={(date) => {
+              const today = startOfDay(new Date());
+              return (
+                date < today ||
+                !availableDates.has(format(date, DATE_ID_FORMAT))
+              );
+            }}
+            className="rounded-md border h-full w-full"
+          />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          {!selectedDateId ? (
+            <div className="col-span-full flex items-center gap-2 rounded-md border border-dashed p-4 text-sm text-muted-foreground">
+              <HugeiconsIcon
+                icon={Clock01Icon}
+                className="size-5 shrink-0"
+                strokeWidth={2}
+              />
+              Vælg en dato for at se ledige tider.
+            </div>
+          ) : loading ? (
+            <div className="col-span-full flex items-center gap-2 rounded-md border border-dashed p-4 text-sm text-muted-foreground animate-pulse">
+              <HugeiconsIcon
+                icon={Clock01Icon}
+                className="size-5 shrink-0"
+                strokeWidth={2}
+              />
+              Henter ledige tider...
+            </div>
+          ) : slotError ? (
+            <div className="col-span-full flex items-start gap-3 rounded-md border border-destructive/50 bg-destructive/5 p-4 text-sm text-destructive">
+              <HugeiconsIcon
+                icon={Alert02Icon}
+                className="size-5 shrink-0 mt-0.5"
+                strokeWidth={2}
+              />
+              <span>
+                Der opstod en fejl ved hentning af tider. Prøv igen senere.
+              </span>
+            </div>
+          ) : slotsForDay.length === 0 ? (
+            <div className="col-span-full space-y-3">
+              <div className="flex items-center gap-2 rounded-md border border-dashed p-4 text-sm text-muted-foreground">
+                <HugeiconsIcon
+                  icon={Clock01Icon}
+                  className="size-5 shrink-0"
+                  strokeWidth={2}
+                />
+                Ingen ledige tider på den valgte dato.
+              </div>
+              {serviceDuration > 30 && (
+                <div className="flex items-start gap-3 rounded-md border border-amber-500/30 bg-amber-50/50 p-4 text-sm text-amber-800 dark:bg-amber-950/20 dark:text-amber-200">
+                  <HugeiconsIcon
+                    icon={InformationCircleIcon}
+                    className="size-5 shrink-0 mt-0.5"
+                    strokeWidth={2}
+                  />
+                  <span>
+                    Dine valgte services har en samlet varighed på{' '}
+                    <strong>{serviceDuration} minutter</strong>. Det kan være
+                    svært at finde en ledig tid, der passer. Prøv at vælge færre
+                    services eller en anden dato.
+                  </span>
+                </div>
+              )}
+            </div>
+          ) : (
+            slotsForDay.map((slot) => {
+              const isSelected = draft.slotISO === slot.iso;
 
-        <div className="grid grid-cols-2 gap-3">
-          {PLACEHOLDER_SLOTS.map((slot) => {
-            const isSelected = draft.slotISO === slot.iso;
-
-            return (
-              <Button
-                key={slot.iso}
-                type="button"
-                variant={isSelected ? 'default' : 'outline'}
-                className="h-12 w-full"
-                onClick={() => setDraft({ slotISO: slot.iso })}
-              >
-                {slot.label}
-              </Button>
-            );
-          })}
+              return (
+                <Button
+                  key={slot.iso}
+                  type="button"
+                  variant={isSelected ? 'default' : 'outline'}
+                  className="w-full"
+                  disabled={!slot.reachable}
+                  onClick={() => setDraft({ slotISO: slot.iso })}
+                >
+                  {slot.label}
+                  {!slot.reachable && (
+                    <span className="ml-1 text-xs text-muted-foreground">
+                      (for langt)
+                    </span>
+                  )}
+                </Button>
+              );
+            })
+          )}
         </div>
       </CardContent>
-      <CardFooter>
-        <Button
-          type="button"
-          onClick={handleContinue}
-          disabled={!draft.slotISO}
-        >
-          Fortsæt
-        </Button>
-      </CardFooter>
     </Card>
   );
 };

@@ -14,5 +14,5 @@ export const GuestRoute = ({ children }: GuestRouteProps) => {
     return <Navigate to="/admin" replace />;
   }
 
-  return <Navigate to="/dashboard" replace />;
+  return <Navigate to="/profile" replace />;
 };
