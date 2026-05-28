@@ -4,6 +4,7 @@ import {
   nameSchema,
   optionalNameSchema,
   passwordSchema,
+  safeString,
   userRoleSchema,
   uuidSchema,
 } from '../validators';
@@ -25,11 +26,25 @@ export const createUserSchema = z.object({
 
 export const updateUserSchema = z
   .object({
-    user_email: emailSchema.optional(),
-    user_first_name: nameSchema({ label: 'First name' }).optional(),
-    user_last_name: optionalNameSchema({ label: 'Last name' }).optional(),
-    user_location_fk: uuidSchema.optional(),
-    user_password: passwordSchema.optional(),
+    user_email: z.string().email('Invalid email format').max(255).optional(),
+    user_first_name: safeString({
+      min: 1,
+      max: 100,
+      label: 'First name',
+    }).optional(),
+    user_last_name: safeString({
+      min: 1,
+      max: 100,
+      label: 'Last name',
+    }).optional(),
+    user_location_fk: z.string().uuid('Invalid location ID').optional(),
+    user_note: z.string().max(1000, 'Note is too long').nullable().optional(),
+    user_password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .max(255, 'Password is too long')
+      .regex(/^[^<>\n\r]*$/, 'Invalid characters in password')
+      .optional(),
     repeat_password: z.string().optional(),
   })
   .refine((body: Record<string, unknown>) => Object.keys(body).length > 0, {

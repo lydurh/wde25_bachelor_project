@@ -8,22 +8,39 @@ import { AppLayout } from '@/components/layout/app-layout';
 import { AuthLayout } from '@/components/layout/auth-layout';
 import { BookingLayout } from '@/components/layout/booking-layout';
 import { UserLayout } from '@/components/layout/user-layout';
+
 import { availabilityLoader } from '@/lib/loaders/availability';
 import { bookingUserLoader } from '@/lib/loaders/booking-user';
 import { profileLoader } from '@/lib/loaders/profile';
 import { servicesLoader } from '@/lib/loaders/service';
+
 import { AdminDashboardPage } from '@/views/admin/pages/dashboard';
+import { ServicesPage as AdminServicesPage } from '@/views/admin/pages/services/services';
+import { ServicePage } from '@/views/admin/pages/services/service';
+import { CreateServicePage } from '@/views/admin/pages/services/create-service';
+import { AvailabilityPage } from '@/views/admin/pages/availability/availability';
+import { CreateAvailabilityPage } from '@/views/admin/pages/availability/create-availability';
+import { AvailabilityDetailPage } from '@/views/admin/pages/availability/availability-detail';
+import { UsersPage } from '@/views/admin/pages/users/users';
+import { UserDetailPage } from '@/views/admin/pages/users/user-detail';
+import { SettingsPage } from '@/views/admin/pages/settings/settings';
+import { AppointmentsPage as AdminAppointmentsPage } from '@/views/admin/pages/appointments/appointments';
+import { AppointmentDetailPage } from '@/views/admin/pages/appointments/appointment-detail';
+
 import { LoginPage } from '@/views/auth/pages/login';
 import { SignupPage } from '@/views/auth/pages/signup';
+import { ForgotPasswordPage } from '@/views/auth/pages/forgot-password';
+import { ResetPasswordPage } from '@/views/auth/pages/reset-password';
+
 import { ConfirmationPage } from '@/views/booking/pages/booking-confirmation';
 import { LocationPage } from '@/views/booking/pages/booking-location';
 import { ServicesPage } from '@/views/booking/pages/booking-service';
 import { TimeSelectPage } from '@/views/booking/pages/booking-time';
+import { AdminFetchUsersPage } from '@/views/booking/pages/booking-fetch-users';
+
 import { AppointmentsPage } from '@/views/user/pages/appointments';
 import { ProfilePage } from '@/views/user/pages/profile';
-import { AdminFetchUsersPage } from '@/views/booking/pages/booking-fetch-users';
-import { ForgotPasswordPage } from '@/views/auth/pages/forgot-password';
-import { ResetPasswordPage } from '@/views/auth/pages/reset-password';
+
 import { NotFoundPage } from '@/views/not-found/pages/not-found';
 
 export const router = createBrowserRouter([
@@ -117,6 +134,23 @@ export const router = createBrowserRouter([
             element: <AdminDashboardPage />,
             handle: { title: 'Admin dashboard' },
           },
+          { path: 'services', element: <AdminServicesPage /> },
+          { path: 'services/new', element: <CreateServicePage /> },
+          { path: 'services/:serviceId', element: <ServicePage /> },
+          { path: 'availability', element: <AvailabilityPage /> },
+          { path: 'availability/new', element: <CreateAvailabilityPage /> },
+          {
+            path: 'availability/:availabilityId',
+            element: <AvailabilityDetailPage />,
+          },
+          { path: 'users', element: <UsersPage /> },
+          { path: 'users/:userId', element: <UserDetailPage /> },
+          { path: 'appointments', element: <AdminAppointmentsPage /> },
+          {
+            path: 'appointments/:appointmentId',
+            element: <AppointmentDetailPage />,
+          },
+          { path: 'settings', element: <SettingsPage /> },
         ],
       },
 

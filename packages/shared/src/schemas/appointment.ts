@@ -55,8 +55,9 @@ export const createAppointmentInputSchema = appointmentSchema
   })
   .strict(); // Here we are rejecting unknown keys --> sanitizing the input
 
-/** PATCH body: any subset of create fields may be sent. */
+/** PATCH body: any subset of create fields + status may be sent. */
 export const updateAppointmentInputSchema = createAppointmentInputSchema
+  .merge(appointmentSchema.pick({ appointment_status: true }))
   .partial()
   .strict();
 

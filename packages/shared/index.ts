@@ -14,8 +14,8 @@ export {
   escapeHtml,
 } from './src/validators';
 
-export type { User, UserRow } from './src/types/user';
-export { toPublicUser } from './src/types/user';
+export type { User, UserRow, AdminUser } from './src/types/user';
+export { toPublicUser, toAdminUser } from './src/types/user';
 export type { Service } from './src/types/service';
 export {
   BOOKING_LOCATION_FEE_KR,

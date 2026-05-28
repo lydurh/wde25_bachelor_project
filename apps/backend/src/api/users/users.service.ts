@@ -4,6 +4,7 @@ import {
   type AdminOrigin,
   formatLocationAddress,
   toPublicUser,
+  toAdminUser,
 } from '@repo/shared';
 
 function parseCoordinate(value: string | null): number | null {
@@ -18,7 +19,7 @@ export const usersService = {
       .select()
       .from(users)
       .where(isNull(users.user_deleted_at));
-    return rows.map(toPublicUser);
+    return rows.map(toAdminUser);
   },
 
   async listByEmail(email: string, limit = 10) {
@@ -61,7 +62,7 @@ export const usersService = {
       .where(and(eq(users.user_pk, id), isNull(users.user_deleted_at)))
       .limit(1);
 
-    return user ? toPublicUser(user) : undefined;
+    return user ? toAdminUser(user) : undefined;
   },
 
   async create(data: CreateUserInput) {

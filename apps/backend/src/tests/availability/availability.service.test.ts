@@ -23,7 +23,7 @@ const validInput = {
   availability_date: '2030-08-01',
   availability_start_time: '09:00',
   availability_end_time: '17:00',
-  availability_type: 'available',
+  availability_type: 'available' as const,
 };
 
 describe('availabilityService.list', () => {

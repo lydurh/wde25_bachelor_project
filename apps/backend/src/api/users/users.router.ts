@@ -9,6 +9,7 @@ import {
   updateUser,
   deleteUser,
 } from './users.handler';
+
 import { authMiddleware, adminMiddleware } from '../../middleware';
 
 type AuthVars = {

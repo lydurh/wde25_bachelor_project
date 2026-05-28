@@ -80,7 +80,9 @@ export const availabilityService = {
         availability_date: input.availability_date,
         availability_start_time: input.availability_start_time,
         availability_end_time: input.availability_end_time,
-        availability_type: input.availability_type ?? 'available',
+        ...(input.availability_type
+          ? { availability_type: input.availability_type }
+          : {}),
       })
       .returning();
 

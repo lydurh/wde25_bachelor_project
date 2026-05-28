@@ -3,6 +3,7 @@ import { sign } from 'hono/jwt';
 import { app } from '../../app';
 import { env } from '../../lib/env';
 import { servicesService } from '../../api/services/services.service';
+import { db, services, eq } from '@repo/db';
 import type { Service } from '@repo/shared';
 
 type ServiceResponse = { data: Service };
@@ -31,7 +32,7 @@ const assertDefined = <T>(val: T | undefined): T => {
 
 afterAll(async () => {
   for (const id of testIds) {
-    await servicesService.remove(id);
+    await db.delete(services).where(eq(services.service_pk, id));
   }
 });
 
