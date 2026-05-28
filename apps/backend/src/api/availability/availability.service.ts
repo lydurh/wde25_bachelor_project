@@ -25,6 +25,7 @@ function availabilityFromRow(row: AvailabilityRow): Availability {
     availability_date: row.availability_date,
     availability_start_time: row.availability_start_time,
     availability_end_time: row.availability_end_time,
+    availability_type: row.availability_type,
     availability_created_at: row.availability_created_at.toISOString(),
     availability_updated_at: row.availability_updated_at?.toISOString() ?? null,
     availability_deleted_at: row.availability_deleted_at?.toISOString() ?? null,
@@ -79,6 +80,9 @@ export const availabilityService = {
         availability_date: input.availability_date,
         availability_start_time: input.availability_start_time,
         availability_end_time: input.availability_end_time,
+        ...(input.availability_type
+          ? { availability_type: input.availability_type }
+          : {}),
       })
       .returning();
 

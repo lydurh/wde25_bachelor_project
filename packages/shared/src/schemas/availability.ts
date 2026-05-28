@@ -11,12 +11,16 @@ const dateString = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD');
 
+export const AVAILABILITY_TYPES = ['available', 'blocked'] as const;
+export type AvailabilityType = (typeof AVAILABILITY_TYPES)[number];
+
 /** API / wire shape for an availability row (matches DB `availability` table). */
 export const availabilitySchema = z.object({
   availability_pk: z.string().min(1),
   availability_date: dateString,
   availability_start_time: timeString,
   availability_end_time: timeString,
+  availability_type: z.enum(AVAILABILITY_TYPES),
   availability_created_at: z.string().min(1),
   availability_updated_at: z.string().min(1).nullable(),
   availability_deleted_at: z.string().min(1).nullable(),
@@ -48,7 +52,9 @@ const _createAvailabilityBase = availabilitySchema
     availability_date: true,
     availability_start_time: true,
     availability_end_time: true,
+    availability_type: true,
   })
+  .partial({ availability_type: true })
   .strict();
 
 const _updateAvailabilityBase = _createAvailabilityBase.partial().strict();

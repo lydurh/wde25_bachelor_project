@@ -1,10 +1,20 @@
-import { date, pgTable, time, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  date,
+  pgTable,
+  time,
+  timestamp,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 
 export const availability = pgTable('availability', {
   availability_pk: uuid('availability_pk').primaryKey().defaultRandom(),
   availability_date: date('availability_date').notNull(),
   availability_start_time: time('availability_start_time').notNull(),
   availability_end_time: time('availability_end_time').notNull(),
+  availability_type: varchar('availability_type', { length: 50 })
+    .notNull()
+    .default('available'),
   availability_created_at: timestamp('availability_created_at', {
     withTimezone: true,
   })

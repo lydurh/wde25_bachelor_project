@@ -1,7 +1,7 @@
 import { db, users, locations, isNull, eq, and, ilike, or } from '@repo/db';
 import type { UpdateUserInput, CreateUserInput } from '@repo/shared';
 import {
-  type AdminOrigin, 
+  type AdminOrigin,
   formatLocationAddress,
   toPublicUser,
   toAdminUser,

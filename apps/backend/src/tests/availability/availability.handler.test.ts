@@ -44,7 +44,7 @@ const validInput = {
   availability_date: '2030-09-10',
   availability_start_time: '08:00',
   availability_end_time: '16:00',
-  availability_type: 'available',
+  availability_type: 'available' as const,
 };
 
 describe('GET /api/availability', () => {

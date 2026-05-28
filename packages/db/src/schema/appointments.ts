@@ -14,6 +14,7 @@ import { users } from './users';
 import { locations } from './locations';
 
 export const appointmentStatusEnum = pgEnum('appointment_status', [
+  'pending',
   'confirmed',
   'cancelled',
   'completed',
@@ -39,7 +40,7 @@ export const appointments = pgTable(
     }),
     appointment_status: appointmentStatusEnum('appointment_status')
       .notNull()
-      .default('confirmed'),
+      .default('pending'),
     appointment_created_at: timestamp('appointment_created_at', {
       withTimezone: true,
     })

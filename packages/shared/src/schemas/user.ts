@@ -4,6 +4,7 @@ import {
   nameSchema,
   optionalNameSchema,
   passwordSchema,
+  safeString,
   userRoleSchema,
   uuidSchema,
 } from '../validators';
@@ -26,14 +27,16 @@ export const createUserSchema = z.object({
 export const updateUserSchema = z
   .object({
     user_email: z.string().email('Invalid email format').max(255).optional(),
-    user_first_name: safeString
-      .min(1, 'First name is required')
-      .max(100)
-      .optional(),
-    user_last_name: safeString
-      .min(1, 'Last name is required')
-      .max(100)
-      .optional(),
+    user_first_name: safeString({
+      min: 1,
+      max: 100,
+      label: 'First name',
+    }).optional(),
+    user_last_name: safeString({
+      min: 1,
+      max: 100,
+      label: 'Last name',
+    }).optional(),
     user_location_fk: z.string().uuid('Invalid location ID').optional(),
     user_note: z.string().max(1000, 'Note is too long').nullable().optional(),
     user_password: z

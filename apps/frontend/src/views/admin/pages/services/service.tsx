@@ -5,12 +5,7 @@ import type { Service } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type ApiResponse<T> = { data: T };
 
@@ -62,9 +57,7 @@ export const ServicePage = () => {
       });
       void navigate('/admin/services');
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to update service',
-      );
+      setError(err instanceof Error ? err.message : 'Failed to update service');
     } finally {
       setSubmitting(false);
     }
@@ -75,9 +68,7 @@ export const ServicePage = () => {
       await api.delete(`/services/${serviceId}`);
       void navigate('/admin/services');
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to delete service',
-      );
+      setError(err instanceof Error ? err.message : 'Failed to delete service');
     }
   };
 
@@ -99,9 +90,7 @@ export const ServicePage = () => {
           <CardTitle>{service.service_title}</CardTitle>
         </CardHeader>
         <CardContent>
-          {error && (
-            <p className="mb-4 text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
 
           <form onSubmit={(e) => void handleSave(e)} className="space-y-4">
             <div className="space-y-1">
