@@ -25,6 +25,7 @@ import {
   getLinePriceKr,
 } from '@repo/shared';
 import { LocationFeeLabel } from '@/views/booking/components/location-fee-label';
+import { BookingSuccessDialog } from '@/views/booking/components/booking-success-dialog';
 import {
   useBooking,
   useBookingStepFooter,
@@ -57,6 +58,8 @@ export const ConfirmationPage = () => {
     continueLabel,
     isSubmitting,
     bookingCustomer,
+    showSuccessDialog,
+    setShowSuccessDialog,
   } = useBooking();
 
   useBookingStepFooter({
@@ -238,6 +241,10 @@ export const ConfirmationPage = () => {
           {isSubmitting ? 'Booker...' : continueLabel}
         </Button>
       </CardFooter>
+      <BookingSuccessDialog
+        isOpen={showSuccessDialog}
+        onOpenChange={setShowSuccessDialog}
+      />
     </Card>
   );
 };

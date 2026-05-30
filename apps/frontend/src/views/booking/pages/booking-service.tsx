@@ -28,7 +28,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-// import { LocationFeeLabel } from '@/views/booking/components/location-fee-label';
+
 import {
   buildSelectedServiceLines,
   getCumulatedServiceDurationFromQuantities,
@@ -84,7 +84,6 @@ export const ServicesPage = () => {
       comments: textarea.value,
     });
   };
-
   return (
     <Card>
       <CardHeader className="flex justify-between">
@@ -134,17 +133,24 @@ export const ServicesPage = () => {
           return (
             <Item
               key={service.service_pk}
-              className="flex items-center justify-between px-0"
+              className="flex items-start justify-between gap-4 px-0"
               size="xs"
               variant="default"
             >
-              <ItemContent>
-                <ItemTitle>{service.service_title}</ItemTitle>
-                <ItemDescription className="text-sm">
-                  {service.service_duration} min - {service.service_price} kr
+              <ItemContent className="flex-1 space-y-2 px-0">
+                <div className="flex flex-wrap items-baseline gap-2">
+                  <ItemTitle className="min-w-0 text-base font-semibold">
+                    {service.service_title} -
+                  </ItemTitle>
+                  <ItemDescription className="text-sm text-foreground/70 whitespace-nowrap">
+                    {service.service_price} kr - {service.service_duration} min
+                  </ItemDescription>
+                </div>
+                <ItemDescription className="text-sm text-foreground/70 min-w-0">
+                  {service.service_description}
                 </ItemDescription>
               </ItemContent>
-              <ItemActions>
+              <ItemActions className="flex items-center gap-2">
                 <Button
                   type="button"
                   variant="outline"

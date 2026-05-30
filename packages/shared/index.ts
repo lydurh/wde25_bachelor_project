@@ -64,12 +64,14 @@ export type {
   CreateAppointmentInput,
   UpdateAppointmentInput,
   AppointmentStatus,
+  SendConfirmationEmailInput,
 } from './src/schemas/appointment';
 export {
   APPOINTMENT_STATUSES,
   appointmentSchema,
   createAppointmentInputSchema,
   updateAppointmentInputSchema,
+  sendConfirmationEmailSchema,
   parseAppointment,
 } from './src/schemas/appointment';
 
