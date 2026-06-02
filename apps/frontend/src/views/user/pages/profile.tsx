@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { ProfileLoaderData } from '@/lib/loaders/profile';
 import { Link, useLoaderData } from 'react-router';
 import { formatLocationAddress } from '@repo/shared';
@@ -10,6 +11,12 @@ import { Button } from '@/components/ui/button';
 
 export const ProfilePage = () => {
   const { appointments, user, location } = useLoaderData<ProfileLoaderData>();
+  const [showPreviousAppointments, setShowPreviousAppointments] =
+    useState(false);
+
+  const firstAppointment =
+    appointments.length > 0 ? appointments[0] : undefined;
+  const previousAppointments = appointments.slice(1);
 
   const originAddress = location
     ? formatLocationAddress({
@@ -59,12 +66,28 @@ export const ProfilePage = () => {
               Du har ingen aftaler endnu.
             </p>
           ) : (
-            appointments.map((appointment) => (
-              <AppointmentCard
-                key={appointment.appointment_pk}
-                appointment={appointment}
-              />
-            ))
+            <div className="flex flex-col gap-2">
+              <AppointmentCard appointment={firstAppointment!} />
+              {showPreviousAppointments &&
+                previousAppointments.map((appointment) => (
+                  <AppointmentCard
+                    key={appointment.appointment_pk}
+                    appointment={appointment}
+                  />
+                ))}
+              {previousAppointments.length > 0 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => setShowPreviousAppointments((open) => !open)}
+                >
+                  {showPreviousAppointments
+                    ? 'Skjul tidligere aftaler'
+                    : 'Vis tidligere aftaler'}
+                </Button>
+              )}
+            </div>
           )}
         </section>
       </div>

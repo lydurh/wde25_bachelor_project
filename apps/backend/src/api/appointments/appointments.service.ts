@@ -10,7 +10,7 @@ import {
   ne,
   services,
   users,
-  desc,
+  asc,
 } from '@repo/db';
 import {
   type Appointment,
@@ -167,8 +167,8 @@ export const appointmentsService = {
       )
       .where(and(eq(appointments.appointment_user_fk, id), notDeleted))
       .orderBy(
-        desc(appointments.appointment_date),
-        desc(appointments.appointment_time),
+        asc(appointments.appointment_date),
+        asc(appointments.appointment_time),
       );
     const servicesByAppointment = await fetchServicesByUserId(id);
     return rows.map((row) => ({
