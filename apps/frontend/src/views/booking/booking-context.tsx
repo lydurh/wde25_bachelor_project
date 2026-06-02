@@ -57,6 +57,9 @@ type BookingContextValue = {
   isSubmitting: boolean;
   handleContinue: () => void;
   setStepFooter: (config: StepFooterConfig) => void;
+  showSuccessDialog: boolean;
+  setShowSuccessDialog: (show: boolean) => void;
+  hasSubmittedSuccessfully: boolean;
 };
 
 const BookingContext = createContext<BookingContextValue | null>(null);
@@ -68,6 +71,9 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   const [draft, setDraftState] = useState<BookingDraft>({});
   const [stepFooter, setStepFooterState] = useState<StepFooterConfig>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [hasSubmittedSuccessfully, setHasSubmittedSuccessfully] =
+    useState(false);
 
   const currentStep = getCurrentStep(routeLocation.pathname);
 
@@ -108,6 +114,35 @@ export function BookingProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setStepFooterState({});
+  }, [currentStep]);
+
+  // Navigate to profile only after a successful booking and when the success dialog closes.
+  useEffect(() => {
+    if (
+      currentStep !== 'confirm' ||
+      isSubmitting ||
+      !hasSubmittedSuccessfully ||
+      showSuccessDialog
+    ) {
+      return undefined;
+    }
+
+    const timer = setTimeout(() => {
+      void navigate('/profile');
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [
+    showSuccessDialog,
+    currentStep,
+    isSubmitting,
+    hasSubmittedSuccessfully,
+    navigate,
+  ]);
+
+  useEffect(() => {
+    if (currentStep !== 'confirm') {
+      setHasSubmittedSuccessfully(false);
+    }
   }, [currentStep]);
 
   const continueDisabled = useMemo(() => {
@@ -180,12 +215,28 @@ export function BookingProvider({ children }: { children: ReactNode }) {
             quantity: s.quantity,
           })),
         })
-        .then(() => {
+        .then((response) => {
           resetDraft();
-          void navigate('/profile/appointments');
+          setHasSubmittedSuccessfully(true);
+          setShowSuccessDialog(true);
+          // Send confirmation email
+          void api
+            .post('/appointments/send-confirmation-email', {
+              appointment_pk: response.data.appointment_pk,
+              appointment_date: date,
+              appointment_time: time,
+              user_email: bookingCustomer?.user_email,
+            })
+            .catch((err: unknown) => {
+              console.warn('Failed to send confirmation email', err);
+            });
         })
         .catch((err: unknown) => {
           console.error('Booking failed', err);
+          const apiError = err as { status?: number; message?: string };
+          if (apiError?.status === 400 || apiError?.status === 409) {
+            console.warn(apiError.message ?? 'Booking validation failed');
+          }
         })
         .finally(() => {
           setIsSubmitting(false);
@@ -212,6 +263,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     servicesData,
     setDraft,
     resetDraft,
+    setHasSubmittedSuccessfully,
   ]);
 
   return (
@@ -231,6 +283,9 @@ export function BookingProvider({ children }: { children: ReactNode }) {
         isSubmitting,
         handleContinue,
         setStepFooter,
+        showSuccessDialog,
+        setShowSuccessDialog,
+        hasSubmittedSuccessfully,
       }}
     >
       {children}

@@ -34,6 +34,7 @@ function BookingLayoutContent() {
     continueLabel,
     handleContinue,
     showLayoutContinue,
+    hasSubmittedSuccessfully,
   } = useBooking();
 
   const guardContext = useMemo(
@@ -60,6 +61,10 @@ function BookingLayoutContent() {
         replace: true,
         state: { from: location.pathname },
       });
+      return;
+    }
+
+    if (currentStep === 'confirm' && hasSubmittedSuccessfully) {
       return;
     }
 

@@ -74,3 +74,22 @@ export type UpdateAppointmentInput = z.infer<
 export function parseAppointment(input: unknown): Appointment {
   return appointmentSchema.parse(input);
 }
+
+/** Schema for sending a booking confirmation email */
+export const sendConfirmationEmailSchema = z.object({
+  appointment_pk: z.string().min(1),
+  appointment_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD'),
+  appointment_time: z
+    .string()
+    .regex(
+      /^([01]?\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/,
+      'Expected time like HH:MM or HH:MM:SS',
+    ),
+  user_email: z.string().email().nullable().optional(),
+});
+
+export type SendConfirmationEmailInput = z.infer<
+  typeof sendConfirmationEmailSchema
+>;
