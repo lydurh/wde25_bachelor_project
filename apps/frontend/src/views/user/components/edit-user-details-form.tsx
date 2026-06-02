@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useRevalidator } from 'react-router';
-import { updateUserSchema, type User } from '@repo/shared';
+import { updateUserSchema, type Location, type User } from '@repo/shared';
+// import { LocationCheck01Icon } from '@hugeicons/core-free-icons';
+// import { HugeiconsIcon } from '@hugeicons/react';
 import { api, ApiError, getErrorMessage } from '@/lib/api';
 import { flattenApiIssues, flattenZodErrors } from '@/lib/zod-form';
 import {
@@ -27,6 +29,7 @@ import {
 import { Field, FieldError, FieldGroup } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { usePlaceAutocomplete } from '@/views/booking/use-place-autocomplete';
 
 type EditUserDetailsFormProps = {
   user: User;
@@ -37,7 +40,6 @@ type FormFields = Pick<
   'user_first_name' | 'user_last_name' | 'user_email'
 >;
 
-// We occupy the form fields from the user object
 const toFormFields = (user: User): FormFields => ({
   user_first_name: user.user_first_name,
   user_last_name: user.user_last_name,
@@ -46,12 +48,22 @@ const toFormFields = (user: User): FormFields => ({
 
 export const EditUserDetailsForm = ({ user }: EditUserDetailsFormProps) => {
   const { revalidate } = useRevalidator();
+  const autocompleteContainerRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [form, setForm] = useState(() => toFormFields(user));
+  const [pendingAddress, setPendingAddress] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const onAddressSelected = useCallback((address: string) => {
+    setPendingAddress(address);
+  }, []);
+
+  usePlaceAutocomplete(autocompleteContainerRef, onAddressSelected, {
+    enabled: open,
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -60,6 +72,7 @@ export const EditUserDetailsForm = ({ user }: EditUserDetailsFormProps) => {
 
   const resetForm = () => {
     setForm(toFormFields(user));
+    setPendingAddress(null);
     setFieldErrors({});
   };
 
@@ -97,7 +110,17 @@ export const EditUserDetailsForm = ({ user }: EditUserDetailsFormProps) => {
     setSaving(true);
     setConfirmError(null);
     try {
-      await api.patch<{ data: User }>(`/users/${user.user_pk}`, parsed.data);
+      const payload = { ...parsed.data };
+
+      if (pendingAddress?.trim()) {
+        const { data: location } = await api.post<{ data: Location }>(
+          '/locations/from-address',
+          { formattedAddress: pendingAddress.trim() },
+        );
+        payload.user_location_fk = location.location_pk;
+      }
+
+      await api.patch<{ data: User }>(`/users/${user.user_pk}`, payload);
       setConfirmOpen(false);
       setOpen(false);
       void revalidate();
@@ -120,11 +143,12 @@ export const EditUserDetailsForm = ({ user }: EditUserDetailsFormProps) => {
             Rediger oplysninger
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="overflow-visible sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Rediger dine oplysninger</DialogTitle>
             <DialogDescription>
-              Opdater dit navn og din e-mail. Ændringerne gemmes på din profil.
+              Opdater dit navn, din e-mail og din adresse. Ændringerne gemmes på
+              din profil.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={(e) => handleSaveClick(e)} className="space-y-4">
@@ -172,6 +196,16 @@ export const EditUserDetailsForm = ({ user }: EditUserDetailsFormProps) => {
                 {fieldErrors['user_email'] && (
                   <FieldError>{fieldErrors['user_email']}</FieldError>
                 )}
+              </Field>
+              <Field>
+                <Label htmlFor="profile-address-search">Adresse</Label>
+                {open ? (
+                  <div
+                    id="profile-address-search"
+                    ref={autocompleteContainerRef}
+                    className="relative z-10 min-h-9 w-full"
+                  />
+                ) : null}
               </Field>
             </FieldGroup>
             <DialogFooter>
