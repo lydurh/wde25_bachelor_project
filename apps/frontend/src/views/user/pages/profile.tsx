@@ -28,11 +28,11 @@ export const ProfilePage = () => {
 
   return (
     <main className="space-y-8 max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold">Profile</h1>
+      <h1 className="text-3xl font-bold">Hej {user.user_first_name}!</h1>
       <div className="flex flex-col gap-12">
         <section className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-2xl font-bold">Dine oplysninger</h2>
+            <h2 className="text-xl font-semibold">Dine oplysninger</h2>
             <EditUserDetailsForm user={user} />
           </div>
           <ItemGroup className="grid grid-cols-1 md:grid-cols-2 gap-2 bg-white rounded-lg p-3 border border-border shadow-sm">
@@ -56,7 +56,7 @@ export const ProfilePage = () => {
         </section>
         <section className="flex flex-col gap-2">
           <header className="flex items-center justify-between gap-2">
-            <h2 className="text-2xl font-bold">Dine aftaler</h2>
+            <h2 className="text-xl font-semibold">Dine aftaler</h2>
             <Button variant="default" asChild>
               <Link to="/book/service">book ny aftale</Link>
             </Button>

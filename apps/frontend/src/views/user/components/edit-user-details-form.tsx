@@ -138,7 +138,7 @@ export const EditUserDetailsForm = ({ user }: EditUserDetailsFormProps) => {
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
           <Button variant="outline" size="sm">
-            Rediger oplysninger
+            Rediger
           </Button>
         </DialogTrigger>
         <DialogContent className="overflow-visible sm:max-w-md">
