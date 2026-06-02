@@ -223,6 +223,26 @@ describe('appointmentsService.patch', () => {
   });
 });
 
+describe('appointmentsService.listByUserId', () => {
+  it('should return appointments with linked services from appointment_services', async () => {
+    const created = assertDefined(
+      await appointmentsService.post(makeInput(testUserId)),
+    );
+    testAppointmentIds.push(created.appointment_pk);
+
+    const result = await appointmentsService.listByUserId(testUserId);
+    const found = assertDefined(
+      result.find((a) => a.appointment_pk === created.appointment_pk),
+    );
+
+    expect(found.services).toHaveLength(1);
+    expect(found.services[0]?.service_fk).toBe(TEST_SERVICE_PK);
+    expect(found.services[0]?.quantity).toBe(1);
+    expect(found.services[0]?.service_title.length).toBeGreaterThan(0);
+    expect(found.services[0]?.service_price).toMatch(/^\d+\.\d{2}$/);
+  });
+});
+
 describe('appointmentsService.delete', () => {
   it('should soft-delete and return the appointment', async () => {
     const created = assertDefined(

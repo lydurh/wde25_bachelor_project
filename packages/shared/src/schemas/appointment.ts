@@ -61,8 +61,27 @@ export const updateAppointmentInputSchema = createAppointmentInputSchema
   .partial()
   .strict();
 
-// Here we are exporting the types for the appointment and create appointment input
+/** Service line on an appointment (from `appointment_services` joined with `services`). */
+export const appointmentServiceLineSchema = z.object({
+  service_fk: z.string().min(1),
+  quantity: z.number().int().positive(),
+  service_title: z.string().min(1),
+  service_description: z.string().nullable(),
+  service_duration: z.number().int().positive(),
+  service_price: z.string(),
+});
+
+export const appointmentWithServicesSchema = appointmentSchema.extend({
+  services: z.array(appointmentServiceLineSchema),
+});
+
 export type Appointment = z.infer<typeof appointmentSchema>;
+export type AppointmentServiceLine = z.infer<
+  typeof appointmentServiceLineSchema
+>;
+export type AppointmentWithServices = z.infer<
+  typeof appointmentWithServicesSchema
+>;
 export type CreateAppointmentInput = z.infer<
   typeof createAppointmentInputSchema
 >;

@@ -1,4 +1,4 @@
-import type { Appointment } from '@repo/shared';
+import type { AppointmentWithServices } from '@repo/shared';
 import {
   Card,
   CardHeader,
@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/card';
 
 type AppointmentCardProps = {
-  appointment: Appointment;
+  appointment: AppointmentWithServices;
 };
 
 export const AppointmentCard = ({ appointment }: AppointmentCardProps) => {
@@ -25,6 +25,20 @@ export const AppointmentCard = ({ appointment }: AppointmentCardProps) => {
           {appointment.appointment_date}
         </p>
       </CardContent>
+      {appointment.services.length > 0 && (
+        <CardContent>
+          <p className="text-sm font-bold text-gray-700">Services</p>
+          <ul className="mt-1 space-y-1 text-sm text-gray-500">
+            {appointment.services.map((line) => (
+              <li key={line.service_fk}>
+                {line.service_title}
+                {line.quantity > 1 ? ` × ${line.quantity}` : ''} —{' '}
+                {line.service_price} kr
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      )}
       <CardContent>
         <p className="text-sm text-gray-500">
           <span className="font-bold">Created at:</span>{' '}

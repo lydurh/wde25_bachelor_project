@@ -65,10 +65,14 @@ export type {
   UpdateAppointmentInput,
   AppointmentStatus,
   SendConfirmationEmailInput,
+  AppointmentServiceLine,
+  AppointmentWithServices,
 } from './src/schemas/appointment';
 export {
   APPOINTMENT_STATUSES,
   appointmentSchema,
+  appointmentServiceLineSchema,
+  appointmentWithServicesSchema,
   createAppointmentInputSchema,
   updateAppointmentInputSchema,
   sendConfirmationEmailSchema,

@@ -8,10 +8,13 @@ import {
   isNull,
   locations,
   ne,
+  services,
   users,
 } from '@repo/db';
 import {
   type Appointment,
+  type AppointmentServiceLine,
+  type AppointmentWithServices,
   type CreateAppointmentInput,
   type UpdateAppointmentInput,
   type SendConfirmationEmailInput,
@@ -67,18 +70,71 @@ function appointmentFromRow(row: AppointmentRow): Appointment {
 
 const notDeleted = isNull(appointments.appointment_deleted_at);
 
+async function fetchServicesByUserId(
+  userId: string,
+): Promise<Map<string, AppointmentServiceLine[]>> {
+  const byAppointment = new Map<string, AppointmentServiceLine[]>();
+
+  const rows = await db
+    .select({
+      appointment_fk: appointmentServices.appointment_fk,
+      quantity: appointmentServices.quantity,
+      service_pk: services.service_pk,
+      service_title: services.service_title,
+      service_description: services.service_description,
+      service_duration: services.service_duration,
+      service_price: services.service_price,
+    })
+    .from(appointmentServices)
+    .innerJoin(
+      appointments,
+      eq(appointmentServices.appointment_fk, appointments.appointment_pk),
+    )
+    .innerJoin(
+      services,
+      eq(appointmentServices.service_fk, services.service_pk),
+    )
+    .where(
+      and(
+        eq(appointments.appointment_user_fk, userId),
+        notDeleted,
+        isNull(services.service_deleted_at),
+      ),
+    );
+
+  for (const row of rows) {
+    const line: AppointmentServiceLine = {
+      service_fk: row.service_pk,
+      quantity: row.quantity,
+      service_title: row.service_title,
+      service_description: row.service_description,
+      service_duration: row.service_duration,
+      service_price: String(row.service_price),
+    };
+    const existing = byAppointment.get(row.appointment_fk) ?? [];
+    existing.push(line);
+    byAppointment.set(row.appointment_fk, existing);
+  }
+
+  return byAppointment;
+}
+
 export const appointmentsService = {
   async list() {
     const rows = await db.select().from(appointments).where(notDeleted);
     return rows.map(appointmentFromRow);
   },
 
-  async listByUserId(id: string) {
+  async listByUserId(id: string): Promise<AppointmentWithServices[]> {
     const rows = await db
       .select()
       .from(appointments)
       .where(and(eq(appointments.appointment_user_fk, id), notDeleted));
-    return rows.map(appointmentFromRow);
+    const servicesByAppointment = await fetchServicesByUserId(id);
+    return rows.map((row) => ({
+      ...appointmentFromRow(row),
+      services: servicesByAppointment.get(row.appointment_pk) ?? [],
+    }));
   },
 
   async get(id: string) {
