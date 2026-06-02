@@ -59,12 +59,21 @@ jobs:
           COMMIT_SHA: ${{ github.sha }}
         run: |
           test -n "$WEBHOOK_URL"
-          response=$(curl --fail-with-body --show-error --silent \
+          http_code=$(curl --show-error --silent -o /tmp/resp.txt -w "%{http_code}" \
             -X POST "$WEBHOOK_URL" \
             -H "Content-Type: application/json" \
-            --data "{\"branch\":\"$BRANCH_NAME\",\"ref\":\"$BRANCH_REF\",\"sha\":\"$COMMIT_SHA\"}")
-          echo "Dokploy response: $response"
-          if echo "$response" | grep -qi 'not match\|error'; then
+            -H "X-GitHub-Event: push" \
+            -H "X-GitHub-Delivery: ${{ github.run_id }}-${{ github.run_attempt }}" \
+            --data "{\"ref\":\"$BRANCH_REF\",\"after\":\"$COMMIT_SHA\",\"repository\":{\"default_branch\":\"$BRANCH_NAME\"}}")
+          echo "HTTP $http_code"
+          echo "Body:"
+          cat /tmp/resp.txt
+          echo
+          if [ "$http_code" -ge 400 ]; then
+            echo "Dokploy returned error status"
+            exit 1
+          fi
+          if grep -qi 'not match\|error' /tmp/resp.txt; then
             echo "Dokploy rejected deploy"
             exit 1
           fi
