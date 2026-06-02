@@ -1,8 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
-import { useRevalidator } from 'react-router';
+import { Link, useRevalidator } from 'react-router';
 import { updateUserSchema, type Location, type User } from '@repo/shared';
-// import { LocationCheck01Icon } from '@hugeicons/core-free-icons';
-// import { HugeiconsIcon } from '@hugeicons/react';
 import { api, ApiError, getErrorMessage } from '@/lib/api';
 import { flattenApiIssues, flattenZodErrors } from '@/lib/zod-form';
 import {
@@ -208,15 +206,23 @@ export const EditUserDetailsForm = ({ user }: EditUserDetailsFormProps) => {
                 ) : null}
               </Field>
             </FieldGroup>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button type="button" variant="outline" disabled={saving}>
-                  Annuller
+            <DialogFooter className="flex-row items-center justify-between gap-2 sm:flex-row sm:justify-between">
+              <Link
+                to={`/forgot-password?email=${encodeURIComponent(user.user_email)}`}
+                className="text-sm text-primary hover:underline"
+              >
+                Nulstil adgangskode
+              </Link>
+              <div className="flex items-center gap-2">
+                <DialogClose asChild>
+                  <Button type="button" variant="outline" disabled={saving}>
+                    Annuller
+                  </Button>
+                </DialogClose>
+                <Button type="submit" disabled={saving}>
+                  Gem
                 </Button>
-              </DialogClose>
-              <Button type="submit" disabled={saving}>
-                Gem
-              </Button>
+              </div>
             </DialogFooter>
           </form>
         </DialogContent>
