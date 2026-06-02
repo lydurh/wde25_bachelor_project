@@ -11,6 +11,7 @@ import {
   services,
   users,
 } from '@repo/db';
+import { desc } from 'drizzle-orm';
 import {
   type Appointment,
   type AppointmentLocation,
@@ -164,7 +165,11 @@ export const appointmentsService = {
           isNull(locations.location_deleted_at),
         ),
       )
-      .where(and(eq(appointments.appointment_user_fk, id), notDeleted));
+      .where(and(eq(appointments.appointment_user_fk, id), notDeleted))
+      .orderBy(
+        desc(appointments.appointment_date),
+        desc(appointments.appointment_time),
+      );
     const servicesByAppointment = await fetchServicesByUserId(id);
     return rows.map((row) => ({
       ...appointmentFromRow(row.appointment),

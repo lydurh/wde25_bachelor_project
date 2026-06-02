@@ -6,7 +6,7 @@ export const ProfilePage = () => {
   const { appointments, user } = useLoaderData<ProfileLoaderData>();
 
   return (
-    <main className="space-y-8">
+    <main className="space-y-8 max-w-3xl mx-auto">
       <h1 className="text-3xl font-bold">Profile</h1>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">

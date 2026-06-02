@@ -243,6 +243,45 @@ describe('appointmentsService.listByUserId', () => {
     expect(found.location).toBeNull();
   });
 
+  it('should return appointments ordered by date and time descending', async () => {
+    const earlier = assertDefined(
+      await appointmentsService.post({
+        ...makeInput(testUserId),
+        appointment_date: '2030-01-01',
+        appointment_time: '09:00',
+      }),
+    );
+    testAppointmentIds.push(earlier.appointment_pk);
+
+    const laterSameDay = assertDefined(
+      await appointmentsService.post({
+        ...makeInput(testUserId),
+        appointment_date: '2030-06-15',
+        appointment_time: '14:00',
+      }),
+    );
+    testAppointmentIds.push(laterSameDay.appointment_pk);
+
+    const latest = assertDefined(
+      await appointmentsService.post({
+        ...makeInput(testUserId),
+        appointment_date: '2030-12-31',
+        appointment_time: '10:00',
+      }),
+    );
+    testAppointmentIds.push(latest.appointment_pk);
+
+    const result = await appointmentsService.listByUserId(testUserId);
+    const ids = result.map((a) => a.appointment_pk);
+
+    expect(ids.indexOf(latest.appointment_pk)).toBeLessThan(
+      ids.indexOf(laterSameDay.appointment_pk),
+    );
+    expect(ids.indexOf(laterSameDay.appointment_pk)).toBeLessThan(
+      ids.indexOf(earlier.appointment_pk),
+    );
+  });
+
   it('should return joined location when appointment has location_fk', async () => {
     const created = assertDefined(
       await appointmentsService.post({

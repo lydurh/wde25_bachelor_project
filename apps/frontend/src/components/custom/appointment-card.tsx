@@ -1,5 +1,6 @@
 import {
-  formatLocationAddress,
+  type LocationAddressParts,
+  type AppointmentServiceLine,
   type AppointmentWithServices,
 } from '@repo/shared';
 import {
@@ -9,59 +10,123 @@ import {
   CardContent,
   CardFooter,
 } from '@/components/ui/card';
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from '../ui/item';
+import { HugeiconsIcon } from '@hugeicons/react';
+import type { IconSvgElement } from '@hugeicons/react';
+import {
+  Appointment02Icon,
+  CoinsDollarIcon,
+  Location04Icon,
+  ScissorIcon,
+  Comment03Icon,
+} from '@hugeicons/core-free-icons';
+import { format } from 'date-fns';
+import { Separator } from '../ui/separator';
 
 type AppointmentCardProps = {
   appointment: AppointmentWithServices;
 };
 
+type AppointmentItemProps = {
+  media?: IconSvgElement;
+  title: string;
+  content?: string | number;
+};
+
+const formatAddress = (address: LocationAddressParts | null) => {
+  if (!address) return 'Ingen adresse fundet';
+  const cityLine = [address.location_postal_code, address.location_city]
+    .filter(Boolean)
+    .join(', ');
+
+  return cityLine
+    ? `${address.location_address}\n${cityLine}`
+    : address.location_address;
+};
+
+const formatServices = (services: AppointmentServiceLine[]) => {
+  return services
+    .map((service) =>
+      service.quantity > 1
+        ? `${service.quantity} × ${service.service_title}`
+        : service.service_title,
+    )
+    .join(', ');
+};
+
+const formatAppointmentDate = (date: string) => {
+  return format(new Date(date), 'd. MMM yyyy');
+};
+
+const AppointmentItem = ({ media, title, content }: AppointmentItemProps) => {
+  return (
+    <Item>
+      {media && (
+        <ItemMedia>
+          <HugeiconsIcon icon={media} size={18} strokeWidth={2} />
+        </ItemMedia>
+      )}
+      <ItemContent>
+        <ItemTitle className="font-semibold">{title}</ItemTitle>
+        {content && (
+          <ItemDescription className="whitespace-pre-line text-foreground/70">
+            {content}
+          </ItemDescription>
+        )}
+      </ItemContent>
+    </Item>
+  );
+};
+
 export const AppointmentCard = ({ appointment }: AppointmentCardProps) => {
   return (
-    <Card className="bg-white rounded-lg shadow-md p-4">
+    <Card className="bg-white rounded-lg shadow-md">
       <CardHeader>
         <CardTitle>
-          {appointment.appointment_time} - {appointment.appointment_date}
+          <Item>
+            <HugeiconsIcon icon={Appointment02Icon} size={36} strokeWidth={2} />
+            <ItemContent>
+              <ItemTitle className="font-semibold text-xl">
+                {formatAppointmentDate(appointment.appointment_date)} -{' '}
+                {appointment.appointment_time}
+              </ItemTitle>
+            </ItemContent>
+          </Item>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-500">
-          <span className="font-bold">Date:</span>{' '}
-          {appointment.appointment_date}
-        </p>
+        <ItemGroup className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <AppointmentItem
+            media={Location04Icon}
+            title="Sted:"
+            content={formatAddress(appointment.location)}
+          />
+          <AppointmentItem
+            media={CoinsDollarIcon}
+            title="Pris:"
+            content={`${appointment.appointment_total_price},-`}
+          />
+          <AppointmentItem
+            media={ScissorIcon}
+            title="Services:"
+            content={formatServices(appointment.services)}
+          />
+          <AppointmentItem
+            media={Comment03Icon}
+            title="Kommentar:"
+            content={appointment.appointment_notes ?? 'Ingen kommentar'}
+          />
+        </ItemGroup>
       </CardContent>
-      {appointment.location && (
-        <CardContent>
-          <p className="text-sm text-gray-500">
-            <span className="font-bold">Location:</span>{' '}
-            {formatLocationAddress(appointment.location)}
-          </p>
-        </CardContent>
-      )}
-      {appointment.services.length > 0 && (
-        <CardContent>
-          <p className="text-sm font-bold text-gray-700">Services</p>
-          <ul className="mt-1 space-y-1 text-sm text-gray-500">
-            {appointment.services.map((line) => (
-              <li key={line.service_fk}>
-                {line.service_title}
-                {line.quantity > 1 ? ` × ${line.quantity}` : ''} —{' '}
-                {line.service_price} kr
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      )}
-      <CardContent>
-        <p className="text-sm text-gray-500">
-          <span className="font-bold">Created at:</span>{' '}
-          {new Date(appointment.appointment_created_at).toLocaleString()}
-        </p>
-      </CardContent>
-      <CardFooter>
-        <p className="text-sm text-gray-500">
-          <span className="font-bold">Time:</span>{' '}
-          {appointment.appointment_time}
-        </p>
-      </CardFooter>
+      <Separator className="my-4" />
+      <CardFooter>footer here</CardFooter>
     </Card>
   );
 };
