@@ -73,6 +73,14 @@ export const appointmentsService = {
     return rows.map(appointmentFromRow);
   },
 
+  async listByUserId(id: string) {
+    const rows = await db
+      .select()
+      .from(appointments)
+      .where(and(eq(appointments.appointment_user_fk, id), notDeleted));
+    return rows.map(appointmentFromRow);
+  },
+
   async get(id: string) {
     const [row] = await db
       .select()

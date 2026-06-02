@@ -36,6 +36,17 @@ export const getAppointmentById = async (c: Context) => {
   return c.json({ data: appointment }, 200);
 };
 
+export const listAppointmentsByUserId = async (c: Context) => {
+  const userId = requireAppointmentId(c.req.param('id'));
+  const appointments = await appointmentsService.listByUserId(userId);
+
+  if (!appointments) {
+    throw new HTTPException(404, { message: 'Appointments not found' });
+  }
+
+  return c.json({ data: appointments }, 200);
+};
+
 export const deleteAppointmentById = async (c: Context) => {
   const id = requireAppointmentId(c.req.param('id'));
   const deletedAppointment = await appointmentsService.delete(id);
