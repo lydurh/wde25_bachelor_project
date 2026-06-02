@@ -23,8 +23,8 @@ services:
 
   frontend:
     image: ghcr.io/lydurh/wde25_bachelor_project/frontend:latest
-    ports:
-      - '80:80'
+    expose:
+      - '80'
     depends_on:
       - backend
     restart: unless-stopped
