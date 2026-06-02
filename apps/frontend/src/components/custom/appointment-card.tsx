@@ -6,16 +6,8 @@ import {
 } from '@repo/shared';
 import { CancelAppointment } from '@/views/user/components/cancel-appointment';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemMedia,
-  ItemTitle,
-} from '../ui/item';
+import { Item, ItemGroup, ItemTitle } from '../ui/item';
 import { HugeiconsIcon } from '@hugeicons/react';
-import type { IconSvgElement } from '@hugeicons/react';
 import {
   Appointment02Icon,
   CoinsDollarIcon,
@@ -25,30 +17,12 @@ import {
 } from '@hugeicons/core-free-icons';
 import { format } from 'date-fns';
 import { da } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import { Badge } from '../ui/badge';
+import { ProfileItem } from '@/views/user/components/profile-item';
 
 type AppointmentCardProps = {
   appointment: AppointmentWithServices;
 };
-
-type AppointmentItemProps = {
-  media?: IconSvgElement;
-  title: string;
-  content?: string | number;
-  className?: string;
-};
-
-// const formatAddress = (address: LocationAddressParts | null) => {
-//   if (!address) return 'Ingen adresse fundet';
-//   const cityLine = [address.location_postal_code, address.location_city]
-//     .filter(Boolean)
-//     .join(', ');
-
-//   return cityLine
-//     ? `${address.location_address}\n${cityLine}`
-//     : address.location_address;
-// };
 
 const formatServices = (services: AppointmentServiceLine[]) => {
   return services
@@ -114,31 +88,6 @@ const formatAppointmentStatus = (status: AppointmentStatus) => {
   }
 };
 
-const AppointmentItem = ({
-  media,
-  title,
-  content,
-  className,
-}: AppointmentItemProps) => {
-  return (
-    <Item className={cn(className)}>
-      {media && (
-        <ItemMedia>
-          <HugeiconsIcon icon={media} size={18} strokeWidth={2} />
-        </ItemMedia>
-      )}
-      <ItemContent>
-        <ItemTitle className="font-semibold">{title}</ItemTitle>
-        {content && (
-          <ItemDescription className="whitespace-pre-line text-foreground/70">
-            {content}
-          </ItemDescription>
-        )}
-      </ItemContent>
-    </Item>
-  );
-};
-
 export const AppointmentCard = ({ appointment }: AppointmentCardProps) => {
   const [status, setStatus] = useState(appointment.appointment_status);
 
@@ -164,24 +113,24 @@ export const AppointmentCard = ({ appointment }: AppointmentCardProps) => {
       </CardHeader>
       <CardContent>
         <ItemGroup className="grid grid-cols-1 md:grid-cols-3 gap-2">
-          <AppointmentItem
+          <ProfileItem
             media={Location04Icon}
             title={
               appointment.location?.location_address ?? 'Ingen adresse fundet'
             }
             className="md:col-span-3"
           />
-          <AppointmentItem
+          <ProfileItem
             media={ScissorIcon}
             title="Services:"
             content={formatServices(appointment.services)}
           />
-          <AppointmentItem
+          <ProfileItem
             media={Comment03Icon}
             title="Kommentar:"
             content={appointment.appointment_notes ?? 'Ingen kommentar'}
           />
-          <AppointmentItem
+          <ProfileItem
             media={CoinsDollarIcon}
             title="Pris:"
             content={`${appointment.appointment_total_price},-`}
