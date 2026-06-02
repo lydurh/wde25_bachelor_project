@@ -8,13 +8,21 @@ import {
   isNull,
   locations,
   ne,
+  users,
 } from '@repo/db';
 import {
   type Appointment,
   type CreateAppointmentInput,
   type UpdateAppointmentInput,
+  type SendConfirmationEmailInput,
   parseAppointment,
 } from '@repo/shared';
+import {
+  getMailFrom,
+  isMockEmailTransport,
+  resolveMailRecipient,
+  transporter,
+} from '../../utils/mailer';
 
 type AppointmentRow = InferSelectModel<typeof appointments>;
 
@@ -156,4 +164,84 @@ export const appointmentsService = {
       };
     });
   },
+
+  async sendConfirmationEmail(input: SendConfirmationEmailInput) {
+    const [appointment] = await db
+      .select({ appointment_user_fk: appointments.appointment_user_fk })
+      .from(appointments)
+      .where(
+        and(eq(appointments.appointment_pk, input.appointment_pk), notDeleted),
+      )
+      .limit(1);
+
+    if (!appointment) {
+      throw new Error('Appointment not found');
+    }
+
+    const [user] = await db
+      .select({
+        user_first_name: users.user_first_name,
+        user_email: users.user_email,
+      })
+      .from(users)
+      .where(eq(users.user_pk, appointment.appointment_user_fk))
+      .limit(1);
+
+    const recipientEmail = input.user_email ?? user?.user_email;
+    const recipientName = user?.user_first_name?.trim() || 'kunde';
+
+    if (!recipientEmail) {
+      throw new Error('No email address found for appointment user');
+    }
+
+    // Format date and time
+    const [year, month, day] = input.appointment_date.split('-');
+    const dateString = `${day}. ${getMonthName(parseInt(month ?? '1', 10))} ${year}`;
+    const timeString = input.appointment_time.slice(0, 5);
+
+    const mailTo = resolveMailRecipient(recipientEmail);
+    const emailContent = `
+<h2>Hej ${recipientName}</h2>
+<p>Tak for din booking d. ${dateString} kl. ${timeString}.</p>
+  Da jeg ikke har mulighed for hårvask, bedes du møde op med nyvasket hår.<br />
+  <br />
+  Du kan aflyse din tid senest 24 timer før. Ved senere aflysning kan der forekomme et betalingsgebyr.
+</p>
+    `;
+
+    try {
+      await transporter.sendMail({
+        from: getMailFrom(),
+        to: mailTo,
+        subject: 'Bekræftelse på din frisørbooking',
+        html: emailContent,
+      });
+      if (isMockEmailTransport) {
+        console.warn(`[email] Booking confirmation sent to ${recipientEmail}`);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        console.warn('Failed to send confirmation email:', error.message);
+      }
+      throw error;
+    }
+  },
 };
+
+function getMonthName(monthNumber: number): string {
+  const months = [
+    'januar',
+    'februar',
+    'marts',
+    'april',
+    'maj',
+    'juni',
+    'juli',
+    'august',
+    'september',
+    'oktober',
+    'november',
+    'december',
+  ];
+  return months[monthNumber - 1] ?? 'januar';
+}

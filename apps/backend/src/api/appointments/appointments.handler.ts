@@ -6,6 +6,7 @@ import { appointmentsService } from './appointments.service';
 import {
   createAppointmentInputSchema,
   updateAppointmentInputSchema,
+  sendConfirmationEmailSchema,
   uuidSchema,
 } from '@repo/shared';
 
@@ -109,5 +110,32 @@ export const updateAppointment = factory.createHandlers(
     }
 
     return c.json({ data: updatedAppointment }, 200);
+  },
+);
+
+export const sendConfirmationEmail = factory.createHandlers(
+  zValidator('json', sendConfirmationEmailSchema, (result, c) => {
+    if (!result.success) {
+      throw new HTTPException(400, {
+        res: c.json(
+          { error: 'Invalid input', issues: result.error.issues },
+          400,
+        ),
+      });
+    }
+    return undefined;
+  }),
+  async (c) => {
+    const input = c.req.valid('json');
+    try {
+      await appointmentsService.sendConfirmationEmail(input);
+      return c.json({ success: true }, 200);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.warn('Failed to send confirmation email:', error.message);
+      }
+      // Don't throw error - silently fail so the user still sees the success dialog
+      return c.json({ success: true }, 200);
+    }
   },
 );
