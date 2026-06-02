@@ -10,13 +10,19 @@ export const ProfilePage = () => {
       <h1 className="text-3xl font-bold">Profile</h1>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
-          <h2 className="text-2xl font-bold">Appointments</h2>
-          {appointments.map((appointment) => (
-            <AppointmentCard
-              key={appointment.appointment_pk}
-              appointment={appointment}
-            />
-          ))}
+          <h2 className="text-2xl font-bold">Dine aftaler</h2>
+          {appointments.length === 0 ? (
+            <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
+              Du har ingen aftaler endnu.
+            </p>
+          ) : (
+            appointments.map((appointment) => (
+              <AppointmentCard
+                key={appointment.appointment_pk}
+                appointment={appointment}
+              />
+            ))
+          )}
         </div>
         <div className="flex flex-col gap-2">
           <h2 className="text-2xl font-bold">
