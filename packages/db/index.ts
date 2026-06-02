@@ -11,4 +11,5 @@ export {
   or,
   ne,
   gte,
+  desc,
 } from 'drizzle-orm';

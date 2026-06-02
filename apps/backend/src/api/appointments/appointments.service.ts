@@ -10,8 +10,8 @@ import {
   ne,
   services,
   users,
+  desc,
 } from '@repo/db';
-import { desc } from 'drizzle-orm';
 import {
   type Appointment,
   type AppointmentLocation,
