@@ -13,6 +13,7 @@ import {
 } from '@repo/db';
 import {
   type Appointment,
+  type AppointmentLocation,
   type AppointmentServiceLine,
   type AppointmentWithServices,
   type CreateAppointmentInput,
@@ -119,6 +120,26 @@ async function fetchServicesByUserId(
   return byAppointment;
 }
 
+function locationFromJoin(row: {
+  location_pk: string | null;
+  location_address: string | null;
+  location_postal_code: string | null;
+  location_city: string | null;
+  location_country: string | null;
+}): AppointmentLocation | null {
+  if (!row.location_pk || !row.location_address || !row.location_city) {
+    return null;
+  }
+
+  return {
+    location_pk: row.location_pk,
+    location_address: row.location_address,
+    location_postal_code: row.location_postal_code,
+    location_city: row.location_city,
+    location_country: row.location_country,
+  };
+}
+
 export const appointmentsService = {
   async list() {
     const rows = await db.select().from(appointments).where(notDeleted);
@@ -127,13 +148,28 @@ export const appointmentsService = {
 
   async listByUserId(id: string): Promise<AppointmentWithServices[]> {
     const rows = await db
-      .select()
+      .select({
+        appointment: appointments,
+        location_pk: locations.location_pk,
+        location_address: locations.location_address,
+        location_postal_code: locations.location_postal_code,
+        location_city: locations.location_city,
+        location_country: locations.location_country,
+      })
       .from(appointments)
+      .leftJoin(
+        locations,
+        and(
+          eq(appointments.location_fk, locations.location_pk),
+          isNull(locations.location_deleted_at),
+        ),
+      )
       .where(and(eq(appointments.appointment_user_fk, id), notDeleted));
     const servicesByAppointment = await fetchServicesByUserId(id);
     return rows.map((row) => ({
-      ...appointmentFromRow(row),
-      services: servicesByAppointment.get(row.appointment_pk) ?? [],
+      ...appointmentFromRow(row.appointment),
+      services: servicesByAppointment.get(row.appointment.appointment_pk) ?? [],
+      location: locationFromJoin(row),
     }));
   },
 

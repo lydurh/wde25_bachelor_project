@@ -3,60 +3,80 @@ import { env } from '../lib/env';
 type LatLng = { lat: number; lng: number };
 
 type GeocodeResult = {
-  types: string[];
-  partial_match?: boolean;
-  geometry: {
-    location: LatLng;
-    location_type: string;
-  };
+  formatted_address?: string;
+  address_components?: { long_name: string; types: string[] }[];
+  geometry: { location: LatLng };
 };
 
-type GeocodeResponse = {
-  status: string;
-  results: GeocodeResult[];
-};
+const FALLBACK: LatLng = { lat: 55.6761, lng: 12.5683 };
 
-/** Default fallback coordinates (Copenhagen centre) used in non-production. */
-const FALLBACK_COORDS: LatLng = { lat: 55.6761, lng: 12.5683 };
+function findComponent(
+  components: GeocodeResult['address_components'],
+  type: string,
+): string | null {
+  return components?.find((c) => c.types.includes(type))?.long_name ?? null;
+}
 
-export const geocoder = async (
-  address: string,
-  postalCode: string,
-  city: string,
-): Promise<LatLng> => {
-  const fullAddress = `${address}, ${postalCode}, ${city}, Denmark`;
+async function geocodeAddress(address: string): Promise<GeocodeResult | null> {
   const params = new URLSearchParams({
-    address: fullAddress,
+    address,
     key: env.GOOGLE_MAPS_API_KEY,
     region: 'dk',
     components: 'country:DK',
   });
 
-  let data: GeocodeResponse;
   try {
     const response = await fetch(
       `https://maps.googleapis.com/maps/api/geocode/json?${params.toString()}`,
     );
-    data = (await response.json()) as GeocodeResponse;
+    const data = (await response.json()) as {
+      status: string;
+      results: GeocodeResult[];
+    };
+
+    if (data.status === 'OK' && data.results[0]) {
+      return data.results[0];
+    }
   } catch {
-    if (env.NODE_ENV === 'production') {
-      throw new Error(`Geocoding request failed for "${fullAddress}"`);
-    }
-    console.warn(
-      `[geocoder] API request failed for "${fullAddress}", using fallback coordinates`,
-    );
-    return FALLBACK_COORDS;
+    // fall through to fallback handling below
   }
 
-  if (data.status !== 'OK' || data.results.length === 0) {
-    if (env.NODE_ENV === 'production') {
-      throw new Error(`Geocoding failed for "${fullAddress}": ${data.status}`);
-    }
-    console.warn(
-      `[geocoder] API returned ${data.status} for "${fullAddress}", using fallback coordinates`,
-    );
-    return FALLBACK_COORDS;
+  if (env.NODE_ENV === 'production') {
+    throw new Error(`Geocoding failed for "${address}"`);
   }
 
-  return data.results[0]?.geometry.location as LatLng;
-};
+  console.warn(`[geocoder] Using fallback coordinates for "${address}"`);
+  return null;
+}
+
+export async function geocoder(
+  address: string,
+  postalCode: string,
+  city: string,
+): Promise<LatLng> {
+  const result = await geocodeAddress(
+    `${address}, ${postalCode}, ${city}, Denmark`,
+  );
+  return result?.geometry.location ?? FALLBACK;
+}
+
+export async function geocodeFormattedAddress(formattedAddress: string) {
+  const result = await geocodeAddress(formattedAddress);
+  const { lat, lng } = result?.geometry.location ?? FALLBACK;
+
+  return {
+    location_address: result?.formatted_address ?? formattedAddress,
+    location_postal_code: findComponent(
+      result?.address_components,
+      'postal_code',
+    ),
+    location_city:
+      findComponent(result?.address_components, 'locality') ??
+      findComponent(result?.address_components, 'postal_town') ??
+      'Denmark',
+    location_country:
+      findComponent(result?.address_components, 'country') ?? 'Denmark',
+    location_latitude: lat.toString(),
+    location_longitude: lng.toString(),
+  };
+}

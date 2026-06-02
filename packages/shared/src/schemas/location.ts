@@ -35,11 +35,20 @@ export const locationDistanceCheckResultSchema = z.object({
   appliesLocationFee: z.boolean(),
 });
 
+export const bookingLocationFromAddressInputSchema = z
+  .object({
+    formattedAddress: z.string().trim().min(1),
+  })
+  .strict();
+
 export type LocationDistanceCheckInput = z.infer<
   typeof locationDistanceCheckInputSchema
 >;
 export type LocationDistanceCheckResult = z.infer<
   typeof locationDistanceCheckResultSchema
+>;
+export type BookingLocationFromAddressInput = z.infer<
+  typeof bookingLocationFromAddressInputSchema
 >;
 
 export const adminOriginSchema = z.object({

@@ -1,4 +1,7 @@
-import type { AppointmentWithServices } from '@repo/shared';
+import {
+  formatLocationAddress,
+  type AppointmentWithServices,
+} from '@repo/shared';
 import {
   Card,
   CardHeader,
@@ -25,6 +28,14 @@ export const AppointmentCard = ({ appointment }: AppointmentCardProps) => {
           {appointment.appointment_date}
         </p>
       </CardContent>
+      {appointment.location && (
+        <CardContent>
+          <p className="text-sm text-gray-500">
+            <span className="font-bold">Location:</span>{' '}
+            {formatLocationAddress(appointment.location)}
+          </p>
+        </CardContent>
+      )}
       {appointment.services.length > 0 && (
         <CardContent>
           <p className="text-sm font-bold text-gray-700">Services</p>

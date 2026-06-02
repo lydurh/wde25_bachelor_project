@@ -4,6 +4,7 @@ import {
   getAdminOrigin,
   getLocation,
   createLocation,
+  createBookingLocation,
   checkLocationDistance,
 } from './locations.handler';
 import { authMiddleware, adminMiddleware } from '../../middleware';
@@ -17,6 +18,7 @@ locationsRoutes.post(
   authMiddleware,
   ...checkLocationDistance,
 );
+locationsRoutes.post('/from-address', authMiddleware, ...createBookingLocation);
 locationsRoutes.get('/:id', getLocation);
 locationsRoutes.post('/', authMiddleware, adminMiddleware, ...createLocation);
 

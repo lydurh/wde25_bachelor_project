@@ -19,7 +19,7 @@ import {
   getCumulatedServiceDurationFromQuantities,
   getBookingTotalPriceKr,
 } from '@repo/shared';
-import type { Appointment, User } from '@repo/shared';
+import type { Appointment, Location, User } from '@repo/shared';
 import { api } from '@/lib/api';
 import type { BookingUserLoaderData } from '@/lib/loaders/booking-user';
 import type { ServicesLoaderData } from '@/lib/loaders/service';
@@ -187,7 +187,6 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     }
 
     if (currentStep === 'confirm') {
-      const loc = bookingUserData?.location;
       const selectedServices = draft.selectedServices ?? [];
       const appointmentUserPk = bookingCustomer?.user_pk;
       if (!appointmentUserPk || !draft.slotISO || selectedServices.length === 0)
@@ -201,25 +200,39 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       ).toFixed(2);
 
       setIsSubmitting(true);
-      void api
-        .post<{ data: Appointment }>('/appointments', {
-          appointment_user_fk: appointmentUserPk,
-          location_fk: loc?.location_pk ?? null,
-          appointment_date: date,
-          appointment_time: time,
-          appointment_notes: draft.comments?.trim() || null,
-          appointment_duration: draft.cumulatedServiceDuration ?? null,
-          appointment_total_price: totalPrice,
-          services: selectedServices.map((s) => ({
-            service_fk: s.id,
-            quantity: s.quantity,
-          })),
-        })
-        .then((response) => {
+      void (async () => {
+        try {
+          let locationFk = draft.locationFk ?? null;
+          const customAddress = draft.address?.trim();
+
+          if (!locationFk && customAddress) {
+            const { data: location } = await api.post<{ data: Location }>(
+              '/locations/from-address',
+              { formattedAddress: customAddress },
+            );
+            locationFk = location.location_pk;
+          }
+
+          const response = await api.post<{ data: Appointment }>(
+            '/appointments',
+            {
+              appointment_user_fk: appointmentUserPk,
+              location_fk: locationFk,
+              appointment_date: date,
+              appointment_time: time,
+              appointment_notes: draft.comments?.trim() || null,
+              appointment_duration: draft.cumulatedServiceDuration ?? null,
+              appointment_total_price: totalPrice,
+              services: selectedServices.map((s) => ({
+                service_fk: s.id,
+                quantity: s.quantity,
+              })),
+            },
+          );
+
           resetDraft();
           setHasSubmittedSuccessfully(true);
           setShowSuccessDialog(true);
-          // Send confirmation email
           void api
             .post('/appointments/send-confirmation-email', {
               appointment_pk: response.data.appointment_pk,
@@ -230,17 +243,16 @@ export function BookingProvider({ children }: { children: ReactNode }) {
             .catch((err: unknown) => {
               console.warn('Failed to send confirmation email', err);
             });
-        })
-        .catch((err: unknown) => {
+        } catch (err: unknown) {
           console.error('Booking failed', err);
           const apiError = err as { status?: number; message?: string };
           if (apiError?.status === 400 || apiError?.status === 409) {
             console.warn(apiError.message ?? 'Booking validation failed');
           }
-        })
-        .finally(() => {
+        } finally {
           setIsSubmitting(false);
-        });
+        }
+      })();
       return;
     }
 
@@ -256,9 +268,10 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     draft.selectedServices,
     draft.cumulatedServiceDuration,
     draft.comments,
+    draft.locationFk,
+    draft.address,
     bookingCustomer,
     draft.locationFeeApplies,
-    bookingUserData,
     navigate,
     servicesData,
     setDraft,

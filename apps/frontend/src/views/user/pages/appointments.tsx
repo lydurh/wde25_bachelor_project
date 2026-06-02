@@ -15,6 +15,7 @@ const appointmentExample: AppointmentWithServices = {
   appointment_updated_at: null,
   appointment_deleted_at: null,
   services: [],
+  location: null,
 };
 
 export const AppointmentsPage = () => {

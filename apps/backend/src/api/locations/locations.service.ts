@@ -1,6 +1,7 @@
 import { db, locations, eq, isNull, and } from '@repo/db';
 import { appliesLocationFee, type CreateLocationInput } from '@repo/shared';
 import { computeRouteDistanceKm } from '../../utils/routes';
+import { geocodeFormattedAddress } from '../../utils/geocoder';
 import { usersService } from '../users/users.service';
 
 export const locationsService = {
@@ -30,6 +31,11 @@ export const locationsService = {
     const [location] = await db.insert(locations).values(data).returning();
 
     return location;
+  },
+
+  async createFromFormattedAddress(formattedAddress: string) {
+    const parsed = await geocodeFormattedAddress(formattedAddress);
+    return this.create(parsed);
   },
 
   async checkDistanceFee(destinationAddress: string) {

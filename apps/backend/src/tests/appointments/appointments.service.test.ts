@@ -240,6 +240,29 @@ describe('appointmentsService.listByUserId', () => {
     expect(found.services[0]?.quantity).toBe(1);
     expect(found.services[0]?.service_title.length).toBeGreaterThan(0);
     expect(found.services[0]?.service_price).toMatch(/^\d+\.\d{2}$/);
+    expect(found.location).toBeNull();
+  });
+
+  it('should return joined location when appointment has location_fk', async () => {
+    const created = assertDefined(
+      await appointmentsService.post({
+        ...makeInput(testUserId),
+        location_fk: '11111111-1111-4111-8111-111111111111',
+      }),
+    );
+    testAppointmentIds.push(created.appointment_pk);
+
+    const result = await appointmentsService.listByUserId(testUserId);
+    const found = assertDefined(
+      result.find((a) => a.appointment_pk === created.appointment_pk),
+    );
+
+    expect(found.location).not.toBeNull();
+    expect(found.location?.location_pk).toBe(
+      '11111111-1111-4111-8111-111111111111',
+    );
+    expect(found.location?.location_address.length).toBeGreaterThan(0);
+    expect(found.location?.location_city.length).toBeGreaterThan(0);
   });
 });
 

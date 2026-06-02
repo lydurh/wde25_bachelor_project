@@ -66,12 +66,14 @@ export type {
   AppointmentStatus,
   SendConfirmationEmailInput,
   AppointmentServiceLine,
+  AppointmentLocation,
   AppointmentWithServices,
 } from './src/schemas/appointment';
 export {
   APPOINTMENT_STATUSES,
   appointmentSchema,
   appointmentServiceLineSchema,
+  appointmentLocationSchema,
   appointmentWithServicesSchema,
   createAppointmentInputSchema,
   updateAppointmentInputSchema,
@@ -97,12 +99,14 @@ export type {
   CreateLocationInput,
   LocationDistanceCheckInput,
   LocationDistanceCheckResult,
+  BookingLocationFromAddressInput,
 } from './src/schemas/location';
 export {
   adminOriginSchema,
   createLocationSchema,
   locationDistanceCheckInputSchema,
   locationDistanceCheckResultSchema,
+  bookingLocationFromAddressInputSchema,
   parseAdminOrigin,
   toLocationBiasCenter,
 } from './src/schemas/location';
