@@ -1,7 +1,8 @@
 import { describe, it, expect, afterAll, beforeAll } from 'bun:test';
 import { appointmentsService } from '../../api/appointments/appointments.service';
 import { authService } from '../../api/auth/auth.service';
-import { db, users, services, like, eq } from '@repo/db';
+import { locationsService } from '../../api/locations/locations.service';
+import { db, users, services, locations, like, eq } from '@repo/db';
 
 const TEST_SERVICE_PK = '33333333-3333-4333-8333-333333333333';
 
@@ -47,6 +48,9 @@ afterAll(async () => {
   }
   await db.delete(users).where(like(users.user_email, 'TEST_%'));
   await db.delete(services).where(eq(services.service_pk, TEST_SERVICE_PK));
+  await db
+    .delete(locations)
+    .where(like(locations.location_address, 'TEST_ApptListByUser%'));
 });
 
 const makeInput = (userId: string) => ({
@@ -283,10 +287,19 @@ describe('appointmentsService.listByUserId', () => {
   });
 
   it('should return joined location when appointment has location_fk', async () => {
+    const testLocation = assertDefined(
+      await locationsService.create({
+        location_address: 'TEST_ApptListByUser Joined Location',
+        location_postal_code: '0001',
+        location_city: 'Oslo',
+        location_country: 'Norway',
+      }),
+    );
+
     const created = assertDefined(
       await appointmentsService.post({
         ...makeInput(testUserId),
-        location_fk: '11111111-1111-4111-8111-111111111111',
+        location_fk: testLocation.location_pk,
       }),
     );
     testAppointmentIds.push(created.appointment_pk);
@@ -297,11 +310,11 @@ describe('appointmentsService.listByUserId', () => {
     );
 
     expect(found.location).not.toBeNull();
-    expect(found.location?.location_pk).toBe(
-      '11111111-1111-4111-8111-111111111111',
+    expect(found.location?.location_pk).toBe(testLocation.location_pk);
+    expect(found.location?.location_address).toBe(
+      testLocation.location_address,
     );
-    expect(found.location?.location_address.length).toBeGreaterThan(0);
-    expect(found.location?.location_city.length).toBeGreaterThan(0);
+    expect(found.location?.location_city).toBe(testLocation.location_city);
   });
 });
 
