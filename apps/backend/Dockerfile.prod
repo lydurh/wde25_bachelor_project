@@ -11,4 +11,4 @@ ENV PORT=3000
 
 EXPOSE 3000
 
-CMD ["bun", "./apps/backend/dist/index.js"]
+CMD ["sh", "-c", "bun run --filter @repo/db db:migrate:prod && bun ./apps/backend/dist/index.js"]
