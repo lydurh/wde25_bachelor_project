@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
+import { auth } from '@/lib/auth';
 import { forgotPasswordInputSchema } from '@repo/shared';
 import { api, ApiError, getErrorMessage } from '@/lib/api';
 import { flattenApiIssues, flattenZodErrors } from '@/lib/zod-form';
@@ -11,7 +12,10 @@ import {
 type ForgotResponse = { data: { message: string } };
 
 export const ForgotPasswordPage = () => {
-  const [email, setEmail] = useState('');
+  const [searchParams] = useSearchParams();
+  const [email, setEmail] = useState(
+    () => searchParams.get('email')?.trim() ?? '',
+  );
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -91,9 +95,15 @@ export const ForgotPasswordPage = () => {
         </form>
 
         <p className="text-sm text-center mt-4">
-          <Link to="/login" className="text-primary hover:underline">
-            Back to login
-          </Link>
+          {auth.isAuthenticated() ? (
+            <Link to="/profile" className="text-primary hover:underline">
+              Back to profile
+            </Link>
+          ) : (
+            <Link to="/login" className="text-primary hover:underline">
+              Back to login
+            </Link>
+          )}
         </p>
       </div>
     </section>

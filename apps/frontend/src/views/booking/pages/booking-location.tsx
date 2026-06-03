@@ -27,6 +27,7 @@ import { usePlaceAutocomplete } from '@/views/booking/use-place-autocomplete';
 
 function locationToDraftPatch(location: Location) {
   return {
+    locationFk: location.location_pk,
     address: formatLocationAddress({
       location_address: location.location_address,
       location_postal_code: location.location_postal_code,
@@ -109,13 +110,14 @@ export const LocationPage = () => {
         return;
       }
 
-      setDraft({ address: '', city: '', postalCode: '' });
+      setDraft({ address: '', city: '', postalCode: '', locationFk: null });
     },
     [setDraft, usualLocation],
   );
 
   const onAddressSelected = useCallback(
-    (address: string) => setDraft({ address }),
+    (address: string) =>
+      setDraft({ address, city: '', postalCode: '', locationFk: null }),
     [setDraft],
   );
 

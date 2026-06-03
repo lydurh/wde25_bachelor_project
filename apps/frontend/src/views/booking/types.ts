@@ -18,6 +18,8 @@ export type BookingDraft = {
   address?: string;
   city?: string;
   postalCode?: string;
+  /** Known location row when using the customer's usual address */
+  locationFk?: string | null;
   /** Driving distance from admin origin (km), set after location step check */
   distanceKm?: number | undefined;
   locationFeeApplies?: boolean;

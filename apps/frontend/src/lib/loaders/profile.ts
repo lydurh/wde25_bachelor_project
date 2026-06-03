@@ -1,15 +1,41 @@
 import { redirect } from 'react-router';
-import type { Appointment } from '@repo/shared';
+import type { AppointmentWithServices, Location, User } from '@repo/shared';
 import { api } from '@/lib/api';
+import { auth } from '../auth';
 
 export type ProfileLoaderData = {
-  appointments: Appointment[];
+  appointments: AppointmentWithServices[];
+  user: User;
+  location: Location | null;
 };
 
 export async function profileLoader() {
-  const token = localStorage.getItem('token');
-  if (!token) return redirect('/login');
+  const userId = auth.getUserId();
+  if (!userId) return redirect('/login');
 
-  const { data } = await api.get<{ data: Appointment[] }>('/appointments');
-  return { appointments: data };
+  const [appointmentsRes, userRes] = await Promise.all([
+    api.get<{ data: AppointmentWithServices[] }>(
+      `/appointments/list/${userId}`,
+    ),
+    api.get<{ data: User }>(`/users/${userId}`),
+  ]);
+  const user = userRes.data;
+
+  if (!user.user_location_fk) {
+    return {
+      appointments: appointmentsRes.data,
+      user,
+      location: null,
+    };
+  }
+
+  const locationRes = await api.get<{ data: Location }>(
+    `/locations/${user.user_location_fk}`,
+  );
+
+  return {
+    appointments: appointmentsRes.data,
+    user,
+    location: locationRes.data,
+  };
 }

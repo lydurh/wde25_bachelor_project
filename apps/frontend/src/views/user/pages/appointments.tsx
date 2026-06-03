@@ -1,7 +1,7 @@
 import { AppointmentCard } from '@/components/custom/appointment-card';
-import type { Appointment } from '@repo/shared';
+import type { AppointmentWithServices } from '@repo/shared';
 
-const appointmentExample: Appointment = {
+const appointmentExample: AppointmentWithServices = {
   appointment_pk: '1',
   appointment_user_fk: '1',
   location_fk: null,
@@ -14,6 +14,8 @@ const appointmentExample: Appointment = {
   appointment_created_at: '2026-01-01T09:00:00.000Z',
   appointment_updated_at: null,
   appointment_deleted_at: null,
+  services: [],
+  location: null,
 };
 
 export const AppointmentsPage = () => {

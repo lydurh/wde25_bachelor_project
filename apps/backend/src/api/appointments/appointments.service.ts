@@ -8,10 +8,15 @@ import {
   isNull,
   locations,
   ne,
+  services,
   users,
+  asc,
 } from '@repo/db';
 import {
   type Appointment,
+  type AppointmentLocation,
+  type AppointmentServiceLine,
+  type AppointmentWithServices,
   type CreateAppointmentInput,
   type UpdateAppointmentInput,
   type SendConfirmationEmailInput,
@@ -67,10 +72,110 @@ function appointmentFromRow(row: AppointmentRow): Appointment {
 
 const notDeleted = isNull(appointments.appointment_deleted_at);
 
+async function fetchServicesByUserId(
+  userId: string,
+): Promise<Map<string, AppointmentServiceLine[]>> {
+  const byAppointment = new Map<string, AppointmentServiceLine[]>();
+
+  const rows = await db
+    .select({
+      appointment_fk: appointmentServices.appointment_fk,
+      quantity: appointmentServices.quantity,
+      service_pk: services.service_pk,
+      service_title: services.service_title,
+      service_description: services.service_description,
+      service_duration: services.service_duration,
+      service_price: services.service_price,
+    })
+    .from(appointmentServices)
+    .innerJoin(
+      appointments,
+      eq(appointmentServices.appointment_fk, appointments.appointment_pk),
+    )
+    .innerJoin(
+      services,
+      eq(appointmentServices.service_fk, services.service_pk),
+    )
+    .where(
+      and(
+        eq(appointments.appointment_user_fk, userId),
+        notDeleted,
+        isNull(services.service_deleted_at),
+      ),
+    );
+
+  for (const row of rows) {
+    const line: AppointmentServiceLine = {
+      service_fk: row.service_pk,
+      quantity: row.quantity,
+      service_title: row.service_title,
+      service_description: row.service_description,
+      service_duration: row.service_duration,
+      service_price: String(row.service_price),
+    };
+    const existing = byAppointment.get(row.appointment_fk) ?? [];
+    existing.push(line);
+    byAppointment.set(row.appointment_fk, existing);
+  }
+
+  return byAppointment;
+}
+
+function locationFromJoin(row: {
+  location_pk: string | null;
+  location_address: string | null;
+  location_postal_code: string | null;
+  location_city: string | null;
+  location_country: string | null;
+}): AppointmentLocation | null {
+  if (!row.location_pk || !row.location_address || !row.location_city) {
+    return null;
+  }
+
+  return {
+    location_pk: row.location_pk,
+    location_address: row.location_address,
+    location_postal_code: row.location_postal_code,
+    location_city: row.location_city,
+    location_country: row.location_country,
+  };
+}
+
 export const appointmentsService = {
   async list() {
     const rows = await db.select().from(appointments).where(notDeleted);
     return rows.map(appointmentFromRow);
+  },
+
+  async listByUserId(id: string): Promise<AppointmentWithServices[]> {
+    const rows = await db
+      .select({
+        appointment: appointments,
+        location_pk: locations.location_pk,
+        location_address: locations.location_address,
+        location_postal_code: locations.location_postal_code,
+        location_city: locations.location_city,
+        location_country: locations.location_country,
+      })
+      .from(appointments)
+      .leftJoin(
+        locations,
+        and(
+          eq(appointments.location_fk, locations.location_pk),
+          isNull(locations.location_deleted_at),
+        ),
+      )
+      .where(and(eq(appointments.appointment_user_fk, id), notDeleted))
+      .orderBy(
+        asc(appointments.appointment_date),
+        asc(appointments.appointment_time),
+      );
+    const servicesByAppointment = await fetchServicesByUserId(id);
+    return rows.map((row) => ({
+      ...appointmentFromRow(row.appointment),
+      services: servicesByAppointment.get(row.appointment.appointment_pk) ?? [],
+      location: locationFromJoin(row),
+    }));
   },
 
   async get(id: string) {

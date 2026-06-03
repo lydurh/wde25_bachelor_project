@@ -362,6 +362,82 @@ describe('PATCH /api/users/:id', () => {
     });
     expect(res.status).toBe(401);
   });
+
+  it('should return 200 when a user updates their own profile', async () => {
+    const created = assertDefined(
+      await usersService.create({
+        ...validCreateInput,
+        user_email: uniqueEmail('patch_self'),
+      }),
+    );
+    testIds.push(created.user_pk);
+
+    const selfToken = await sign(
+      {
+        user_pk: created.user_pk,
+        user_role: 'client',
+        user_email: created.user_email,
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      },
+      env.JWT_SECRET,
+      'HS256',
+    );
+
+    const res = await app.request(`/api/users/${created.user_pk}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${selfToken}`,
+      },
+      body: JSON.stringify({
+        user_first_name: 'SelfPatched',
+        user_email: uniqueEmail('patch_self_updated'),
+      }),
+    });
+    const body = (await res.json()) as UserResponse;
+
+    expect(res.status).toBe(200);
+    expect(body.data.user_first_name).toBe('SelfPatched');
+  });
+
+  it('should return 403 when a non-admin tries to update another user', async () => {
+    const target = assertDefined(
+      await usersService.create({
+        ...validCreateInput,
+        user_email: uniqueEmail('patch_forbidden_target'),
+      }),
+    );
+    testIds.push(target.user_pk);
+
+    const otherUser = assertDefined(
+      await usersService.create({
+        ...validCreateInput,
+        user_email: uniqueEmail('patch_forbidden_other'),
+      }),
+    );
+    testIds.push(otherUser.user_pk);
+
+    const otherToken = await sign(
+      {
+        user_pk: otherUser.user_pk,
+        user_role: 'client',
+        user_email: otherUser.user_email,
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      },
+      env.JWT_SECRET,
+      'HS256',
+    );
+
+    const res = await app.request(`/api/users/${target.user_pk}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${otherToken}`,
+      },
+      body: JSON.stringify({ user_first_name: 'Hacked' }),
+    });
+    expect(res.status).toBe(403);
+  });
 });
 
 describe('DELETE /api/users/:id', () => {

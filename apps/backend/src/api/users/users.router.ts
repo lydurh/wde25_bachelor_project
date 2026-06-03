@@ -34,7 +34,7 @@ usersRoutes.get('/', authMiddleware, adminMiddleware, listUsers);
 usersRoutes.get('/search', authMiddleware, adminMiddleware, searchUsersByName);
 usersRoutes.get('/:id', authMiddleware, selfOrAdmin, getUserById);
 usersRoutes.post('/', authMiddleware, adminMiddleware, ...createUser);
-usersRoutes.patch('/:id', authMiddleware, adminMiddleware, ...updateUser);
+usersRoutes.patch('/:id', authMiddleware, selfOrAdmin, ...updateUser);
 usersRoutes.delete('/:id', authMiddleware, selfOrAdmin, deleteUser);
 
 export { usersRoutes };

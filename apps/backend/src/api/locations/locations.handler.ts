@@ -5,6 +5,7 @@ import { zValidator } from '@hono/zod-validator';
 import {
   createLocationSchema,
   locationDistanceCheckInputSchema,
+  bookingLocationFromAddressInputSchema,
   type AdminOrigin,
   uuidSchema,
 } from '@repo/shared';
@@ -106,5 +107,33 @@ export const createLocation = factory.createHandlers(
     const location = await locationsService.create(input);
 
     return c.json({ data: location }, 201);
+  },
+);
+
+export const createBookingLocation = factory.createHandlers(
+  zValidator('json', bookingLocationFromAddressInputSchema, (result, c) => {
+    if (!result.success) {
+      throw new HTTPException(400, {
+        res: c.json(
+          { error: 'Invalid input', issues: result.error.issues },
+          400,
+        ),
+      });
+    }
+    return undefined;
+  }),
+  async (c) => {
+    const { formattedAddress } = c.req.valid('json');
+
+    try {
+      const location =
+        await locationsService.createFromFormattedAddress(formattedAddress);
+      return c.json({ data: location }, 201);
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('Geocoding')) {
+        throw new HTTPException(400, { message: error.message });
+      }
+      throw error;
+    }
   },
 );

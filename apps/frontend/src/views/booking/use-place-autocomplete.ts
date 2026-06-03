@@ -141,14 +141,12 @@ export function usePlaceAutocomplete(
   useEffect(() => {
     if (!enabled) return;
 
-    const container = containerRef.current;
-    if (!container) return;
-
     const biasCenter = locationBiasCenter ?? DEFAULT_LOCATION_BIAS;
     const autocompleteOptions = buildPlaceAutocompleteOptions(biasCenter);
 
     let autocomplete: PlaceAutocompleteElementInstance | null = null;
     let cancelled = false;
+    let retryFrameId = 0;
 
     const onSelect = (event: Event) => {
       void resolveAddressFromGmpSelect(event).then((address) => {
@@ -156,22 +154,43 @@ export function usePlaceAutocomplete(
       });
     };
 
-    void loadGoogleMapsCore()
-      .then(() => createPlaceAutocompleteElement(autocompleteOptions))
-      .then((element) => {
-        if (cancelled || !containerRef.current) return;
+    const mountElement = (element: PlaceAutocompleteElementInstance) => {
+      const tryAppend = () => {
+        if (cancelled) return;
+
+        const container = containerRef.current;
+        if (!container) {
+          retryFrameId = requestAnimationFrame(tryAppend);
+          return;
+        }
 
         autocomplete = element;
         elementRef.current = element;
         element.placeholder = PLACEHOLDER;
         element.style.width = '100%';
+        element.style.display = 'block';
+        element.style.setProperty('color-scheme', 'light');
+        element.style.setProperty('background-color', '#ffffff');
+        element.style.setProperty('border', '1px solid #e5e3e3');
+        element.style.setProperty('border-radius', '9999px');
+        element.style.setProperty('min-height', '2.25rem');
 
         if (initialAddressRef.current) {
           element.value = initialAddressRef.current;
         }
 
         element.addEventListener('gmp-select', onSelect);
-        containerRef.current.appendChild(element);
+        container.appendChild(element);
+      };
+
+      tryAppend();
+    };
+
+    void loadGoogleMapsCore()
+      .then(() => createPlaceAutocompleteElement(autocompleteOptions))
+      .then((element) => {
+        if (cancelled) return;
+        mountElement(element);
       })
       .catch((error: unknown) => {
         console.error('Google Places autocomplete failed to load', error);
@@ -179,6 +198,7 @@ export function usePlaceAutocomplete(
 
     return () => {
       cancelled = true;
+      cancelAnimationFrame(retryFrameId);
       elementRef.current = null;
       autocomplete?.removeEventListener('gmp-select', onSelect);
       autocomplete?.remove();

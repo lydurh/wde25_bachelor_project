@@ -1,7 +1,8 @@
 import { describe, it, expect, afterAll, beforeAll } from 'bun:test';
 import { appointmentsService } from '../../api/appointments/appointments.service';
 import { authService } from '../../api/auth/auth.service';
-import { db, users, services, like, eq } from '@repo/db';
+import { locationsService } from '../../api/locations/locations.service';
+import { db, users, services, locations, like, eq } from '@repo/db';
 
 const TEST_SERVICE_PK = '33333333-3333-4333-8333-333333333333';
 
@@ -47,6 +48,9 @@ afterAll(async () => {
   }
   await db.delete(users).where(like(users.user_email, 'TEST_%'));
   await db.delete(services).where(eq(services.service_pk, TEST_SERVICE_PK));
+  await db
+    .delete(locations)
+    .where(like(locations.location_address, 'TEST_ApptListByUser%'));
 });
 
 const makeInput = (userId: string) => ({
@@ -220,6 +224,97 @@ describe('appointmentsService.patch', () => {
       appointment_notes: 'Should not work',
     });
     expect(result).toBeUndefined();
+  });
+});
+
+describe('appointmentsService.listByUserId', () => {
+  it('should return appointments with linked services from appointment_services', async () => {
+    const created = assertDefined(
+      await appointmentsService.post(makeInput(testUserId)),
+    );
+    testAppointmentIds.push(created.appointment_pk);
+
+    const result = await appointmentsService.listByUserId(testUserId);
+    const found = assertDefined(
+      result.find((a) => a.appointment_pk === created.appointment_pk),
+    );
+
+    expect(found.services).toHaveLength(1);
+    expect(found.services[0]?.service_fk).toBe(TEST_SERVICE_PK);
+    expect(found.services[0]?.quantity).toBe(1);
+    expect(found.services[0]?.service_title.length).toBeGreaterThan(0);
+    expect(found.services[0]?.service_price).toMatch(/^\d+\.\d{2}$/);
+    expect(found.location).toBeNull();
+  });
+
+  it('should return appointments ordered by date and time ascending', async () => {
+    const earlier = assertDefined(
+      await appointmentsService.post({
+        ...makeInput(testUserId),
+        appointment_date: '2030-01-01',
+        appointment_time: '09:00',
+      }),
+    );
+    testAppointmentIds.push(earlier.appointment_pk);
+
+    const laterSameDay = assertDefined(
+      await appointmentsService.post({
+        ...makeInput(testUserId),
+        appointment_date: '2030-06-15',
+        appointment_time: '14:00',
+      }),
+    );
+    testAppointmentIds.push(laterSameDay.appointment_pk);
+
+    const latest = assertDefined(
+      await appointmentsService.post({
+        ...makeInput(testUserId),
+        appointment_date: '2030-12-31',
+        appointment_time: '10:00',
+      }),
+    );
+    testAppointmentIds.push(latest.appointment_pk);
+
+    const result = await appointmentsService.listByUserId(testUserId);
+    const ids = result.map((a) => a.appointment_pk);
+
+    expect(ids.indexOf(earlier.appointment_pk)).toBeLessThan(
+      ids.indexOf(laterSameDay.appointment_pk),
+    );
+    expect(ids.indexOf(laterSameDay.appointment_pk)).toBeLessThan(
+      ids.indexOf(latest.appointment_pk),
+    );
+  });
+
+  it('should return joined location when appointment has location_fk', async () => {
+    const testLocation = assertDefined(
+      await locationsService.create({
+        location_address: 'TEST_ApptListByUser Joined Location',
+        location_postal_code: '0001',
+        location_city: 'Oslo',
+        location_country: 'Norway',
+      }),
+    );
+
+    const created = assertDefined(
+      await appointmentsService.post({
+        ...makeInput(testUserId),
+        location_fk: testLocation.location_pk,
+      }),
+    );
+    testAppointmentIds.push(created.appointment_pk);
+
+    const result = await appointmentsService.listByUserId(testUserId);
+    const found = assertDefined(
+      result.find((a) => a.appointment_pk === created.appointment_pk),
+    );
+
+    expect(found.location).not.toBeNull();
+    expect(found.location?.location_pk).toBe(testLocation.location_pk);
+    expect(found.location?.location_address).toBe(
+      testLocation.location_address,
+    );
+    expect(found.location?.location_city).toBe(testLocation.location_city);
   });
 });
 
