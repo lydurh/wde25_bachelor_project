@@ -243,7 +243,7 @@ describe('appointmentsService.listByUserId', () => {
     expect(found.location).toBeNull();
   });
 
-  it('should return appointments ordered by date and time descending', async () => {
+  it('should return appointments ordered by date and time ascending', async () => {
     const earlier = assertDefined(
       await appointmentsService.post({
         ...makeInput(testUserId),
@@ -274,11 +274,11 @@ describe('appointmentsService.listByUserId', () => {
     const result = await appointmentsService.listByUserId(testUserId);
     const ids = result.map((a) => a.appointment_pk);
 
-    expect(ids.indexOf(latest.appointment_pk)).toBeLessThan(
+    expect(ids.indexOf(earlier.appointment_pk)).toBeLessThan(
       ids.indexOf(laterSameDay.appointment_pk),
     );
     expect(ids.indexOf(laterSameDay.appointment_pk)).toBeLessThan(
-      ids.indexOf(earlier.appointment_pk),
+      ids.indexOf(latest.appointment_pk),
     );
   });
 
