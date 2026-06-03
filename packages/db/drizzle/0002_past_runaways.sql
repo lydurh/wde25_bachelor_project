@@ -1,3 +1,0 @@
-CREATE TYPE "public"."appointment_status" AS ENUM('pending', 'confirmed', 'cancelled', 'completed');--> statement-breakpoint
-ALTER TABLE "appointments" ALTER COLUMN "appointment_status" SET DEFAULT 'pending'::"public"."appointment_status";--> statement-breakpoint
-ALTER TABLE "appointments" ALTER COLUMN "appointment_status" SET DATA TYPE "public"."appointment_status" USING "appointment_status"::"public"."appointment_status";
