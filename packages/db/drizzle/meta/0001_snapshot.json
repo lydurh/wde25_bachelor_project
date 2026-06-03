@@ -1,6 +1,6 @@
 {
-  "id": "c62bead3-c676-4074-9e92-5f81183155f3",
-  "prevId": "b1390846-af52-40f0-b16a-db59ade5641b",
+  "id": "a1b2c3d4-0001-4000-8000-000000000001",
+  "prevId": "850d3259-6c7a-4e6d-b19a-07857994146c",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -114,7 +114,8 @@
         },
         "appointment_status": {
           "name": "appointment_status",
-          "type": "varchar(50)",
+          "type": "appointment_status",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
           "default": "'pending'"
@@ -410,13 +411,13 @@
         },
         "user_first_name": {
           "name": "user_first_name",
-          "type": "varchar(100)",
+          "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true
         },
         "user_last_name": {
           "name": "user_last_name",
-          "type": "varchar(100)",
+          "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true
         },
@@ -489,7 +490,13 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.appointment_status": {
+      "name": "appointment_status",
+      "schema": "public",
+      "values": ["pending", "confirmed", "cancelled", "completed"]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},

@@ -1,5 +1,5 @@
 {
-  "id": "b1390846-af52-40f0-b16a-db59ade5641b",
+  "id": "850d3259-6c7a-4e6d-b19a-07857994146c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -10,13 +10,13 @@
       "columns": {
         "appointment_fk": {
           "name": "appointment_fk",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
         "service_fk": {
           "name": "service_fk",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
@@ -24,8 +24,7 @@
           "name": "quantity",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "default": 1
+          "notNull": true
         }
       },
       "indexes": {},
@@ -66,19 +65,20 @@
       "columns": {
         "appointment_pk": {
           "name": "appointment_pk",
-          "type": "serial",
+          "type": "uuid",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
         "appointment_user_fk": {
           "name": "appointment_user_fk",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
         "location_fk": {
           "name": "location_fk",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -114,7 +114,8 @@
         },
         "appointment_status": {
           "name": "appointment_status",
-          "type": "varchar(50)",
+          "type": "appointment_status",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
           "default": "'pending'"
@@ -188,9 +189,10 @@
       "columns": {
         "availability_pk": {
           "name": "availability_pk",
-          "type": "serial",
+          "type": "uuid",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
         "availability_date": {
           "name": "availability_date",
@@ -251,9 +253,10 @@
       "columns": {
         "location_pk": {
           "name": "location_pk",
-          "type": "serial",
+          "type": "uuid",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
         "location_address": {
           "name": "location_address",
@@ -263,7 +266,7 @@
         },
         "location_postal_code": {
           "name": "location_postal_code",
-          "type": "varchar(20)",
+          "type": "char(4)",
           "primaryKey": false,
           "notNull": false
         },
@@ -325,13 +328,14 @@
       "columns": {
         "service_pk": {
           "name": "service_pk",
-          "type": "serial",
+          "type": "uuid",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
         "service_title": {
           "name": "service_title",
-          "type": "varchar(255)",
+          "type": "varchar(100)",
           "primaryKey": false,
           "notNull": true
         },
@@ -387,9 +391,10 @@
       "columns": {
         "user_pk": {
           "name": "user_pk",
-          "type": "serial",
+          "type": "uuid",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
         "user_role": {
           "name": "user_role",
@@ -406,25 +411,25 @@
         },
         "user_first_name": {
           "name": "user_first_name",
-          "type": "varchar(100)",
+          "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true
         },
         "user_last_name": {
           "name": "user_last_name",
-          "type": "varchar(100)",
+          "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true
         },
         "user_location_fk": {
           "name": "user_location_fk",
-          "type": "integer",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
         "user_password": {
           "name": "user_password",
-          "type": "text",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
         },
@@ -485,7 +490,13 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.appointment_status": {
+      "name": "appointment_status",
+      "schema": "public",
+      "values": ["pending", "confirmed", "cancelled", "completed"]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},
