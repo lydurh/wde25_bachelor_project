@@ -1,8 +1,11 @@
-import { HugeiconsIcon } from '@hugeicons/react';
 import { useEffect, useMemo } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 
 import { Button } from '@/components/ui/button';
+import {
+  ButtonGroup,
+  ButtonGroupSeparator,
+} from '@/components/ui/button-group';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { auth } from '@/lib/auth';
@@ -12,12 +15,15 @@ import {
   canViewBookingStep,
   createBookingGuardContext,
   getBookingRedirectForStep,
+  getPreviousBookingStep,
 } from '@/views/booking/booking-guards';
 import {
   BOOKING_STEPS,
   BOOKING_TAB_STEPS,
   getCurrentStep,
 } from '@/views/booking/booking-steps';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowLeft02Icon, ArrowRight02Icon } from '@hugeicons/core-free-icons';
 
 const BOOKING_FLOW_PATH =
   /^\/book\/(service|user|location|information|time|confirm)\/?$/;
@@ -44,6 +50,16 @@ function BookingLayoutContent() {
   const visibleTabSteps = BOOKING_TAB_STEPS.filter((step) =>
     canViewBookingStep(step.value, guardContext),
   );
+
+  const previousStep = useMemo(
+    () => getPreviousBookingStep(currentStep, guardContext),
+    [currentStep, guardContext],
+  );
+
+  const handleGoBack = () => {
+    if (!previousStep) return;
+    void navigate(`/book/${previousStep}`);
+  };
 
   const handleTabChange = (value: string) => {
     const step = BOOKING_STEPS.find((s) => s.value === value)?.value;
@@ -116,19 +132,34 @@ function BookingLayoutContent() {
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-8">
         <Outlet />
-      </main>
 
-      {showLayoutContinue && (
-        <div className="mx-auto w-full max-w-3xl px-6 pb-64">
-          <Button
-            type="button"
-            onClick={handleContinue}
-            disabled={continueDisabled}
-          >
-            {continueLabel}
-          </Button>
-        </div>
-      )}
+        {/* Continue and go back buttons */}
+        {showLayoutContinue && (
+          <div className="w-full flex justify-center my-6">
+            <ButtonGroup>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleGoBack}
+                disabled={!previousStep}
+              >
+                <HugeiconsIcon icon={ArrowLeft02Icon} strokeWidth={2} />
+                Tilbage
+              </Button>
+              <ButtonGroupSeparator />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleContinue}
+                disabled={continueDisabled}
+              >
+                {continueLabel}
+                <HugeiconsIcon icon={ArrowRight02Icon} strokeWidth={2} />
+              </Button>
+            </ButtonGroup>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

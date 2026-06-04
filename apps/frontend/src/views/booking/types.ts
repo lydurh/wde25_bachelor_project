@@ -11,10 +11,6 @@ export type BookingDraft = {
   cumulatedServiceDuration?: number;
   slotISO?: string | undefined;
   selectedDateId?: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
   address?: string;
   city?: string;
   postalCode?: string;
@@ -27,13 +23,3 @@ export type BookingDraft = {
   comments?: string;
   policyAccepted?: boolean;
 };
-
-export function isCustomerInfoComplete(draft: BookingDraft): boolean {
-  const email = draft.email?.trim();
-  return (
-    !!draft.firstName?.trim() &&
-    !!draft.lastName?.trim() &&
-    !!email &&
-    email.includes('@')
-  );
-}

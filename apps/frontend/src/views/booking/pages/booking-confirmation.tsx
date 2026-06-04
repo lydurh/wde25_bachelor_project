@@ -79,11 +79,6 @@ export const ConfirmationPage = () => {
     draft.slotISO,
   );
 
-  const customerName = [draft.firstName, draft.lastName]
-    .map((part) => part?.trim())
-    .filter(Boolean)
-    .join(' ');
-
   const locationLine = [draft.postalCode?.trim(), draft.city?.trim()]
     .filter(Boolean)
     .join(' ');
@@ -155,24 +150,10 @@ export const ConfirmationPage = () => {
                     {bookingCustomer.user_last_name}
                   </span>
                 ) : null}
-                {customerName ? (
-                  <span className="block">{customerName}</span>
-                ) : null}
                 {bookingCustomer?.user_email ? (
                   <span className="block">{bookingCustomer.user_email}</span>
                 ) : null}
-                {draft.email?.trim() ? (
-                  <span className="block">{draft.email.trim()}</span>
-                ) : null}
-                {draft.phone?.trim() ? (
-                  <span className="block">{draft.phone.trim()}</span>
-                ) : null}
-                {!bookingCustomer &&
-                !customerName &&
-                !draft.email?.trim() &&
-                !draft.phone?.trim()
-                  ? '—'
-                  : null}
+                {!bookingCustomer ? '—' : null}
               </ItemDescription>
             </ItemContent>
           </Item>
