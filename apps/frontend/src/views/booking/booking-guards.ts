@@ -159,3 +159,13 @@ export function getNextBookingStep(
   if (index < 0 || index >= order.length - 1) return null;
   return order[index + 1] ?? null;
 }
+
+export function getPreviousBookingStep(
+  step: BookingStepValue,
+  ctx: BookingGuardContext,
+): BookingStepValue | null {
+  const order = getApplicableStepOrder(ctx);
+  const index = order.indexOf(step);
+  if (index <= 0) return null;
+  return order[index - 1] ?? null;
+}
