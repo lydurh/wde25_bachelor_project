@@ -4,7 +4,6 @@ import {
   type BookingStepValue,
 } from '@/views/booking/booking-steps';
 import type { BookingDraft } from '@/views/booking/types';
-import { isCustomerInfoComplete } from '@/views/booking/types';
 
 const STEP_ORDER = BOOKING_STEPS.map((step) => step.value);
 
@@ -61,7 +60,7 @@ export function hasTimeSelection(draft: BookingDraft): boolean {
 }
 
 export function isInformationStepComplete(draft: BookingDraft): boolean {
-  return isCustomerInfoComplete(draft) && draft.policyAccepted === true;
+  return draft.policyAccepted === true;
 }
 
 const PROGRESS_CHECKS: StepRequirement[] = [
@@ -69,7 +68,6 @@ const PROGRESS_CHECKS: StepRequirement[] = [
   hasSelectedUser,
   (draft) => hasLocationInput(draft),
   (draft) => hasTimeSelection(draft),
-  (draft) => isInformationStepComplete(draft),
 ];
 
 function meetsProgress(
