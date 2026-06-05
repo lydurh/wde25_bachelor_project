@@ -13,6 +13,8 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
     .default('development'),
+  EMAIL_USER: z.string().optional().default(''),
+  EMAIL_PASS: z.string().optional().default(''),
   GOOGLE_MAPS_API_KEY: z.string(),
 });
 

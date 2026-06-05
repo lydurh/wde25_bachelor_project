@@ -97,11 +97,11 @@ export const ForgotPasswordPage = () => {
         <p className="text-sm text-center mt-4">
           {auth.isAuthenticated() ? (
             <Link to="/profile" className="text-primary hover:underline">
-              Back to profile
+              Tilbage til din profil
             </Link>
           ) : (
             <Link to="/login" className="text-primary hover:underline">
-              Back to login
+              Tilbage til login
             </Link>
           )}
         </p>

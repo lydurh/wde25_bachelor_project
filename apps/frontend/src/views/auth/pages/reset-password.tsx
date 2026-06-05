@@ -60,14 +60,14 @@ export const ResetPasswordPage = () => {
       <section className="min-h-screen flex items-center justify-center px-4 py-10 bg-background">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-border p-6 text-center">
           <AuthFormBanner variant="error">
-            Missing reset token. Please use the link from your email.
+            Kan ikke verificere, brug venligst linket fra din email.
           </AuthFormBanner>
           <p className="mt-4">
             <Link
               to="/forgot-password"
               className="text-primary hover:underline"
             >
-              Request a new reset link
+              Gensend et reset link
             </Link>
           </p>
         </div>
@@ -79,7 +79,7 @@ export const ResetPasswordPage = () => {
     <section className="min-h-screen flex items-center justify-center px-4 py-10 bg-background">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-border p-6">
         <h1 className="text-3xl font-semibold text-center mb-6">
-          Reset Password
+          Nulstil Password
         </h1>
 
         {formError && (

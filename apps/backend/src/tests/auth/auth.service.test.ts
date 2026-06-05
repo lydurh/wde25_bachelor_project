@@ -1,5 +1,10 @@
 import { describe, it, expect, afterAll, beforeAll } from 'bun:test';
-import { authService, getResetTokenForTest } from '../../api/auth/auth.service';
+import {
+  authService,
+  buildVerificationUrl,
+  getResetTokenForTest,
+} from '../../api/auth/auth.service';
+import { env } from '../../lib/env';
 import { db, users, like } from '@repo/db';
 
 const assertDefined = <T>(val: T | undefined | null): T => {
@@ -14,6 +19,14 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await db.delete(users).where(like(users.user_email, 'TEST_%'));
+});
+
+describe('verification link generation', () => {
+  it('should build verification links from the configured frontend URL', () => {
+    expect(buildVerificationUrl('abc123')).toBe(
+      `${env.FRONTEND_URL}/verify-email?token=abc123`,
+    );
+  });
 });
 
 describe('authService.signup', () => {

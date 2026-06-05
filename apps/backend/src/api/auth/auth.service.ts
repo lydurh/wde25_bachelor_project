@@ -4,7 +4,9 @@ import { toPublicUser } from '@repo/shared';
 import { locationsService } from '../locations/locations.service';
 import { HTTPException } from 'hono/http-exception';
 import {
+  createSimpleEmailMessage,
   getMailFrom,
+  getReplyTo,
   isMockEmailTransport,
   resolveMailRecipient,
   transporter,
@@ -26,6 +28,12 @@ const isTokenValid = (entry: TokenEntry | undefined): entry is TokenEntry => {
     return false;
   }
   return true;
+};
+
+export const buildVerificationUrl = (token: string): string => {
+  const url = new URL('/verify-email', env.FRONTEND_URL);
+  url.searchParams.set('token', token);
+  return url.toString();
 };
 
 const consumeToken = (
@@ -128,20 +136,32 @@ export const authService = {
       expiresAt: Date.now() + VERIFICATION_TTL_MS,
     });
 
-    const verificationLink = `${env.PUBLIC_API_URL}/api/auth/verify-email?token=${verificationToken}`;
+    const verificationLink = buildVerificationUrl(verificationToken);
     const safeEmail = escapeEmailDisplay(email);
     const mailTo = resolveMailRecipient(email);
+    const environmentLabel =
+      env.NODE_ENV === 'production' ? 'production' : 'development';
+
+    console.warn(
+      `[auth] ${environmentLabel.toUpperCase()} verification URL for ${email}: ${verificationLink}`,
+    );
+
+    const verificationEmail = createSimpleEmailMessage({
+      greeting: `Hej ${safeEmail},`,
+      intro:
+        'Tak for at oprette en konto. Brug linket nedenfor til at verificere din konto.',
+      actionLabel: 'Verifier din konto',
+      link: verificationLink,
+    });
 
     try {
       await transporter.sendMail({
         from: getMailFrom(),
+        replyTo: getReplyTo(),
         to: mailTo,
         subject: 'Verify your account',
-        html: `
-<h2>Hello ${safeEmail}</h2>
-<p>Thanks for signing up! Please verify your account by clicking the link below:</p>
-<p><a href="${verificationLink}">Verify Account</a></p>
-        `,
+        text: verificationEmail.text,
+        html: verificationEmail.html,
       });
       if (isMockEmailTransport) {
         console.warn(
@@ -151,7 +171,7 @@ export const authService = {
     } catch (err) {
       console.warn('Failed to send verification email:', err);
       console.warn(
-        `[email] Verification link for ${email}:\n  ${verificationLink}`,
+        `[email] Verification link for ${email} is available for local testing:\n  ${verificationLink}`,
       );
     }
 
@@ -236,16 +256,21 @@ export const authService = {
     const safeEmail = escapeEmailDisplay(email);
     const mailTo = resolveMailRecipient(email);
 
+    const resetEmail = createSimpleEmailMessage({
+      greeting: `Hej ${safeEmail},`,
+      intro: 'Brug linket nedenfor til at nulstille dit password.',
+      actionLabel: 'Nulstil dit password',
+      link: resetLink,
+    });
+
     try {
       await transporter.sendMail({
         from: getMailFrom(),
+        replyTo: getReplyTo(),
         to: mailTo,
         subject: 'Reset your password',
-        html: `
-<h2>Hello ${safeEmail}</h2>
-<p>Click the link below to reset your password.</p>
-<p><a href="${resetLink}">Reset Password</a></p>
-        `,
+        text: resetEmail.text,
+        html: resetEmail.html,
       });
       if (isMockEmailTransport) {
         console.warn(
