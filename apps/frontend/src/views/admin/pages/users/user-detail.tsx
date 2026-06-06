@@ -88,7 +88,7 @@ export const UserDetailPage = () => {
         className="mb-4"
         onClick={() => void navigate('/admin/users')}
       >
-        &larr; Back to Users
+        &larr; Tilbage til brugere
       </Button>
 
       <Card className="mb-6">
@@ -111,7 +111,7 @@ export const UserDetailPage = () => {
             </Badge>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Location</span>
+            <span className="text-muted-foreground">Lokation</span>
             <span>
               {user.user_location_fk
                 ? (locations.find(
@@ -137,7 +137,7 @@ export const UserDetailPage = () => {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Notes</CardTitle>
+          <CardTitle>Noter</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <textarea
@@ -146,7 +146,7 @@ export const UserDetailPage = () => {
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
               setNote(e.target.value)
             }
-            placeholder="Add a note about this user..."
+            placeholder="Tilføj noter om denne bruger..."
             rows={4}
           />
           <Button
@@ -169,7 +169,7 @@ export const UserDetailPage = () => {
                 });
             }}
           >
-            {savingNote ? 'Saving...' : 'Save Note'}
+            {savingNote ? 'Gemmer...' : 'Gem Note'}
           </Button>
         </CardContent>
       </Card>
@@ -182,7 +182,7 @@ export const UserDetailPage = () => {
         </h2>
 
         {appointments.length === 0 ? (
-          <p className="text-muted-foreground">No appointments found.</p>
+          <p className="text-muted-foreground">Ingen aftaler fundet.</p>
         ) : (
           <Table className="w-full rounded-md bg-card">
             <TableHeader className="bg-secondary-background">

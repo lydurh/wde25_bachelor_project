@@ -54,7 +54,7 @@ export const ForgotPasswordPage = () => {
     <section className="min-h-screen flex items-center justify-center px-4 py-10 bg-background">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-border p-6">
         <h1 className="text-3xl font-semibold text-center mb-6">
-          Forgot Password
+          Glemt Password
         </h1>
 
         <div className="flex flex-col gap-4 mb-4">
@@ -97,11 +97,11 @@ export const ForgotPasswordPage = () => {
         <p className="text-sm text-center mt-4">
           {auth.isAuthenticated() ? (
             <Link to="/profile" className="text-primary hover:underline">
-              Back to profile
+              Tilbage til profil
             </Link>
           ) : (
             <Link to="/login" className="text-primary hover:underline">
-              Back to login
+              Tilbage til login
             </Link>
           )}
         </p>

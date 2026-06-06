@@ -67,21 +67,21 @@ export const AppointmentsPage = () => {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <h1>Appointments</h1>
+        <h1>Aftaler</h1>
       </div>
 
       {appointments.length === 0 ? (
-        <p className="text-muted-foreground">No appointments found.</p>
+        <p className="text-muted-foreground">Ingen aftaler fundet.</p>
       ) : (
         <>
           <Table className="w-full rounded-md bg-card">
             <TableHeader className="bg-secondary-background">
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Time</TableHead>
-                <TableHead>Duration</TableHead>
+                <TableHead>Dato</TableHead>
+                <TableHead>Tid</TableHead>
+                <TableHead>Varighed</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Price</TableHead>
+                <TableHead>Pris</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -123,10 +123,10 @@ export const AppointmentsPage = () => {
                 disabled={page === 0}
                 onClick={() => setPage(page - 1)}
               >
-                Previous
+                Tidligere
               </Button>
               <span className="text-sm text-muted-foreground">
-                Page {page + 1} of {totalPages}
+                Side {page + 1} ud af {totalPages}
               </span>
               <Button
                 variant="outline"
@@ -134,7 +134,7 @@ export const AppointmentsPage = () => {
                 disabled={page >= totalPages - 1}
                 onClick={() => setPage(page + 1)}
               >
-                Next
+                Forsæt
               </Button>
             </div>
           )}

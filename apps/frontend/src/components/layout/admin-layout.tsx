@@ -7,12 +7,12 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { label: 'Home', to: '/admin' },
+  { label: 'Hjem', to: '/admin' },
   { label: 'Services', to: '/admin/services' },
-  { label: 'Availability', to: '/admin/availability' },
-  { label: 'Appointments', to: '/admin/appointments' },
-  { label: 'Users', to: '/admin/users' },
-  { label: 'Settings', to: '/admin/settings' },
+  { label: 'Arbejdstider', to: '/admin/availability' },
+  { label: 'Aftaler', to: '/admin/appointments' },
+  { label: 'Brugere', to: '/admin/users' },
+  { label: 'Indstillinger', to: '/admin/settings' },
 ];
 
 export const AdminLayout = () => {

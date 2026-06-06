@@ -55,17 +55,17 @@ export const UsersPage = () => {
       </div>
 
       {users.length === 0 ? (
-        <p className="text-muted-foreground">No users found.</p>
+        <p className="text-muted-foreground">Ingen brugere fundet.</p>
       ) : (
         <div>
           <Table className="w-full rounded-md bg-card">
             <TableHeader className="bg-secondary-background">
               <TableRow>
-                <TableHead>Name</TableHead>
+                <TableHead>Navn</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Verified</TableHead>
-                <TableHead>Joined</TableHead>
+                <TableHead>Rolle</TableHead>
+                <TableHead>Verificeret</TableHead>
+                <TableHead>Oprettet</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -109,7 +109,7 @@ export const UsersPage = () => {
                 disabled={page === 0}
                 onClick={() => setPage(page - 1)}
               >
-                Previous
+                Forrige
               </Button>
               <span className="text-sm text-muted-foreground">
                 Page {page + 1} of {totalPages}
@@ -120,7 +120,7 @@ export const UsersPage = () => {
                 disabled={page >= totalPages - 1}
                 onClick={() => setPage(page + 1)}
               >
-                Next
+                Næste
               </Button>
             </div>
           )}

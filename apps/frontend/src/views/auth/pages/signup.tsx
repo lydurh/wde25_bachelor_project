@@ -100,7 +100,7 @@ export const SignupPage = () => {
           <AuthFormField
             id="first_name"
             name="first_name"
-            label="First Name"
+            label="Fornavn"
             value={form.first_name}
             onChange={handleChange}
             error={fieldErrors['first_name']}
@@ -111,7 +111,7 @@ export const SignupPage = () => {
           <AuthFormField
             id="last_name"
             name="last_name"
-            label="Last Name"
+            label="Efternavn"
             value={form.last_name}
             onChange={handleChange}
             error={fieldErrors['last_name']}
@@ -133,7 +133,7 @@ export const SignupPage = () => {
           <AuthFormField
             id="address"
             name="address"
-            label="Address"
+            label="Adresse"
             value={form.address}
             onChange={handleChange}
             error={fieldErrors['address']}
@@ -145,7 +145,7 @@ export const SignupPage = () => {
             <AuthFormField
               id="postal_code"
               name="postal_code"
-              label="Postal Code"
+              label="Postnummer"
               value={form.postal_code}
               onChange={handleChange}
               error={fieldErrors['postal_code']}
@@ -156,7 +156,7 @@ export const SignupPage = () => {
             <AuthFormField
               id="city"
               name="city"
-              label="City"
+              label="By"
               value={form.city}
               onChange={handleChange}
               error={fieldErrors['city']}
@@ -180,7 +180,7 @@ export const SignupPage = () => {
           <AuthFormField
             id="repeat_password"
             name="repeat_password"
-            label="Repeat Password"
+            label="Gentag Password"
             type="password"
             value={form.repeat_password}
             onChange={handleChange}

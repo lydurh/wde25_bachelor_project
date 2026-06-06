@@ -48,22 +48,22 @@ export const AvailabilityPage = () => {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <h1>Availability</h1>
+        <h1>Arbejdstider</h1>
         <Button onClick={() => void navigate('/admin/availability/new')}>
-          New Availability
+          Ny Arbejdstid
         </Button>
       </div>
 
       {slots.length === 0 ? (
-        <p className="text-muted-foreground">No availability slots found.</p>
+        <p className="text-muted-foreground">Ingen arbejdstider fundet.</p>
       ) : (
         <>
           <Table className="w-full rounded-md bg-card">
             <TableHeader className="bg-secondary-background">
               <TableRow>
-                <TableHead>Date</TableHead>
+                <TableHead>Dato</TableHead>
                 <TableHead>Start</TableHead>
-                <TableHead>End</TableHead>
+                <TableHead>Slut</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -95,10 +95,10 @@ export const AvailabilityPage = () => {
                 disabled={page === 0}
                 onClick={() => setPage(page - 1)}
               >
-                Previous
+                Forrige
               </Button>
               <span className="text-sm text-muted-foreground">
-                Page {page + 1} of {totalPages}
+                Side {page + 1} af {totalPages}
               </span>
               <Button
                 variant="outline"
@@ -106,7 +106,7 @@ export const AvailabilityPage = () => {
                 disabled={page >= totalPages - 1}
                 onClick={() => setPage(page + 1)}
               >
-                Next
+                Næste
               </Button>
             </div>
           )}
