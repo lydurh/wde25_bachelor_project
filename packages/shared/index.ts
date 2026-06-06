@@ -36,6 +36,7 @@ export {
   getTotalPriceKr,
 } from './src/booking/calculation';
 export type { Appointment } from './src/types/appointments';
+export type { SendMailOptions } from './src/types/email';
 
 export type { JwtPayload, AuthUser } from './src/schemas/jwt';
 export { jwtPayloadSchema } from './src/schemas/jwt';

@@ -1,32 +1,41 @@
 import * as nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+import type { SendMailOptions } from '@repo/shared';
 import { env } from '../lib/env';
 
-const emailUser = process.env['EMAIL_USER'];
-const emailPass = process.env['EMAIL_PASS'];
+const emailUser = process.env['EMAIL_USER']; // kept only for dev recipient routing
 
-/** Gmail is used when credentials exist; otherwise emails are only logged. */
-export const hasSmtpCredentials = Boolean(emailUser && emailPass);
+/** Resend used when API key exists; otherwise emails are only logged. */
+export const hasResend = Boolean(env.RESEND_API_KEY);
+export const isMockEmailTransport = !hasResend;
 
-export const isMockEmailTransport = !hasSmtpCredentials;
+const resend = hasResend ? new Resend(env.RESEND_API_KEY) : null;
 
-export const transporter: nodemailer.Transporter = hasSmtpCredentials
-  ? nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: emailUser,
-        pass: emailPass,
-      },
-    })
-  : nodemailer.createTransport({
-      streamTransport: true,
-      newline: 'unix',
-      buffer: true,
+/** Dev/test mock: nodemailer stream transport, buffers mail so we can log it. */
+const mockTransporter = nodemailer.createTransport({
+  streamTransport: true,
+  newline: 'unix',
+  buffer: true,
+});
+
+export const sendMail = async (opts: SendMailOptions): Promise<void> => {
+  if (resend) {
+    const response = await resend.emails.send({
+      from: opts.from,
+      to: opts.to,
+      subject: opts.subject,
+      html: opts.html,
     });
+    if (response.error) {
+      throw new Error(`Resend failed: ${response.error.message}`);
+    }
+    return;
+  }
 
-/**
- * School / dev: deliver auth emails to EMAIL_USER so any signup address (e.g. b@b.com) works.
- * Production: send to the user's real address.
- */
+  // Mock: no API key -> just buffer + log, never throws on transport.
+  await mockTransporter.sendMail(opts);
+};
+
 export const resolveMailRecipient = (accountEmail: string): string => {
   if (env.NODE_ENV === 'production') {
     return accountEmail;
@@ -34,4 +43,5 @@ export const resolveMailRecipient = (accountEmail: string): string => {
   return emailUser ?? accountEmail;
 };
 
-export const getMailFrom = (): string => emailUser ?? 'noreply@localhost';
+/** Must be an address on the Resend-verified domain (lydurh.com). */
+export const getMailFrom = (): string => env.RESEND_FROM;

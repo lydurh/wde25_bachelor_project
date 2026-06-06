@@ -7,7 +7,7 @@ import {
   getMailFrom,
   isMockEmailTransport,
   resolveMailRecipient,
-  transporter,
+  sendMail,
 } from '../../utils/mailer';
 import { env } from '../../lib/env';
 import { geocoder } from '../../utils/geocoder';
@@ -133,7 +133,7 @@ export const authService = {
     const mailTo = resolveMailRecipient(email);
 
     try {
-      await transporter.sendMail({
+      await sendMail({
         from: getMailFrom(),
         to: mailTo,
         subject: 'Verify your account',
@@ -237,7 +237,7 @@ export const authService = {
     const mailTo = resolveMailRecipient(email);
 
     try {
-      await transporter.sendMail({
+      await sendMail({
         from: getMailFrom(),
         to: mailTo,
         subject: 'Reset your password',

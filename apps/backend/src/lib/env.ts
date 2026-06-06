@@ -14,6 +14,8 @@ const envSchema = z.object({
     .enum(['development', 'production', 'test'])
     .default('development'),
   GOOGLE_MAPS_API_KEY: z.string(),
+  RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM: z.string().default('noreply@lydurh.com'),
 });
 
 export const env = envSchema.parse(process.env);
