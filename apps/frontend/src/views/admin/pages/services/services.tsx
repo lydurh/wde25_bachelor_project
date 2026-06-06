@@ -51,7 +51,7 @@ export const ServicesPage = () => {
       <div className="mb-4 flex items-center justify-between">
         <h1>Services</h1>
         <Button onClick={() => void navigate('/admin/services/new')}>
-          New Service
+          Tilføj Service
         </Button>
       </div>
 
@@ -59,9 +59,9 @@ export const ServicesPage = () => {
         <Table className="w-full bg-card rounded-md">
           <TableHeader className="bg-secondary-background">
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Duration</TableHead>
+              <TableHead>Navn</TableHead>
+              <TableHead>Pris</TableHead>
+              <TableHead>Varighed</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -89,10 +89,10 @@ export const ServicesPage = () => {
               disabled={page === 0}
               onClick={() => setPage(page - 1)}
             >
-              Previous
+              Forrige
             </Button>
             <span className="text-sm text-muted-foreground">
-              Page {page + 1} of {totalPages}
+              Side {page + 1} af {totalPages}
             </span>
             <Button
               variant="outline"
@@ -100,7 +100,7 @@ export const ServicesPage = () => {
               disabled={page >= totalPages - 1}
               onClick={() => setPage(page + 1)}
             >
-              Next
+              Næste
             </Button>
           </div>
         )}

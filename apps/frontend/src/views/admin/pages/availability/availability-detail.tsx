@@ -82,7 +82,7 @@ export const AvailabilityDetailPage = () => {
   };
 
   if (loading) return <p>Loading...</p>;
-  if (!slot) return <p>Availability slot not found.</p>;
+  if (!slot) return <p>Arbejdstider ikke fundet.</p>;
 
   return (
     <div className="mx-auto max-w-lg">
@@ -91,7 +91,7 @@ export const AvailabilityDetailPage = () => {
         className="mb-4"
         onClick={() => void navigate('/admin/availability')}
       >
-        &larr; Back to Availability
+        &larr; Tilbage til Arbejdstider
       </Button>
 
       <Card>
@@ -107,7 +107,7 @@ export const AvailabilityDetailPage = () => {
 
           <form onSubmit={(e) => void handleSave(e)} className="space-y-4">
             <div className="space-y-1">
-              <Label htmlFor="date">Date</Label>
+              <Label htmlFor="date">Dato</Label>
               <Input
                 id="date"
                 type="date"
@@ -118,7 +118,7 @@ export const AvailabilityDetailPage = () => {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="startTime">Start Time</Label>
+              <Label htmlFor="startTime">Start Tid</Label>
               <Input
                 id="startTime"
                 type="time"
@@ -129,7 +129,7 @@ export const AvailabilityDetailPage = () => {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="endTime">End Time</Label>
+              <Label htmlFor="endTime">Slut Tid</Label>
               <Input
                 id="endTime"
                 type="time"
@@ -148,7 +148,7 @@ export const AvailabilityDetailPage = () => {
                 variant="destructive"
                 onClick={() => void handleDelete()}
               >
-                Delete
+                Slet
               </Button>
             </div>
           </form>

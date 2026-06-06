@@ -80,7 +80,7 @@ export const AppointmentDetailPage = () => {
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p className="text-destructive">{error}</p>;
-  if (!appointment) return <p>Appointment not found.</p>;
+  if (!appointment) return <p>Aftaler ikke fundet</p>;
 
   return (
     <div className="mx-auto max-w-lg">
@@ -89,7 +89,7 @@ export const AppointmentDetailPage = () => {
         className="mb-4"
         onClick={() => void navigate('/admin/appointments')}
       >
-        &larr; Back to Appointments
+        &larr; Tilbage til aftaler
       </Button>
 
       <Card className="mb-6">
@@ -103,15 +103,15 @@ export const AppointmentDetailPage = () => {
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Date</span>
+            <span className="text-muted-foreground">Dato</span>
             <span>{formatDate(appointment.appointment_date)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Time</span>
+            <span className="text-muted-foreground">Tid</span>
             <span>{appointment.appointment_time.slice(0, 5)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Duration</span>
+            <span className="text-muted-foreground">Varighed</span>
             <span>
               {appointment.appointment_duration
                 ? `${appointment.appointment_duration} min`
@@ -119,7 +119,7 @@ export const AppointmentDetailPage = () => {
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Price</span>
+            <span className="text-muted-foreground">Pris</span>
             <span>
               {appointment.appointment_total_price
                 ? `${appointment.appointment_total_price} kr`
@@ -136,12 +136,12 @@ export const AppointmentDetailPage = () => {
           )}
           {appointment.appointment_notes && (
             <div className="pt-2">
-              <span className="text-muted-foreground">Notes</span>
+              <span className="text-muted-foreground">Noter</span>
               <p className="mt-1">{appointment.appointment_notes}</p>
             </div>
           )}
           <div className="flex justify-between pt-2 text-xs text-muted-foreground">
-            <span>Created</span>
+            <span>Oprettet</span>
             <span>{formatDate(appointment.appointment_created_at)}</span>
           </div>
 

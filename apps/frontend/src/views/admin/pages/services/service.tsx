@@ -82,7 +82,7 @@ export const ServicePage = () => {
         className="mb-4"
         onClick={() => void navigate('/admin/services')}
       >
-        &larr; Back to Services
+        &larr; Tilbage til Services
       </Button>
 
       <Card>
@@ -94,7 +94,7 @@ export const ServicePage = () => {
 
           <form onSubmit={(e) => void handleSave(e)} className="space-y-4">
             <div className="space-y-1">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">Titel</Label>
               <Input
                 id="title"
                 value={title}
@@ -104,17 +104,17 @@ export const ServicePage = () => {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Beskrivelse</Label>
               <Input
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Optional description"
+                placeholder="Valgfri beskrivelse"
               />
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="duration">Duration (minutes)</Label>
+              <Label htmlFor="duration">Varighed (minutter)</Label>
               <Input
                 id="duration"
                 type="number"
@@ -126,7 +126,7 @@ export const ServicePage = () => {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="price">Price (e.g. 50.00)</Label>
+              <Label htmlFor="price">Pris (f.eks. 50.00)</Label>
               <Input
                 id="price"
                 value={price}
@@ -137,14 +137,14 @@ export const ServicePage = () => {
 
             <div className="flex gap-2">
               <Button type="submit" className="flex-1" disabled={submitting}>
-                {submitting ? 'Saving...' : 'Save Changes'}
+                {submitting ? 'Gemmer...' : 'Gem Ændringer'}
               </Button>
               <Button
                 type="button"
                 variant="destructive"
                 onClick={() => void handleDelete()}
               >
-                Delete
+                Slet
               </Button>
             </div>
           </form>

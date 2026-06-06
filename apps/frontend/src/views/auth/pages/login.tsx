@@ -79,8 +79,7 @@ export const LoginPage = () => {
           )}
           {verifyError && (
             <AuthFormBanner variant="error">
-              Verification link is invalid or has expired. Please sign up again
-              or contact support.
+              Verification link is invalid or has expired.
             </AuthFormBanner>
           )}
           {formError && (
@@ -121,7 +120,7 @@ export const LoginPage = () => {
           />
           <div>
             <Link to="/signup" className="text-sm text-primary hover:underline">
-              Don't have an account? Sign up
+              Har du ikke en account? Sign up
             </Link>
           </div>
           <div>
@@ -129,7 +128,7 @@ export const LoginPage = () => {
               to="/forgot-password"
               className="text-sm text-primary hover:underline"
             >
-              Forgot password?
+              Glemt password?
             </Link>
           </div>
           <button

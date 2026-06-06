@@ -79,7 +79,7 @@ export const ResetPasswordPage = () => {
     <section className="min-h-screen flex items-center justify-center px-4 py-10 bg-background">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-border p-6">
         <h1 className="text-3xl font-semibold text-center mb-6">
-          Reset Password
+          Nulstil Password
         </h1>
 
         {formError && (
@@ -98,7 +98,7 @@ export const ResetPasswordPage = () => {
           <AuthFormField
             id="newPassword"
             name="newPassword"
-            label="New password"
+            label="Nyt password"
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
@@ -110,7 +110,7 @@ export const ResetPasswordPage = () => {
           <AuthFormField
             id="repeat_password"
             name="repeat_password"
-            label="Repeat password"
+            label="Gentag password"
             type="password"
             value={repeatPassword}
             onChange={(e) => setRepeatPassword(e.target.value)}

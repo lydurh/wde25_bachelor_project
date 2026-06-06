@@ -78,10 +78,8 @@ export const AdminDashboardPage = () => {
     <div className="space-y-6">
       {/* Greeting */}
       <div>
-        <h1 className="text-2xl font-semibold">Welcome back!</h1>
-        <p className="text-muted-foreground">
-          Here&apos;s what&apos;s happening today.
-        </p>
+        <h1 className="text-2xl font-semibold">Velkommen tilbage!</h1>
+        <p className="text-muted-foreground">Din oversigt.</p>
       </div>
 
       {/* Stats Cards */}
@@ -90,7 +88,7 @@ export const AdminDashboardPage = () => {
           <Card className="transition-colors hover:bg-accent">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Upcoming Appointments
+                Kommende Aftaler
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -103,7 +101,7 @@ export const AdminDashboardPage = () => {
           <Card className="transition-colors hover:bg-accent">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Services
+                Services
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -116,7 +114,7 @@ export const AdminDashboardPage = () => {
           <Card className="transition-colors hover:bg-accent">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Users
+                Brugere
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -130,18 +128,16 @@ export const AdminDashboardPage = () => {
 
       {/* Recent Appointments */}
       <div>
-        <h2 className="mb-3 text-lg font-semibold">
-          Today&apos;s Appointments
-        </h2>
+        <h2 className="mb-3 text-lg font-semibold">Dagens Aftaler</h2>
         {todayAppointments.length === 0 ? (
-          <p className="text-muted-foreground">No appointments today.</p>
+          <p className="text-muted-foreground">Ingen aftaler i dag.</p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Customer</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Time</TableHead>
+                <TableHead>Kunde</TableHead>
+                <TableHead>Dato</TableHead>
+                <TableHead>Tid</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>

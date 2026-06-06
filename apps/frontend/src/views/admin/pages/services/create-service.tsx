@@ -43,40 +43,40 @@ export const CreateServicePage = () => {
         className="mb-4"
         onClick={() => void navigate('/admin/services')}
       >
-        &larr; Back to Services
+        &larr; Tilbage til Services
       </Button>
 
       <Card>
         <CardHeader>
-          <CardTitle>Create New Service</CardTitle>
+          <CardTitle>Opret ny Service</CardTitle>
         </CardHeader>
         <CardContent>
           {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
 
           <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
             <div className="space-y-1">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">Titel</Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Haircut"
+                placeholder="e.g. Klip"
                 required
               />
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Beskrivelse</Label>
               <Input
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Optional description"
+                placeholder="Valgfri beskrivelse"
               />
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="duration">Duration (minutes)</Label>
+              <Label htmlFor="duration">Varighed (minutter)</Label>
               <Input
                 id="duration"
                 type="number"
@@ -89,7 +89,7 @@ export const CreateServicePage = () => {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="price">Price (e.g. 50.00)</Label>
+              <Label htmlFor="price">Pris (e.g. 50.00)</Label>
               <Input
                 id="price"
                 value={price}
@@ -100,7 +100,7 @@ export const CreateServicePage = () => {
             </div>
 
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? 'Creating...' : 'Create Service'}
+              {submitting ? 'Opretter...' : 'Opret Service'}
             </Button>
           </form>
         </CardContent>

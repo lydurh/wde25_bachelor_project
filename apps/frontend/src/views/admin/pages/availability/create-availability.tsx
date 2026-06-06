@@ -49,19 +49,19 @@ export const CreateAvailabilityPage = () => {
         className="mb-4"
         onClick={() => void navigate('/admin/availability')}
       >
-        &larr; Back to Availability
+        &larr; Tilbage til Arbejdstider
       </Button>
 
       <Card>
         <CardHeader>
-          <CardTitle>Create New Availability</CardTitle>
+          <CardTitle>Opret Ny Arbejdstid</CardTitle>
         </CardHeader>
         <CardContent>
           {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
 
           <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
             <div className="space-y-1">
-              <Label htmlFor="date">Date</Label>
+              <Label htmlFor="date">Dato</Label>
               <Input
                 id="date"
                 type="date"
@@ -72,7 +72,7 @@ export const CreateAvailabilityPage = () => {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="startTime">Start Time</Label>
+              <Label htmlFor="startTime">Start Tid</Label>
               <Input
                 id="startTime"
                 type="time"
@@ -83,7 +83,7 @@ export const CreateAvailabilityPage = () => {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="endTime">End Time</Label>
+              <Label htmlFor="endTime">Slut Tid</Label>
               <Input
                 id="endTime"
                 type="time"
@@ -94,7 +94,7 @@ export const CreateAvailabilityPage = () => {
             </div>
 
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? 'Creating...' : 'Create Availability'}
+              {submitting ? 'Opretter...' : 'Opret Arbejdstid'}
             </Button>
           </form>
         </CardContent>

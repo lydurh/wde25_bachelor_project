@@ -120,22 +120,22 @@ export const SettingsPage = () => {
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p className="text-destructive">{error}</p>;
-  if (!user) return <p>User not found.</p>;
+  if (!user) return <p>Bruger ikke fundet.</p>;
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="mb-6">Settings</h1>
+      <h1 className="mb-6">Indstillinger</h1>
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
+          <CardTitle>Profil</CardTitle>
         </CardHeader>
         <CardContent>
           {profileError && (
             <p className="mb-3 text-sm text-destructive">{profileError}</p>
           )}
           {profileSuccess && (
-            <p className="mb-3 text-sm text-green-600">Profile updated.</p>
+            <p className="mb-3 text-sm text-green-600">Profil opdateret.</p>
           )}
 
           <form
@@ -144,7 +144,7 @@ export const SettingsPage = () => {
           >
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="firstName">Fornavn</Label>
                 <Input
                   id="firstName"
                   value={firstName}
@@ -153,7 +153,7 @@ export const SettingsPage = () => {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="lastName">Efternavn</Label>
                 <Input
                   id="lastName"
                   value={lastName}
@@ -174,14 +174,14 @@ export const SettingsPage = () => {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="location">Location</Label>
+              <Label htmlFor="location">Lokation</Label>
               <select
                 id="location"
                 value={locationFk}
                 onChange={(e) => setLocationFk(e.target.value)}
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
-                <option value="">No location</option>
+                <option value="">Ingen lokation</option>
                 {locations.map((loc) => (
                   <option key={loc.location_pk} value={loc.location_pk}>
                     {loc.location_address}, {loc.location_city}
@@ -191,7 +191,7 @@ export const SettingsPage = () => {
             </div>
 
             <Button type="submit" disabled={savingProfile}>
-              {savingProfile ? 'Saving...' : 'Save Profile'}
+              {savingProfile ? 'Saving...' : 'Gem Profil'}
             </Button>
           </form>
         </CardContent>
@@ -201,7 +201,7 @@ export const SettingsPage = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Change Password</CardTitle>
+          <CardTitle>Skift Password</CardTitle>
         </CardHeader>
         <CardContent>
           {passwordError && (
@@ -216,7 +216,7 @@ export const SettingsPage = () => {
             className="space-y-4"
           >
             <div className="space-y-1">
-              <Label htmlFor="password">New Password</Label>
+              <Label htmlFor="password">Nyt Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -228,7 +228,7 @@ export const SettingsPage = () => {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="repeatPassword">Confirm Password</Label>
+              <Label htmlFor="repeatPassword">Bekræft Password</Label>
               <Input
                 id="repeatPassword"
                 type="password"
@@ -240,7 +240,7 @@ export const SettingsPage = () => {
             </div>
 
             <Button type="submit" disabled={savingPassword}>
-              {savingPassword ? 'Saving...' : 'Change Password'}
+              {savingPassword ? 'Saving...' : 'Skift Password'}
             </Button>
           </form>
         </CardContent>
