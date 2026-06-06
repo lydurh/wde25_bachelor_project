@@ -26,7 +26,7 @@ import {
   getMailFrom,
   isMockEmailTransport,
   resolveMailRecipient,
-  transporter,
+  sendMail,
 } from '../../utils/mailer';
 
 type AppointmentRow = InferSelectModel<typeof appointments>;
@@ -315,7 +315,7 @@ export const appointmentsService = {
     `;
 
     try {
-      await transporter.sendMail({
+      await sendMail({
         from: getMailFrom(),
         to: mailTo,
         subject: 'Bekræftelse på din frisørbooking',
