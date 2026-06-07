@@ -127,7 +127,7 @@ describe('appointmentsService.post', () => {
 
     expect(result.appointment_user_fk).toBe(testUserId);
     expect(result.appointment_date).toBe('2030-06-15');
-    expect(result.appointment_status).toBe('pending');
+    expect(result.appointment_status).toBe('confirmed');
   });
 
   it('should generate a valid UUID for appointment_pk', async () => {
@@ -141,13 +141,13 @@ describe('appointmentsService.post', () => {
     );
   });
 
-  it('should default appointment_status to pending', async () => {
+  it('should default appointment_status to confirmed', async () => {
     const result = assertDefined(
       await appointmentsService.post(makeInput(testUserId)),
     );
     testAppointmentIds.push(result.appointment_pk);
 
-    expect(result.appointment_status).toBe('pending');
+    expect(result.appointment_status).toBe('confirmed');
   });
 
   it('should have appointment_deleted_at as null on creation', async () => {

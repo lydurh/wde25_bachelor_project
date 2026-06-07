@@ -40,15 +40,6 @@ const formatAppointmentDate = (date: string) => {
 
 const formatAppointmentStatus = (status: AppointmentStatus) => {
   switch (status) {
-    case 'pending':
-      return (
-        <Badge
-          variant="outline"
-          className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200"
-        >
-          Afventer
-        </Badge>
-      );
     case 'confirmed':
       return (
         <Badge

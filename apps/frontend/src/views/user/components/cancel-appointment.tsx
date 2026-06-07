@@ -15,8 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { CardFooter } from '@/components/ui/card';
 
-const canCancel = (status: AppointmentStatus) =>
-  status === 'pending' || status === 'confirmed';
+const canCancel = (status: AppointmentStatus) => status === 'confirmed';
 
 type CancelAppointmentProps = {
   appointmentPk: string;

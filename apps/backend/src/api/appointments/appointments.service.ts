@@ -210,6 +210,7 @@ export const appointmentsService = {
         appointment_notes: input.appointment_notes,
         appointment_duration: input.appointment_duration,
         appointment_total_price: input.appointment_total_price,
+        appointment_status: 'confirmed',
       })
       .returning();
 
