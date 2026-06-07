@@ -1,0 +1,510 @@
+{
+  "id": "a1b2c3d4-0002-4000-8000-000000000002",
+  "prevId": "a1b2c3d4-0001-4000-8000-000000000001",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.appointment_services": {
+      "name": "appointment_services",
+      "schema": "",
+      "columns": {
+        "appointment_fk": {
+          "name": "appointment_fk",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "service_fk": {
+          "name": "service_fk",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "appointment_services_appointment_fk_appointments_appointment_pk_fk": {
+          "name": "appointment_services_appointment_fk_appointments_appointment_pk_fk",
+          "tableFrom": "appointment_services",
+          "tableTo": "appointments",
+          "columnsFrom": ["appointment_fk"],
+          "columnsTo": ["appointment_pk"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "appointment_services_service_fk_services_service_pk_fk": {
+          "name": "appointment_services_service_fk_services_service_pk_fk",
+          "tableFrom": "appointment_services",
+          "tableTo": "services",
+          "columnsFrom": ["service_fk"],
+          "columnsTo": ["service_pk"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "appointment_services_appointment_fk_service_fk_pk": {
+          "name": "appointment_services_appointment_fk_service_fk_pk",
+          "columns": ["appointment_fk", "service_fk"]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.appointments": {
+      "name": "appointments",
+      "schema": "",
+      "columns": {
+        "appointment_pk": {
+          "name": "appointment_pk",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "appointment_user_fk": {
+          "name": "appointment_user_fk",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "location_fk": {
+          "name": "location_fk",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "appointment_time": {
+          "name": "appointment_time",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "appointment_date": {
+          "name": "appointment_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "appointment_notes": {
+          "name": "appointment_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "appointment_duration": {
+          "name": "appointment_duration",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "appointment_total_price": {
+          "name": "appointment_total_price",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "appointment_status": {
+          "name": "appointment_status",
+          "type": "appointment_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'confirmed'"
+        },
+        "appointment_created_at": {
+          "name": "appointment_created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "appointment_updated_at": {
+          "name": "appointment_updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "appointment_deleted_at": {
+          "name": "appointment_deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "idx_appointments_user_fk": {
+          "name": "idx_appointments_user_fk",
+          "columns": [
+            {
+              "expression": "appointment_user_fk",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "appointments_appointment_user_fk_users_user_pk_fk": {
+          "name": "appointments_appointment_user_fk_users_user_pk_fk",
+          "tableFrom": "appointments",
+          "tableTo": "users",
+          "columnsFrom": ["appointment_user_fk"],
+          "columnsTo": ["user_pk"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "appointments_location_fk_locations_location_pk_fk": {
+          "name": "appointments_location_fk_locations_location_pk_fk",
+          "tableFrom": "appointments",
+          "tableTo": "locations",
+          "columnsFrom": ["location_fk"],
+          "columnsTo": ["location_pk"],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.availability": {
+      "name": "availability",
+      "schema": "",
+      "columns": {
+        "availability_pk": {
+          "name": "availability_pk",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "availability_date": {
+          "name": "availability_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "availability_start_time": {
+          "name": "availability_start_time",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "availability_end_time": {
+          "name": "availability_end_time",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "availability_type": {
+          "name": "availability_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'available'"
+        },
+        "availability_created_at": {
+          "name": "availability_created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "availability_updated_at": {
+          "name": "availability_updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "availability_deleted_at": {
+          "name": "availability_deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.locations": {
+      "name": "locations",
+      "schema": "",
+      "columns": {
+        "location_pk": {
+          "name": "location_pk",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "location_address": {
+          "name": "location_address",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "location_postal_code": {
+          "name": "location_postal_code",
+          "type": "char(4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location_city": {
+          "name": "location_city",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "location_country": {
+          "name": "location_country",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location_latitude": {
+          "name": "location_latitude",
+          "type": "numeric(9, 6)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location_longitude": {
+          "name": "location_longitude",
+          "type": "numeric(9, 6)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location_created_at": {
+          "name": "location_created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "location_updated_at": {
+          "name": "location_updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location_deleted_at": {
+          "name": "location_deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.services": {
+      "name": "services",
+      "schema": "",
+      "columns": {
+        "service_pk": {
+          "name": "service_pk",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "service_title": {
+          "name": "service_title",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "service_description": {
+          "name": "service_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "service_duration": {
+          "name": "service_duration",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "service_price": {
+          "name": "service_price",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "service_created_at": {
+          "name": "service_created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "service_updated_at": {
+          "name": "service_updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "service_deleted_at": {
+          "name": "service_deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "user_pk": {
+          "name": "user_pk",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_role": {
+          "name": "user_role",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'client'"
+        },
+        "user_email": {
+          "name": "user_email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_first_name": {
+          "name": "user_first_name",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_last_name": {
+          "name": "user_last_name",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_location_fk": {
+          "name": "user_location_fk",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_password": {
+          "name": "user_password",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_note": {
+          "name": "user_note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_created_at": {
+          "name": "user_created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "user_updated_at": {
+          "name": "user_updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_deleted_at": {
+          "name": "user_deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_verified_at": {
+          "name": "user_verified_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "users_user_location_fk_locations_location_pk_fk": {
+          "name": "users_user_location_fk_locations_location_pk_fk",
+          "tableFrom": "users",
+          "tableTo": "locations",
+          "columnsFrom": ["user_location_fk"],
+          "columnsTo": ["location_pk"],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_user_email_unique": {
+          "name": "users_user_email_unique",
+          "nullsNotDistinct": false,
+          "columns": ["user_email"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.appointment_status": {
+      "name": "appointment_status",
+      "schema": "public",
+      "values": ["confirmed", "cancelled", "completed"]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

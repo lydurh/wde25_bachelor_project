@@ -157,7 +157,7 @@ describe('POST /api/appointments', () => {
 
     expect(res.status).toBe(201);
     expect(body.data.appointment_user_fk).toBe(testUserId);
-    expect(body.data.appointment_status).toBe('pending');
+    expect(body.data.appointment_status).toBe('confirmed');
   });
 
   it('should return 400 with missing required fields', async () => {

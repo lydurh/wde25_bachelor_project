@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 export const APPOINTMENT_STATUSES = [
-  'pending',
   'confirmed',
   'cancelled',
   'completed',

@@ -15,6 +15,13 @@
       "when": 1780499969813,
       "tag": "0001_seed",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780499969814,
+      "tag": "0002_remove_pending_status",
+      "breakpoints": true
     }
   ]
 }
