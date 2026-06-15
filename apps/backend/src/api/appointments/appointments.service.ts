@@ -30,6 +30,7 @@ import {
 } from '../../utils/mailer';
 
 type AppointmentRow = InferSelectModel<typeof appointments>;
+type AppointmentCanceller = 'admin' | 'client';
 
 /*
   DB row → API shape: `parseAppointment` (Zod) expects wire strings for date/time
@@ -229,17 +230,40 @@ export const appointmentsService = {
     return appointmentFromRow(row);
   },
 
-  async patch(id: string, input: UpdateAppointmentInput) {
+  async patch(
+    id: string,
+    input: UpdateAppointmentInput,
+    cancelledBy: AppointmentCanceller = 'client',
+  ) {
+    const updateData = {
+      ...input,
+      appointment_updated_at: new Date(),
+      ...(input.appointment_status === 'cancelled'
+        ? { appointment_deleted_at: new Date() }
+        : {}),
+    };
+
     const [row] = await db
       .update(appointments)
-      .set({
-        ...input,
-        appointment_updated_at: new Date(),
-      })
+      .set(updateData)
       .where(and(eq(appointments.appointment_pk, id), notDeleted))
       .returning();
 
-    return row ? appointmentFromRow(row) : undefined;
+    if (!row) {
+      return undefined;
+    }
+
+    if (input.appointment_status === 'cancelled') {
+      try {
+        await sendAppointmentCancellationEmail(row, cancelledBy);
+      } catch (error) {
+        if (error instanceof Error) {
+          console.warn('Failed to send cancellation email:', error.message);
+        }
+      }
+    }
+
+    return appointmentFromRow(row);
   },
 
   async listByDateWithAddress(date: string) {
@@ -350,4 +374,108 @@ function getMonthName(monthNumber: number): string {
     'december',
   ];
   return months[monthNumber - 1] ?? 'januar';
+}
+
+function formatAppointmentDateString(date: string | Date): string {
+  const wireDate = toWireDate(date);
+  const [year, month, day] = wireDate.split('-');
+  return `${day}. ${getMonthName(parseInt(month ?? '1', 10))} ${year}`;
+}
+
+async function getAdminRecipientEmail(): Promise<string | null> {
+  const [admin] = await db
+    .select({ user_email: users.user_email })
+    .from(users)
+    .where(and(eq(users.user_role, 'admin'), isNull(users.user_deleted_at)))
+    .limit(1);
+
+  return admin?.user_email ?? null;
+}
+
+async function getAppointmentUserEmailAndName(
+  userId: string,
+): Promise<{ email: string | null; name: string }> {
+  const [user] = await db
+    .select({
+      user_first_name: users.user_first_name,
+      user_last_name: users.user_last_name,
+      user_email: users.user_email,
+    })
+    .from(users)
+    .where(eq(users.user_pk, userId))
+    .limit(1);
+
+  const name = user?.user_first_name?.trim()
+    ? `${user.user_first_name} ${user.user_last_name ?? ''}`.trim()
+    : 'kunde';
+
+  return { email: user?.user_email ?? null, name };
+}
+
+async function sendAppointmentCancellationEmail(
+  appointment: AppointmentRow,
+  cancelledBy: AppointmentCanceller,
+): Promise<void> {
+  const dateString = formatAppointmentDateString(appointment.appointment_date);
+  const timeString = toWireTime(appointment.appointment_time).slice(0, 5);
+
+  if (cancelledBy === 'admin') {
+    const { email, name } = await getAppointmentUserEmailAndName(
+      appointment.appointment_user_fk,
+    );
+
+    if (!email) {
+      console.warn(
+        'Appointment cancellation email skipped: user email not found',
+      );
+      return;
+    }
+
+    const mailTo = resolveMailRecipient(email);
+    const emailContent = `
+<h2>Hej ${name}</h2>
+<p>Your appointment on ${dateString} at ${timeString} has been cancelled.</p>
+<p>Please book a new appointment at a different time.</p>
+`;
+
+    await sendMail({
+      from: getMailFrom(),
+      to: mailTo,
+      subject: 'Your appointment has been cancelled',
+      html: emailContent,
+    });
+
+    if (isMockEmailTransport) {
+      console.warn(`[email] Cancellation notice sent to client ${email}`);
+    }
+    return;
+  }
+
+  const adminEmail = await getAdminRecipientEmail();
+  if (!adminEmail) {
+    console.warn(
+      'Appointment cancellation email skipped: admin email not found',
+    );
+    return;
+  }
+
+  const { name } = await getAppointmentUserEmailAndName(
+    appointment.appointment_user_fk,
+  );
+  const mailTo = resolveMailRecipient(adminEmail);
+  const emailContent = `
+<h2>Hi</h2>
+<p>The appointment for ${name} on ${dateString} at ${timeString} has been cancelled by the client.</p>
+`;
+
+  await sendMail({
+    from: getMailFrom(),
+    to: mailTo,
+    subject: 'Appointment cancelled',
+    html: emailContent,
+  });
+
+  if (isMockEmailTransport) {
+    console.warn(`[email] Cancellation notice sent to admin ${adminEmail}`);
+  }
 }

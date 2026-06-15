@@ -95,7 +95,7 @@ export const AppointmentDetailPage = () => {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            Appointment Details
+            Detaljer for aftale
             <Badge variant={statusVariant(appointment.appointment_status)}>
               {appointment.appointment_status}
             </Badge>
@@ -152,7 +152,7 @@ export const AppointmentDetailPage = () => {
                 disabled={cancelling}
                 onClick={() => void handleCancel()}
               >
-                {cancelling ? 'Cancelling...' : 'Cancel Appointment'}
+                {cancelling ? 'Cancelling...' : 'Aflys Aftale'}
               </Button>
             </div>
           )}
