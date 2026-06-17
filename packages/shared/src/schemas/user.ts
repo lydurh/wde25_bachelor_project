@@ -26,7 +26,7 @@ export const createUserSchema = z.object({
 
 export const updateUserSchema = z
   .object({
-    user_email: z.string().email('Invalid email format').max(255).optional(),
+    user_email: z.email('Invalid email format').max(255).optional(),
     user_first_name: safeString({
       min: 1,
       max: 100,
