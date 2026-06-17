@@ -7,7 +7,6 @@ export type {
   CreateServiceInput,
   CreateUserInput,
   ForgotPasswordInput,
-  GetUserByIdParams,
   Location,
   LoginInput,
   ResetPasswordInput,

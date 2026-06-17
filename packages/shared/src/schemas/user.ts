@@ -9,10 +9,6 @@ import {
   uuidSchema,
 } from '../validators';
 
-export const getUserByIdParamsSchema = z.object({
-  id: uuidSchema,
-});
-
 export const createUserSchema = z.object({
   user_email: emailSchema,
   user_first_name: nameSchema({ label: 'First name' }),
@@ -76,6 +72,5 @@ export const updateUserSchema = z
     },
   );
 
-export type GetUserByIdParams = z.infer<typeof getUserByIdParamsSchema>;
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;

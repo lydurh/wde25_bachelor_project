@@ -2,17 +2,11 @@ import type { Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { createFactory } from 'hono/factory';
 import { zValidator } from '@hono/zod-validator';
-import { createUserSchema, updateUserSchema, uuidSchema } from '@repo/shared';
+import { createUserSchema, updateUserSchema } from '@repo/shared';
+import { requireUuidParam } from '../../lib/params';
 import { usersService } from './users.service';
 
 const factory = createFactory();
-
-function requireUserId(id: string | undefined): string {
-  if (!id || !uuidSchema.safeParse(id).success) {
-    throw new HTTPException(400, { message: 'Invalid userId parameter' });
-  }
-  return id;
-}
 
 export const listUsers = async (c: Context) => {
   const data = await usersService.list();
@@ -27,7 +21,7 @@ export const searchUsersByName = async (c: Context) => {
 };
 
 export const getUserById = async (c: Context) => {
-  const userId = requireUserId(c.req.param('id'));
+  const userId = requireUuidParam(c.req.param('id'), 'userId');
   const user = await usersService.getById(userId);
 
   if (!user) {
@@ -70,7 +64,7 @@ export const updateUser = factory.createHandlers(
     return undefined;
   }),
   async (c) => {
-    const userId = requireUserId(c.req.param('id'));
+    const userId = requireUuidParam(c.req.param('id'), 'userId');
     const input = c.req.valid('json');
     const { repeat_password: _repeat_password, ...updateData } = input;
     const user = await usersService.update(userId, updateData);
@@ -84,7 +78,7 @@ export const updateUser = factory.createHandlers(
 );
 
 export const deleteUser = async (c: Context) => {
-  const userId = requireUserId(c.req.param('id'));
+  const userId = requireUuidParam(c.req.param('id'), 'userId');
   const user = await usersService.remove(userId);
 
   if (!user) {

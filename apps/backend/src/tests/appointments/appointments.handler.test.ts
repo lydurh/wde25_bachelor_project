@@ -186,6 +186,14 @@ describe('GET /api/appointments/list/:id', () => {
     });
     expect(res.status).toBe(401);
   });
+
+  it('should return 400 for invalid UUID format', async () => {
+    const res = await app.request('/api/appointments/list/not-a-uuid', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${await signAdminToken()}` },
+    });
+    expect(res.status).toBe(400);
+  });
 });
 
 describe('GET /api/appointments/:id', () => {
@@ -253,6 +261,21 @@ describe('POST /api/appointments', () => {
       body: JSON.stringify({
         appointment_time: '10:00',
         appointment_date: '2030-07-20',
+      }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('should return 400 with invalid appointment_user_fk UUID', async () => {
+    const res = await app.request('/api/appointments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
+        ...makeBody(testUserId),
+        appointment_user_fk: 'not-a-uuid',
       }),
     });
     expect(res.status).toBe(400);

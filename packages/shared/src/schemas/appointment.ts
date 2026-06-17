@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { uuidSchema } from '../validators';
 
 export const APPOINTMENT_STATUSES = [
   'confirmed',
@@ -10,9 +11,9 @@ export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
 
 /** API / wire shape for an appointment (matches DB intent; PKs are UUID strings in Postgres). */
 export const appointmentSchema = z.object({
-  appointment_pk: z.string().min(1),
-  appointment_user_fk: z.string().min(1),
-  location_fk: z.string().min(1).nullable(),
+  appointment_pk: uuidSchema,
+  appointment_user_fk: uuidSchema,
+  location_fk: uuidSchema.nullable(),
   appointment_time: z
     .string()
     .regex(
@@ -46,7 +47,7 @@ export const createAppointmentInputSchema = appointmentSchema
     services: z
       .array(
         z.object({
-          service_fk: z.string().min(1),
+          service_fk: uuidSchema,
           quantity: z.number().int().positive(),
         }),
       )
@@ -62,7 +63,7 @@ export const updateAppointmentInputSchema = createAppointmentInputSchema
 
 /** Service line on an appointment (from `appointment_services` joined with `services`). */
 export const appointmentServiceLineSchema = z.object({
-  service_fk: z.string().min(1),
+  service_fk: uuidSchema,
   quantity: z.number().int().positive(),
   service_title: z.string().min(1),
   service_description: z.string().nullable(),
@@ -72,7 +73,7 @@ export const appointmentServiceLineSchema = z.object({
 
 /** Location on an appointment (from `appointments.location_fk` joined with `locations`). */
 export const appointmentLocationSchema = z.object({
-  location_pk: z.string().min(1),
+  location_pk: uuidSchema,
   location_address: z.string().min(1),
   location_postal_code: z.string().nullable(),
   location_city: z.string().min(1),
@@ -106,7 +107,7 @@ export function parseAppointment(input: unknown): Appointment {
 
 /** Schema for sending a booking confirmation email */
 export const sendConfirmationEmailSchema = z.object({
-  appointment_pk: z.string().min(1),
+  appointment_pk: uuidSchema,
   appointment_date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD'),
