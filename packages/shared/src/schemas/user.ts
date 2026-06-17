@@ -61,13 +61,13 @@ export const updateUserSchema = z
       if (data.user_password) {
         if (!data.repeat_password) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: 'custom',
             path: ['repeat_password'],
             message: 'Repeat password is required',
           });
         } else if (data.repeat_password !== data.user_password) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: 'custom',
             path: ['repeat_password'],
             message: 'Passwords must match',
           });

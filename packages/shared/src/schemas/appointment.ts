@@ -56,7 +56,7 @@ export const createAppointmentInputSchema = appointmentSchema
 
 /** PATCH body: any subset of create fields + status may be sent. */
 export const updateAppointmentInputSchema = createAppointmentInputSchema
-  .merge(appointmentSchema.pick({ appointment_status: true }))
+  .extend(appointmentSchema.pick({ appointment_status: true }).shape)
   .partial()
   .strict();
 
@@ -116,7 +116,7 @@ export const sendConfirmationEmailSchema = z.object({
       /^([01]?\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/,
       'Expected time like HH:MM or HH:MM:SS',
     ),
-  user_email: z.string().email().nullable().optional(),
+  user_email: z.email().nullable().optional(),
 });
 
 export type SendConfirmationEmailInput = z.infer<
