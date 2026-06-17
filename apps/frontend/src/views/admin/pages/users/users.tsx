@@ -50,8 +50,8 @@ export const UsersPage = () => {
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h1>Users</h1>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-semibold">Brugere</h1>
       </div>
 
       {users.length === 0 ? (
@@ -64,8 +64,10 @@ export const UsersPage = () => {
                 <TableHead>Navn</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Rolle</TableHead>
-                <TableHead>Verificeret</TableHead>
-                <TableHead>Oprettet</TableHead>
+                <TableHead className="hidden sm:table-cell">
+                  Verificeret
+                </TableHead>
+                <TableHead className="hidden sm:table-cell">Oprettet</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -88,14 +90,16 @@ export const UsersPage = () => {
                       {user.user_role}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     {user.user_verified_at ? (
                       <Badge variant="outline">Verified</Badge>
                     ) : (
                       <Badge variant="secondary">Unverified</Badge>
                     )}
                   </TableCell>
-                  <TableCell>{formatDate(user.user_created_at)}</TableCell>
+                  <TableCell className="hidden sm:table-cell">
+                    {formatDate(user.user_created_at)}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -179,13 +179,66 @@ export const appointmentsService = {
     }));
   },
 
-  async get(id: string) {
+  async get(id: string): Promise<AppointmentWithServices | undefined> {
     const [row] = await db
-      .select()
+      .select({
+        appointment: appointments,
+        location_pk: locations.location_pk,
+        location_address: locations.location_address,
+        location_postal_code: locations.location_postal_code,
+        location_city: locations.location_city,
+        location_country: locations.location_country,
+      })
       .from(appointments)
+      .leftJoin(
+        locations,
+        and(
+          eq(appointments.location_fk, locations.location_pk),
+          isNull(locations.location_deleted_at),
+        ),
+      )
       .where(and(eq(appointments.appointment_pk, id), notDeleted))
       .limit(1);
-    return row ? appointmentFromRow(row) : undefined;
+
+    if (!row) return undefined;
+
+    const [serviceRows] = await Promise.all([
+      db
+        .select({
+          quantity: appointmentServices.quantity,
+          service_fk: services.service_pk,
+          service_title: services.service_title,
+          service_description: services.service_description,
+          service_duration: services.service_duration,
+          service_price: services.service_price,
+        })
+        .from(appointmentServices)
+        .innerJoin(
+          services,
+          eq(appointmentServices.service_fk, services.service_pk),
+        )
+        .where(
+          and(
+            eq(appointmentServices.appointment_fk, id),
+            isNull(services.service_deleted_at),
+          ),
+        ),
+    ]);
+
+    const serviceLines: AppointmentServiceLine[] = serviceRows.map((s) => ({
+      service_fk: s.service_fk,
+      quantity: s.quantity,
+      service_title: s.service_title,
+      service_description: s.service_description,
+      service_duration: s.service_duration,
+      service_price: String(s.service_price),
+    }));
+
+    return {
+      ...appointmentFromRow(row.appointment),
+      services: serviceLines,
+      location: locationFromJoin(row),
+    };
   },
 
   async delete(id: string) {

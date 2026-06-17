@@ -3,7 +3,6 @@ import { Link } from 'react-router';
 import { api } from '@/lib/api';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -13,27 +12,15 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
-import type { Appointment, Service, User } from '@/types';
+import type { Appointment, Service, User, Location } from '@/types';
 
 type ApiResponse<T> = { data: T };
-
-const statusVariant = (status: string) => {
-  switch (status) {
-    case 'confirmed':
-      return 'default';
-    case 'cancelled':
-      return 'destructive';
-    case 'completed':
-      return 'secondary';
-    default:
-      return 'outline';
-  }
-};
 
 export const AdminDashboardPage = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,14 +29,16 @@ export const AdminDashboardPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [apptRes, svcRes, usrRes] = await Promise.all([
+        const [apptRes, svcRes, usrRes, locRes] = await Promise.all([
           api.get<ApiResponse<Appointment[]>>('/appointments'),
           api.get<ApiResponse<Service[]>>('/services'),
           api.get<ApiResponse<User[]>>('/users'),
+          api.get<ApiResponse<Location[]>>('/locations'),
         ]);
         setAppointments(apptRes.data);
         setServices(svcRes.data);
         setUsers(usrRes.data);
+        setLocations(locRes.data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
@@ -74,6 +63,12 @@ export const AdminDashboardPage = () => {
     return user ? `${user.user_first_name} ${user.user_last_name}` : userId;
   };
 
+  const getAppointmentLocation = (locationId: string | null) => {
+    if (!locationId) return '—';
+    const location = locations.find((l) => l.location_pk === locationId);
+    return location ? location.location_address : '—';
+  };
+
   return (
     <div className="space-y-6">
       {/* Greeting */}
@@ -88,7 +83,7 @@ export const AdminDashboardPage = () => {
           <Card className="transition-colors hover:bg-accent">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Kommende Aftaler
+                Aftaler
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -135,22 +130,22 @@ export const AdminDashboardPage = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Kunde</TableHead>
-                <TableHead>Dato</TableHead>
-                <TableHead>Tid</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className="font-bold">Kunde</TableHead>
+                <TableHead className="font-bold">Lokation</TableHead>
+                <TableHead className="font-bold">Dato</TableHead>
+                <TableHead className="font-bold">Tid</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {todayAppointments.map((appt) => (
                 <TableRow key={appt.appointment_pk}>
                   <TableCell>{getUserName(appt.appointment_user_fk)}</TableCell>
-                  <TableCell>{appt.appointment_date}</TableCell>
-                  <TableCell>{appt.appointment_time}</TableCell>
                   <TableCell>
-                    <Badge variant={statusVariant(appt.appointment_status)}>
-                      {appt.appointment_status}
-                    </Badge>
+                    {getAppointmentLocation(appt.location_fk)}
+                  </TableCell>
+                  <TableCell>{appt.appointment_date}</TableCell>
+                  <TableCell>
+                    {appt.appointment_time?.slice(0, 5) ?? '—'}
                   </TableCell>
                 </TableRow>
               ))}

@@ -47,8 +47,8 @@ export const AvailabilityPage = () => {
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h1>Arbejdstider</h1>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-semibold">Arbejdstider</h1>
         <Button onClick={() => void navigate('/admin/availability/new')}>
           Ny Arbejdstid
         </Button>

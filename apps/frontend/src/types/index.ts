@@ -21,4 +21,5 @@ export type {
   User,
   UserRow,
   VerifyEmailQuery,
+  AppointmentWithServices,
 } from '@repo/shared';
