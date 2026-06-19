@@ -23,7 +23,6 @@ export const availabilitySchema = z.object({
   availability_type: z.enum(AVAILABILITY_TYPES),
   availability_created_at: z.string().min(1),
   availability_updated_at: z.string().min(1).nullable(),
-  availability_deleted_at: z.string().min(1).nullable(),
 });
 
 function parseTimeMinutes(t: string): number {

@@ -10,3 +10,12 @@ export type Location = {
   location_updated_at: Date | null;
   location_deleted_at: Date | null;
 };
+
+/** Public API shape — internal soft-delete marker stripped. */
+export type PublicLocation = Omit<Location, 'location_deleted_at'>;
+
+/** Strip internal fields from a location row before returning to the client. */
+export function toPublicLocation(row: Location): PublicLocation {
+  const { location_deleted_at: _location_deleted_at, ...rest } = row;
+  return rest;
+}

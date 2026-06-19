@@ -28,7 +28,6 @@ function availabilityFromRow(row: AvailabilityRow): Availability {
     availability_type: row.availability_type,
     availability_created_at: row.availability_created_at.toISOString(),
     availability_updated_at: row.availability_updated_at?.toISOString() ?? null,
-    availability_deleted_at: row.availability_deleted_at?.toISOString() ?? null,
   });
 }
 

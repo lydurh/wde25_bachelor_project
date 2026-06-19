@@ -66,7 +66,6 @@ function appointmentFromRow(row: AppointmentRow): Appointment {
     appointment_status: row.appointment_status,
     appointment_created_at: row.appointment_created_at.toISOString(),
     appointment_updated_at: row.appointment_updated_at?.toISOString() ?? null,
-    appointment_deleted_at: row.appointment_deleted_at?.toISOString() ?? null,
   });
 }
 

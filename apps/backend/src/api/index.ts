@@ -6,14 +6,11 @@ import { authRoutes } from './auth/auth.router';
 import { appointmentsRoutes } from './appointments/appointments.router';
 import { locationsRoutes } from './locations/locations.router';
 import { availabilityRoutes } from './availability/availability.router';
-import { authMiddleware } from '../middleware';
 
 const api = new Hono();
 
 api.route('/health', health);
 api.route('/auth', authRoutes);
-
-api.use('/appointments/*', authMiddleware);
 
 api.route('/users', usersRoutes);
 api.route('/services', servicesRoutes);

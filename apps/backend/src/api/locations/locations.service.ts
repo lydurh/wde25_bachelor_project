@@ -1,15 +1,21 @@
 import { db, locations, eq, isNull, and } from '@repo/db';
-import { appliesLocationFee, type CreateLocationInput } from '@repo/shared';
+import {
+  appliesLocationFee,
+  type CreateLocationInput,
+  toPublicLocation,
+} from '@repo/shared';
 import { computeRouteDistanceKm } from '../../utils/routes';
 import { geocodeFormattedAddress } from '../../utils/geocoder';
 import { usersService } from '../users/users.service';
 
 export const locationsService = {
-  list() {
-    return db
+  async list() {
+    const rows = await db
       .select()
       .from(locations)
       .where(isNull(locations.location_deleted_at));
+
+    return rows.map(toPublicLocation);
   },
 
   async getById(id: string) {
@@ -24,13 +30,13 @@ export const locationsService = {
       )
       .limit(1);
 
-    return location;
+    return location ? toPublicLocation(location) : undefined;
   },
 
   async create(data: CreateLocationInput) {
     const [location] = await db.insert(locations).values(data).returning();
 
-    return location;
+    return location ? toPublicLocation(location) : undefined;
   },
 
   async createFromFormattedAddress(formattedAddress: string) {

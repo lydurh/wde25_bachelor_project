@@ -13,7 +13,6 @@ const appointmentExample: AppointmentWithServices = {
   appointment_status: 'confirmed',
   appointment_created_at: '2026-01-01T09:00:00.000Z',
   appointment_updated_at: null,
-  appointment_deleted_at: null,
   services: [],
   location: null,
 };

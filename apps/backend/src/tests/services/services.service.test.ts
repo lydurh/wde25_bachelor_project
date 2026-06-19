@@ -125,7 +125,7 @@ describe('servicesService.create', () => {
     expect(result.service_created_at).toBeInstanceOf(Date);
   });
 
-  it('should have service_deleted_at as null on creation', async () => {
+  it('should not expose service_deleted_at on creation', async () => {
     const result = assertDefined(
       await servicesService.create({
         ...validInput,
@@ -134,7 +134,7 @@ describe('servicesService.create', () => {
     );
     testIds.push(result.service_pk);
 
-    expect(result.service_deleted_at).toBeNull();
+    expect(result).not.toHaveProperty('service_deleted_at');
   });
 });
 
@@ -232,7 +232,8 @@ describe('servicesService.remove', () => {
     const result = assertDefined(
       await servicesService.remove(created.service_pk),
     );
-    expect(result.service_deleted_at).toBeInstanceOf(Date);
+    expect(result.service_pk).toBe(created.service_pk);
+    expect(result).not.toHaveProperty('service_deleted_at');
   });
 
   it('should hide the service from list() after removal', async () => {
