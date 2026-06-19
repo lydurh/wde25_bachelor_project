@@ -119,3 +119,13 @@ export {
   resetPasswordInputSchema,
   verifyEmailQuerySchema,
 } from './src/schemas/auth';
+
+export type {
+  BusinessSettings,
+  UpdateBusinessSettingsInput,
+} from './src/schemas/business-settings';
+export {
+  businessSettingsSchema,
+  updateBusinessSettingsSchema,
+  parseBusinessSettings,
+} from './src/schemas/business-settings';

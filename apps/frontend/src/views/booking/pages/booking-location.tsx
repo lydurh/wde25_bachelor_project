@@ -41,8 +41,15 @@ function locationToDraftPatch(location: Location) {
 }
 
 export const LocationPage = () => {
-  const { draft, setDraft, adminOrigin, user, location, bookingCustomer } =
-    useBooking();
+  const {
+    draft,
+    setDraft,
+    adminOrigin,
+    businessSettings,
+    user,
+    location,
+    bookingCustomer,
+  } = useBooking();
   const autocompleteContainerRef = useRef<HTMLDivElement>(null);
   const sessionUsualLocation =
     user?.user_pk === bookingCustomer?.user_pk ? location : null;
@@ -213,8 +220,9 @@ export const LocationPage = () => {
             {draft.distanceCheckStatus === 'ready' &&
             draft.locationFeeApplies ? (
               <p className="text-sm text-muted-foreground">
-                Adressen ligger mere end 15 km fra udgangspunktet.
-                Udkørselsgebyr tillægges.
+                Adressen ligger mere end{' '}
+                {businessSettings.location_fee_threshold_km} km fra
+                udgangspunktet. Udkørselsgebyr tillægges.
               </p>
             ) : null}
           </FieldGroup>

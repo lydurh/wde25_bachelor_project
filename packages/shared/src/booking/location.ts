@@ -16,6 +16,9 @@ export function formatLocationAddress(parts: LocationAddressParts): string {
     : parts.location_address;
 }
 
-export function appliesLocationFee(distanceKm: number): boolean {
-  return distanceKm > BOOKING_MAX_DISTANCE_KM;
+export function appliesLocationFee(
+  distanceKm: number,
+  thresholdKm: number = BOOKING_MAX_DISTANCE_KM,
+): boolean {
+  return distanceKm > thresholdKm;
 }

@@ -10,9 +10,13 @@ import {
 
 type LocationFeeLabelProps = {
   className?: string;
+  thresholdKm: number;
 };
 
-export function LocationFeeLabel({ className }: LocationFeeLabelProps) {
+export function LocationFeeLabel({
+  className,
+  thresholdKm,
+}: LocationFeeLabelProps) {
   return (
     <span className={className}>
       Udkørselsgebyr
@@ -29,7 +33,8 @@ export function LocationFeeLabel({ className }: LocationFeeLabelProps) {
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          Gebyr når adressen ligger mere end 15 km fra udgangspunktet.
+          Gebyr når adressen ligger mere end {thresholdKm} km fra
+          udgangspunktet.
         </TooltipContent>
       </Tooltip>
     </span>
