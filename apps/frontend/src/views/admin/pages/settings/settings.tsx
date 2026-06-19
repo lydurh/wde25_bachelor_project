@@ -219,11 +219,11 @@ export const SettingsPage = () => {
     <div className="mx-auto max-w-lg">
       <h1 className="mb-6">Indstillinger</h1>
 
-      <Card className="mb-6">
+      <Card className="relative z-20 mb-6 overflow-visible">
         <CardHeader>
           <CardTitle>Profil</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-visible">
           {profileError && (
             <p className="mb-3 text-sm text-destructive">{profileError}</p>
           )}
