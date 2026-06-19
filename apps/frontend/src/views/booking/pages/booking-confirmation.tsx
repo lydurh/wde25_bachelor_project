@@ -1,6 +1,7 @@
 import { format, parse } from 'date-fns';
 import { HugeiconsIcon } from '@hugeicons/react';
 
+import { AuthFormBanner } from '@/components/auth/auth-form-field';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -53,6 +54,7 @@ export const ConfirmationPage = () => {
     continueDisabled,
     continueLabel,
     isSubmitting,
+    submitError,
     bookingCustomer,
     businessSettings,
     showSuccessDialog,
@@ -212,7 +214,10 @@ export const ConfirmationPage = () => {
           </ItemContent>
         </Item>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex flex-col gap-3">
+        {submitError ? (
+          <AuthFormBanner variant="error">{submitError}</AuthFormBanner>
+        ) : null}
         <Button
           type="button"
           className="w-full"
