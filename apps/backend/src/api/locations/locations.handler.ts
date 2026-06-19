@@ -7,19 +7,12 @@ import {
   locationDistanceCheckInputSchema,
   bookingLocationFromAddressInputSchema,
   type AdminOrigin,
-  uuidSchema,
 } from '@repo/shared';
+import { requireUuidParam } from '../../lib/params';
 import { usersService } from '../users/users.service';
 import { locationsService } from './locations.service';
 
 const factory = createFactory();
-
-function requireLocationId(id: string | undefined): string {
-  if (!id || !uuidSchema.safeParse(id).success) {
-    throw new HTTPException(400, { message: 'Invalid id parameter' });
-  }
-  return id;
-}
 
 export const listLocations = async (c: Context) => {
   const data = await locationsService.list();
@@ -46,7 +39,7 @@ export const getAdminOrigin = async (c: Context) => {
 };
 
 export const getLocation = async (c: Context) => {
-  const id = requireLocationId(c.req.param('id'));
+  const id = requireUuidParam(c.req.param('id'));
   const location = await locationsService.getById(id);
 
   if (!location) {

@@ -62,3 +62,16 @@ export const clientMiddleware = createMiddleware<AuthVars>(async (c, next) => {
 
   return next();
 });
+
+export const selfOrAdminMiddleware = createMiddleware<AuthVars>(
+  async (c, next) => {
+    const targetId = c.req.param('id');
+    const authUser = c.get('authUser');
+
+    if (authUser.user_role !== 'admin' && authUser.user_pk !== targetId) {
+      return c.json({ error: 'Forbidden' }, 403);
+    }
+
+    return next();
+  },
+);
