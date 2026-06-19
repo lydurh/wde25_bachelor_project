@@ -44,10 +44,13 @@ export const locationsService = {
       usersService.getAdminLocation(),
       businessSettingsService.get(),
     ]);
-    const distanceKm = await computeRouteDistanceKm(
-      admin.address,
-      destinationAddress,
-    );
+
+    const originAddress = admin.address.trim();
+    const destination = destinationAddress.trim();
+    const distanceKm =
+      originAddress.toLowerCase() === destination.toLowerCase()
+        ? 0 // Same address: skip Routes API (returns no route for identical origin/destination)
+        : await computeRouteDistanceKm(originAddress, destination);
 
     return {
       distanceKm,
