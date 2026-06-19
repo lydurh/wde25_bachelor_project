@@ -3,6 +3,7 @@ import { appliesLocationFee, type CreateLocationInput } from '@repo/shared';
 import { computeRouteDistanceKm } from '../../utils/routes';
 import { geocodeFormattedAddress } from '../../utils/geocoder';
 import { usersService } from '../users/users.service';
+import { businessSettingsService } from '../business-settings/business-settings.service';
 
 export const locationsService = {
   list() {
@@ -39,7 +40,10 @@ export const locationsService = {
   },
 
   async checkDistanceFee(destinationAddress: string) {
-    const admin = await usersService.getAdminLocation();
+    const [admin, settings] = await Promise.all([
+      usersService.getAdminLocation(),
+      businessSettingsService.get(),
+    ]);
     const distanceKm = await computeRouteDistanceKm(
       admin.address,
       destinationAddress,
@@ -47,7 +51,10 @@ export const locationsService = {
 
     return {
       distanceKm,
-      appliesLocationFee: appliesLocationFee(distanceKm),
+      appliesLocationFee: appliesLocationFee(
+        distanceKm,
+        settings.location_fee_threshold_km,
+      ),
     };
   },
 };

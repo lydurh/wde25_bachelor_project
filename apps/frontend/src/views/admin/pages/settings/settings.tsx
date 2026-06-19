@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { formatLocationAddress, type Location } from '@repo/shared';
+import {
+  formatLocationAddress,
+  type BusinessSettings,
+  type Location,
+} from '@repo/shared';
 import { api } from '@/lib/api';
 import { auth } from '@/lib/auth';
 import type { AdminUser } from '@/types';
@@ -29,6 +33,13 @@ export const SettingsPage = () => {
   const [profileSuccess, setProfileSuccess] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
 
+  // Location fee form
+  const [feeThresholdKm, setFeeThresholdKm] = useState('');
+  const [feeKr, setFeeKr] = useState('');
+  const [feeError, setFeeError] = useState<string | null>(null);
+  const [feeSuccess, setFeeSuccess] = useState(false);
+  const [savingFee, setSavingFee] = useState(false);
+
   // Password form
   const [password, setPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
@@ -45,9 +56,13 @@ export const SettingsPage = () => {
           return;
         }
 
-        const userRes = await api.get<ApiResponse<AdminUser>>(
-          `/users/${userId}`,
-        );
+        const [userRes, settingsRes] = await Promise.all([
+          api.get<ApiResponse<AdminUser>>(`/users/${userId}`),
+          api.get<ApiResponse<BusinessSettings>>('/business-settings'),
+        ]);
+
+        setFeeThresholdKm(String(settingsRes.data.location_fee_threshold_km));
+        setFeeKr(String(settingsRes.data.location_fee_kr));
 
         const adminUser = userRes.data;
 
@@ -126,6 +141,41 @@ export const SettingsPage = () => {
   usePlaceAutocomplete(autocompleteContainerRef, onAddressSelected, {
     initialAddress: currentAddress,
   });
+
+  const handleFeeSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFeeError(null);
+    setFeeSuccess(false);
+
+    const thresholdKm = Number(feeThresholdKm);
+    const fee = Number(feeKr);
+
+    if (!Number.isInteger(thresholdKm) || thresholdKm < 0) {
+      setFeeError('Distance must be a whole number of km (0 or more)');
+      return;
+    }
+    if (!Number.isFinite(fee) || fee < 0) {
+      setFeeError('Fee must be 0 or more');
+      return;
+    }
+
+    setSavingFee(true);
+    try {
+      const res = await api.patch<ApiResponse<BusinessSettings>>(
+        '/business-settings',
+        { location_fee_threshold_km: thresholdKm, location_fee_kr: fee },
+      );
+      setFeeThresholdKm(String(res.data.location_fee_threshold_km));
+      setFeeKr(String(res.data.location_fee_kr));
+      setFeeSuccess(true);
+    } catch (err) {
+      setFeeError(
+        err instanceof Error ? err.message : 'Failed to update location fee',
+      );
+    } finally {
+      setSavingFee(false);
+    }
+  };
 
   const handlePasswordSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -232,6 +282,57 @@ export const SettingsPage = () => {
 
             <Button type="submit" disabled={savingProfile}>
               {savingProfile ? 'Saving...' : 'Gem Profil'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Separator className="my-6" />
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Lokationsgebyr</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {feeError && (
+            <p className="mb-3 text-sm text-destructive">{feeError}</p>
+          )}
+          {feeSuccess && (
+            <p className="mb-3 text-sm text-green-600">Gebyr opdateret.</p>
+          )}
+
+          <form onSubmit={(e) => void handleFeeSave(e)} className="space-y-4">
+            <div className="space-y-1">
+              <Label htmlFor="feeThresholdKm">Gebyr-afstand (km)</Label>
+              <Input
+                id="feeThresholdKm"
+                type="number"
+                min={0}
+                step={1}
+                value={feeThresholdKm}
+                onChange={(e) => setFeeThresholdKm(e.target.value)}
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                Adresser længere væk end dette udløser udkørselsgebyret.
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="feeKr">Gebyr (kr)</Label>
+              <Input
+                id="feeKr"
+                type="number"
+                min={0}
+                step="0.01"
+                value={feeKr}
+                onChange={(e) => setFeeKr(e.target.value)}
+                required
+              />
+            </div>
+
+            <Button type="submit" disabled={savingFee}>
+              {savingFee ? 'Saving...' : 'Gem Gebyr'}
             </Button>
           </form>
         </CardContent>
