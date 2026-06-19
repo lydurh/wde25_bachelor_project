@@ -2,11 +2,11 @@ import type { Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { createFactory } from 'hono/factory';
 import { zValidator } from '@hono/zod-validator';
+import type { AuthUser } from '@repo/shared';
 import {
   createAppointmentInputSchema,
   updateAppointmentInputSchema,
   sendConfirmationEmailSchema,
-  AuthUser,
 } from '@repo/shared';
 import { requireUuidParam } from '../../lib/params';
 import { appointmentsService } from './appointments.service';
