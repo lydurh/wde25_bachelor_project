@@ -2,6 +2,7 @@ import type { Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { createFactory } from 'hono/factory';
 import { zValidator } from '@hono/zod-validator';
+import type { AuthUser } from '@repo/shared';
 import {
   createAppointmentInputSchema,
   updateAppointmentInputSchema,
@@ -107,7 +108,12 @@ export const updateAppointment = factory.createHandlers(
     const id = requireUuidParam(c.req.param('id'));
 
     const input = c.req.valid('json');
-    const updatedAppointment = await appointmentsService.patch(id, input);
+    const authUser = c.get('jwtPayload') as AuthUser;
+    const updatedAppointment = await appointmentsService.patch(
+      id,
+      input,
+      authUser.user_role,
+    );
 
     if (!updatedAppointment) {
       throw new HTTPException(404, { message: 'Appointment not found' });
