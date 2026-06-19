@@ -41,11 +41,13 @@ import { AdminFetchUsersPage } from '@/views/booking/pages/booking-fetch-users';
 import { AppointmentsPage } from '@/views/user/pages/appointments';
 import { ProfilePage } from '@/views/user/pages/profile';
 
+import { RouteErrorPage } from '@/views/error/pages/route-error';
 import { NotFoundPage } from '@/views/not-found/pages/not-found';
 
 export const router = createBrowserRouter([
   {
     element: <AppLayout />,
+    errorElement: <RouteErrorPage />,
     children: [
       {
         index: true,

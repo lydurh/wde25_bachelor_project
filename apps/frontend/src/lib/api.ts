@@ -68,6 +68,19 @@ const parseErrorBody = async (res: Response): Promise<ApiErrorBody> => {
   }
 };
 
+const getFallbackApiMessage = (status: number): string => {
+  if (status === 429) {
+    return 'For mange forespørgsler. Prøv igen om lidt.';
+  }
+  if (status === 502 || status === 503 || status === 504) {
+    return 'Serveren er midlertidigt utilgængelig.';
+  }
+  if (status >= 500) {
+    return 'Der opstod en serverfejl. Prøv igen senere.';
+  }
+  return 'Noget gik galt. Prøv igen.';
+};
+
 async function request<T>(
   method: string,
   path: string,
@@ -90,9 +103,14 @@ async function request<T>(
   if (!res.ok) {
     const errorBody = await parseErrorBody(res);
     handleSessionExpiry(res.status, path, options);
+
+    if (!errorBody.error) {
+      console.error(`[API Error] ${method} ${path} failed: ${res.status}`);
+    }
+
     throw new ApiError(
       res.status,
-      errorBody.error ?? `${method} ${path} failed: ${res.status}`,
+      errorBody.error ?? getFallbackApiMessage(res.status),
       errorBody.issues,
     );
   }
@@ -105,48 +123,25 @@ async function request<T>(
 }
 
 /**
- * Converts API errors to user-friendly messages.
- * Logs full error details to console for developers.
+ * Returns the API error message from `{ error: "..." }` JSON (or nginx rate-limit JSON).
+ * Falls back only for network/unknown errors.
  */
 export const getErrorMessage = (err: unknown): string => {
-  // Log detailed error for developers
   if (err instanceof ApiError) {
     console.error(
-      `[API Error] Status: ${err.status} | Original Message: ${err.message}`,
+      `[API Error] Status: ${err.status} | Message: ${err.message}`,
       err.issues,
     );
-  } else if (err instanceof TypeError && err.message === 'Failed to fetch') {
-    console.error('[Network Error]', err);
-  } else {
-    console.error('[Unknown Error]', err);
+    return err.message;
   }
 
-  // Return user-friendly message
-  if (err instanceof ApiError) {
-    if (err.status === 401 || err.status === 403) {
-      return 'Invalid email or password';
-    }
-    if (err.status === 409) {
-      return 'Email already registered';
-    }
-    if (err.status === 400) {
-      return 'Invalid request. Please check your details.';
-    }
-    if (err.status === 429) {
-      return 'Too many attempts. Please try again later.';
-    }
-    if (err.status >= 500) {
-      return 'Server error. Please try again later.';
-    }
-    return 'Something went wrong. Please try again.';
-  }
-
-  // Network error
   if (err instanceof TypeError && err.message === 'Failed to fetch') {
-    return 'Network error. Please check your connection.';
+    console.error('[Network Error]', err);
+    return 'Netværksfejl. Tjek din forbindelse.';
   }
 
-  return 'Something went wrong. Please try again.';
+  console.error('[Unknown Error]', err);
+  return 'Noget gik galt. Prøv igen.';
 };
 
 export const api = {
