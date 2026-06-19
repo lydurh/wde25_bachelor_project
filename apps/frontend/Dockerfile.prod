@@ -4,6 +4,10 @@ WORKDIR /app
 COPY . .
 
 RUN bun install --frozen-lockfile
+
+# Vite inlines this at build time; must be present during the build, not at runtime.
+ARG VITE_GOOGLE_MAPS_API_KEY
+ENV VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY
 RUN bun run --filter frontend build
 
 FROM nginx:1.27-alpine

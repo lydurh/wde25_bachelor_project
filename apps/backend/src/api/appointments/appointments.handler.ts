@@ -2,23 +2,16 @@ import type { Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { createFactory } from 'hono/factory';
 import { zValidator } from '@hono/zod-validator';
-import { appointmentsService } from './appointments.service';
-import type { AuthUser } from '@repo/shared';
 import {
   createAppointmentInputSchema,
   updateAppointmentInputSchema,
   sendConfirmationEmailSchema,
-  uuidSchema,
+  AuthUser,
 } from '@repo/shared';
+import { requireUuidParam } from '../../lib/params';
+import { appointmentsService } from './appointments.service';
 
 const factory = createFactory();
-
-function requireAppointmentId(id: string | undefined): string {
-  if (!id || !uuidSchema.safeParse(id).success) {
-    throw new HTTPException(400, { message: 'Invalid id parameter' });
-  }
-  return id;
-}
 
 export const listAppointments = async (c: Context) => {
   const data = await appointmentsService.list();
@@ -27,7 +20,7 @@ export const listAppointments = async (c: Context) => {
 };
 
 export const getAppointmentById = async (c: Context) => {
-  const id = requireAppointmentId(c.req.param('id'));
+  const id = requireUuidParam(c.req.param('id'));
   const appointment = await appointmentsService.get(id);
 
   if (!appointment) {
@@ -38,7 +31,7 @@ export const getAppointmentById = async (c: Context) => {
 };
 
 export const listAppointmentsByUserId = async (c: Context) => {
-  const userId = requireAppointmentId(c.req.param('id'));
+  const userId = requireUuidParam(c.req.param('id'), 'userId');
   const appointments = await appointmentsService.listByUserId(userId);
 
   if (!appointments) {
@@ -49,7 +42,7 @@ export const listAppointmentsByUserId = async (c: Context) => {
 };
 
 export const deleteAppointmentById = async (c: Context) => {
-  const id = requireAppointmentId(c.req.param('id'));
+  const id = requireUuidParam(c.req.param('id'));
   const deletedAppointment = await appointmentsService.delete(id);
 
   if (!deletedAppointment) {
@@ -112,7 +105,7 @@ export const updateAppointment = factory.createHandlers(
     return undefined;
   }),
   async (c) => {
-    const id = requireAppointmentId(c.req.param('id'));
+    const id = requireUuidParam(c.req.param('id'));
 
     const input = c.req.valid('json');
     const authUser = c.get('jwtPayload') as AuthUser;

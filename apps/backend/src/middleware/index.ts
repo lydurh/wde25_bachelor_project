@@ -1,4 +1,9 @@
 export { corsMiddleware } from './cors';
 export { loggerMiddleware } from './logger';
 export { errorHandler } from './error-handler';
-export { authMiddleware, adminMiddleware, clientMiddleware } from './auth';
+export {
+  authMiddleware,
+  adminMiddleware,
+  clientMiddleware,
+  selfOrAdminMiddleware,
+} from './auth';
