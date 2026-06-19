@@ -38,7 +38,6 @@ import { ServicesPage } from '@/views/booking/pages/booking-service';
 import { TimeSelectPage } from '@/views/booking/pages/booking-time';
 import { AdminFetchUsersPage } from '@/views/booking/pages/booking-fetch-users';
 
-import { AppointmentsPage } from '@/views/user/pages/appointments';
 import { ProfilePage } from '@/views/user/pages/profile';
 
 import { RouteErrorPage } from '@/views/error/pages/route-error';
@@ -169,12 +168,6 @@ export const router = createBrowserRouter([
             element: <ProfilePage />,
             loader: profileLoader,
             handle: { title: 'My profile' },
-          },
-          {
-            path: 'appointments',
-            element: <AppointmentsPage />,
-            loader: profileLoader,
-            handle: { title: 'My appointments' },
           },
         ],
       },
