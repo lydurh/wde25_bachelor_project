@@ -3,13 +3,22 @@ import { HTTPException } from 'hono/http-exception';
 import { createFactory } from 'hono/factory';
 import { zValidator } from '@hono/zod-validator';
 import { createUserSchema, updateUserSchema } from '@repo/shared';
+import type { AuthUser } from '@repo/shared';
 import { requireUuidParam } from '../../lib/params';
 import { usersService } from './users.service';
 
+type AuthVars = {
+  Variables: {
+    authUser: AuthUser;
+    jwtPayload: AuthUser;
+  };
+};
+
 const factory = createFactory();
 
-export const listUsers = async (c: Context) => {
-  const data = await usersService.list();
+export const listUsers = async (c: Context<AuthVars>) => {
+  const authUser = c.get('authUser');
+  const data = await usersService.list(authUser.user_pk);
 
   return c.json({ data });
 };

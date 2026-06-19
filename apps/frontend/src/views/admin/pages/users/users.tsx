@@ -63,7 +63,6 @@ export const UsersPage = () => {
               <TableRow>
                 <TableHead>Navn</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Rolle</TableHead>
                 <TableHead>Verificeret</TableHead>
                 <TableHead>Oprettet</TableHead>
               </TableRow>
@@ -79,15 +78,6 @@ export const UsersPage = () => {
                     {user.user_first_name} {user.user_last_name}
                   </TableCell>
                   <TableCell>{user.user_email}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        user.user_role === 'admin' ? 'default' : 'secondary'
-                      }
-                    >
-                      {user.user_role}
-                    </Badge>
-                  </TableCell>
                   <TableCell>
                     {user.user_verified_at ? (
                       <Badge variant="outline">Verified</Badge>

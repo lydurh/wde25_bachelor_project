@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import { auth } from '@/lib/auth';
 import type { AdminUser, Location } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,17 +35,18 @@ export const SettingsPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [usersRes, locRes] = await Promise.all([
-          api.get<ApiResponse<AdminUser[]>>('/users'),
-          api.get<ApiResponse<Location[]>>('/locations'),
-        ]);
-
-        // Find the first admin user as the current user (auth not wired yet)
-        const adminUser = usersRes.data.find((u) => u.user_role === 'admin');
-        if (!adminUser) {
+        const userId = auth.getUserId();
+        if (!userId) {
           setError('No admin user found');
           return;
         }
+
+        const [userRes, locRes] = await Promise.all([
+          api.get<ApiResponse<AdminUser>>(`/users/${userId}`),
+          api.get<ApiResponse<Location[]>>('/locations'),
+        ]);
+
+        const adminUser = userRes.data;
 
         setUser(adminUser);
         setFirstName(adminUser.user_first_name);

@@ -1,4 +1,4 @@
-import { db, users, locations, isNull, eq, and, ilike, or } from '@repo/db';
+import { db, users, locations, isNull, eq, ne, and, ilike, or } from '@repo/db';
 import type { UpdateUserInput, CreateUserInput } from '@repo/shared';
 import {
   type AdminOrigin,
@@ -14,11 +14,16 @@ function parseCoordinate(value: string | null): number | null {
 }
 
 export const usersService = {
-  async list() {
+  async list(excludeUserId?: string) {
     const rows = await db
       .select()
       .from(users)
-      .where(isNull(users.user_deleted_at));
+      .where(
+        and(
+          isNull(users.user_deleted_at),
+          excludeUserId ? ne(users.user_pk, excludeUserId) : undefined,
+        ),
+      );
     return rows.map(toAdminUser);
   },
 
