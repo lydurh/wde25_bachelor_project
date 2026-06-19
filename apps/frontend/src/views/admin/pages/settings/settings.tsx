@@ -1,18 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { formatLocationAddress, type Location } from '@repo/shared';
 import { api } from '@/lib/api';
 import { auth } from '@/lib/auth';
-import type { AdminUser, Location } from '@/types';
+import type { AdminUser } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { usePlaceAutocomplete } from '@/views/booking/use-place-autocomplete';
 
 type ApiResponse<T> = { data: T };
 
 export const SettingsPage = () => {
   const [user, setUser] = useState<AdminUser | null>(null);
-  const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,6 +22,9 @@ export const SettingsPage = () => {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [locationFk, setLocationFk] = useState('');
+  const [currentAddress, setCurrentAddress] = useState('');
+  const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+  const autocompleteContainerRef = useRef<HTMLDivElement>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileSuccess, setProfileSuccess] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -41,10 +45,9 @@ export const SettingsPage = () => {
           return;
         }
 
-        const [userRes, locRes] = await Promise.all([
-          api.get<ApiResponse<AdminUser>>(`/users/${userId}`),
-          api.get<ApiResponse<Location[]>>('/locations'),
-        ]);
+        const userRes = await api.get<ApiResponse<AdminUser>>(
+          `/users/${userId}`,
+        );
 
         const adminUser = userRes.data;
 
@@ -53,7 +56,19 @@ export const SettingsPage = () => {
         setLastName(adminUser.user_last_name);
         setEmail(adminUser.user_email);
         setLocationFk(adminUser.user_location_fk ?? '');
-        setLocations(locRes.data);
+
+        if (adminUser.user_location_fk) {
+          const locRes = await api.get<ApiResponse<Location>>(
+            `/locations/${adminUser.user_location_fk}`,
+          );
+          setCurrentAddress(
+            formatLocationAddress({
+              location_address: locRes.data.location_address,
+              location_postal_code: locRes.data.location_postal_code,
+              location_city: locRes.data.location_city,
+            }),
+          );
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
@@ -70,12 +85,30 @@ export const SettingsPage = () => {
     setSavingProfile(true);
 
     try {
+      let nextLocationFk = locationFk;
+
+      // A freshly picked address has no location row yet — geocode it into one
+      // (reusing the booking flow's endpoint) and link the resulting FK.
+      if (selectedAddress) {
+        const locRes = await api.post<ApiResponse<Location>>(
+          '/locations/from-address',
+          { formattedAddress: selectedAddress },
+        );
+        nextLocationFk = locRes.data.location_pk;
+      }
+
       await api.patch(`/users/${user?.user_pk}`, {
         user_first_name: firstName,
         user_last_name: lastName,
         user_email: email,
-        user_location_fk: locationFk || undefined,
+        user_location_fk: nextLocationFk || undefined,
       });
+
+      if (selectedAddress) {
+        setLocationFk(nextLocationFk);
+        setCurrentAddress(selectedAddress);
+        setSelectedAddress(null);
+      }
       setProfileSuccess(true);
     } catch (err) {
       setProfileError(
@@ -85,6 +118,14 @@ export const SettingsPage = () => {
       setSavingProfile(false);
     }
   };
+
+  const onAddressSelected = useCallback((address: string) => {
+    setSelectedAddress(address);
+  }, []);
+
+  usePlaceAutocomplete(autocompleteContainerRef, onAddressSelected, {
+    initialAddress: currentAddress,
+  });
 
   const handlePasswordSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,19 +218,16 @@ export const SettingsPage = () => {
 
             <div className="space-y-1">
               <Label htmlFor="location">Lokation</Label>
-              <select
+              <div
                 id="location"
-                value={locationFk}
-                onChange={(e) => setLocationFk(e.target.value)}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <option value="">Ingen lokation</option>
-                {locations.map((loc) => (
-                  <option key={loc.location_pk} value={loc.location_pk}>
-                    {loc.location_address}, {loc.location_city}
-                  </option>
-                ))}
-              </select>
+                ref={autocompleteContainerRef}
+                className="relative z-10"
+              />
+              {selectedAddress && (
+                <p className="text-xs text-muted-foreground">
+                  Ny adresse vælges: {selectedAddress}
+                </p>
+              )}
             </div>
 
             <Button type="submit" disabled={savingProfile}>
