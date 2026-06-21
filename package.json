@@ -19,6 +19,11 @@
     "db:migrate": "bun run --filter @repo/db db:migrate",
     "db:push": "bun run --filter @repo/db db:push",
     "db:studio": "bun run --filter @repo/db db:studio",
+    "security:deps": "bun audit --audit-level=high",
+    "security:config": "trivy config --severity HIGH,CRITICAL .",
+    "security:image:backend": "docker build -f apps/backend/Dockerfile.prod -t wde-backend:scan . && trivy image --severity HIGH,CRITICAL --ignore-unfixed wde-backend:scan",
+    "security:image:frontend": "docker build -f apps/frontend/Dockerfile.prod --build-arg VITE_GOOGLE_MAPS_API_KEY=local -t wde-frontend:scan . && trivy image --severity HIGH,CRITICAL --ignore-unfixed wde-frontend:scan",
+    "security": "bun run security:deps && bun run security:config && bun run security:image:backend && bun run security:image:frontend",
     "prepare": "husky"
   },
   "devDependencies": {
@@ -35,5 +40,8 @@
       "prettier --write"
     ],
     "*": "prettier --write --ignore-unknown"
+  },
+  "overrides": {
+    "hono": "4.12.26"
   }
 }

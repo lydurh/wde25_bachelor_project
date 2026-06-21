@@ -16,7 +16,7 @@
     "@hono/zod-validator": "^0.7.6",
     "@repo/db": "workspace:*",
     "@repo/shared": "workspace:*",
-    "hono": "^4.12.17",
+    "hono": "^4.12.26",
     "nodemailer": "^6.9.16",
     "postgres": "^3.4.9",
     "resend": "^6.12.4"
