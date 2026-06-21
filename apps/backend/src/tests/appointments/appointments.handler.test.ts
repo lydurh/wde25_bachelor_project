@@ -14,6 +14,7 @@ type AppointmentListResponse = { data: Appointment[] };
 
 const testAppointmentIds: string[] = [];
 let userToken = '';
+let adminToken = '';
 let testUserId = '';
 
 const assertDefined = <T>(val: T | undefined | null): T => {
@@ -58,6 +59,17 @@ beforeAll(async () => {
     env.JWT_SECRET,
     'HS256',
   );
+
+  adminToken = await sign(
+    {
+      user_pk: testUserId,
+      user_role: 'admin',
+      user_email: signupResult.user.user_email,
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    },
+    env.JWT_SECRET,
+    'HS256',
+  );
 });
 
 afterAll(async () => {
@@ -82,10 +94,10 @@ const makeBody = (userId: string) => ({
 });
 
 describe('GET /api/appointments', () => {
-  it('should return 200', async () => {
+  it('should return 200 for an admin', async () => {
     const res = await app.request('/api/appointments', {
       method: 'GET',
-      headers: { Authorization: `Bearer ${userToken}` },
+      headers: { Authorization: `Bearer ${adminToken}` },
     });
     expect(res.status).toBe(200);
   });
@@ -93,10 +105,18 @@ describe('GET /api/appointments', () => {
   it('should return a data array', async () => {
     const res = await app.request('/api/appointments', {
       method: 'GET',
-      headers: { Authorization: `Bearer ${userToken}` },
+      headers: { Authorization: `Bearer ${adminToken}` },
     });
     const body = (await res.json()) as AppointmentListResponse;
     expect(Array.isArray(body.data)).toBe(true);
+  });
+
+  it('should return 403 for a non-admin', async () => {
+    const res = await app.request('/api/appointments', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${userToken}` },
+    });
+    expect(res.status).toBe(403);
   });
 
   it('should return 401 without auth token', async () => {
@@ -440,7 +460,7 @@ describe('DELETE /api/appointments/:id', () => {
 
     const listRes = await app.request('/api/appointments', {
       method: 'GET',
-      headers: { Authorization: `Bearer ${userToken}` },
+      headers: { Authorization: `Bearer ${adminToken}` },
     });
     const listBody = (await listRes.json()) as AppointmentListResponse;
     const found = listBody.data.find(

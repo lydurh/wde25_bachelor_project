@@ -122,10 +122,18 @@ describe('servicesService.create', () => {
     );
     testIds.push(result.service_pk);
 
-    expect(result.service_created_at).toBeInstanceOf(Date);
+    const row = assertDefined(
+      (
+        await db
+          .select()
+          .from(services)
+          .where(eq(services.service_pk, result.service_pk))
+      )[0],
+    );
+    expect(row.service_created_at).toBeInstanceOf(Date);
   });
 
-  it('should have service_deleted_at as null on creation', async () => {
+  it('should not expose service_deleted_at on creation', async () => {
     const result = assertDefined(
       await servicesService.create({
         ...validInput,
@@ -134,7 +142,7 @@ describe('servicesService.create', () => {
     );
     testIds.push(result.service_pk);
 
-    expect(result.service_deleted_at).toBeNull();
+    expect(result).not.toHaveProperty('service_deleted_at');
   });
 });
 
@@ -166,13 +174,21 @@ describe('servicesService.update', () => {
     );
     testIds.push(created.service_pk);
 
-    const result = assertDefined(
+    assertDefined(
       await servicesService.update(created.service_pk, {
         service_title: 'TEST_UpdatedTimestamp',
       }),
     );
 
-    expect(result.service_updated_at).toBeInstanceOf(Date);
+    const row = assertDefined(
+      (
+        await db
+          .select()
+          .from(services)
+          .where(eq(services.service_pk, created.service_pk))
+      )[0],
+    );
+    expect(row.service_updated_at).toBeInstanceOf(Date);
   });
 
   it('should leave unchanged fields the same', async () => {
@@ -232,7 +248,8 @@ describe('servicesService.remove', () => {
     const result = assertDefined(
       await servicesService.remove(created.service_pk),
     );
-    expect(result.service_deleted_at).toBeInstanceOf(Date);
+    expect(result.service_pk).toBe(created.service_pk);
+    expect(result).not.toHaveProperty('service_deleted_at');
   });
 
   it('should hide the service from list() after removal', async () => {

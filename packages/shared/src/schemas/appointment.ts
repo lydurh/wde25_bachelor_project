@@ -28,8 +28,6 @@ export const appointmentSchema = z.object({
   appointment_total_price: z.string().nullable(),
   appointment_status: z.enum(APPOINTMENT_STATUSES),
   appointment_created_at: z.string().min(1),
-  appointment_updated_at: z.string().min(1).nullable(),
-  appointment_deleted_at: z.string().min(1).nullable(),
 });
 
 // For this we are creating a schema for the input of the create appointment endpoint

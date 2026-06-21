@@ -8,11 +8,23 @@ import {
   sendConfirmationEmail,
   listAppointmentsByUserId,
 } from './appointments.handler';
-import { selfOrAdminMiddleware } from '../../middleware';
+import {
+  authMiddleware,
+  adminMiddleware,
+  selfOrAdminMiddleware,
+} from '../../middleware';
 
 export const appointmentsRoutes = new Hono();
 
-appointmentsRoutes.get('/', listAppointments);
+// Every appointment route requires authentication. Applied here (not via a
+// path-prefix `use` in the parent router) so the bare `/appointments` list
+// route is covered too — a `/appointments/*` wildcard does not match it.
+appointmentsRoutes.use('*', authMiddleware);
+
+// Listing every appointment is admin-only; clients read their own via
+// `/list/:id`. Without this any authenticated user could enumerate all bookings.
+appointmentsRoutes.get('/', adminMiddleware, listAppointments);
+// A client may only read their own appointments; admins may read anyone's.
 appointmentsRoutes.get(
   '/list/:id',
   selfOrAdminMiddleware,

@@ -1,16 +1,19 @@
 import { db, services, eq, isNull, and } from '@repo/db';
-import type {
-  CreateServiceInput,
-  UpdateServiceInput,
-  Service,
+import {
+  type CreateServiceInput,
+  type UpdateServiceInput,
+  type PublicService,
+  toPublicService,
 } from '@repo/shared';
 
 export const servicesService = {
-  list() {
-    return db
+  async list() {
+    const rows = await db
       .select()
       .from(services)
       .where(isNull(services.service_deleted_at));
+
+    return rows.map(toPublicService);
   },
 
   async getById(id: string) {
@@ -22,13 +25,13 @@ export const servicesService = {
       )
       .limit(1);
 
-    return service;
+    return service ? toPublicService(service) : undefined;
   },
 
   async create(data: CreateServiceInput) {
     const [service] = await db.insert(services).values(data).returning();
 
-    return service;
+    return service ? toPublicService(service) : undefined;
   },
 
   async update(id: string, data: UpdateServiceInput) {
@@ -43,10 +46,10 @@ export const servicesService = {
       )
       .returning();
 
-    return service;
+    return service ? toPublicService(service) : undefined;
   },
 
-  async remove(id: string): Promise<Service | undefined> {
+  async remove(id: string): Promise<PublicService | undefined> {
     const [service] = await db
       .update(services)
       .set({ service_deleted_at: new Date() })
@@ -55,6 +58,6 @@ export const servicesService = {
       )
       .returning();
 
-    return service;
+    return service ? toPublicService(service) : undefined;
   },
 };

@@ -1,6 +1,6 @@
 import { describe, expect, test, afterAll } from 'bun:test';
 import { locationsService } from '../../api/locations/locations.service';
-import { db, locations, like } from '@repo/db';
+import { db, locations, like, eq } from '@repo/db';
 
 const assertDefined = <T>(val: T | undefined): T => {
   expect(val).toBeDefined();
@@ -70,7 +70,15 @@ describe('locationsService.create', () => {
         location_city: 'Copenhagen',
       }),
     );
-    expect(location.location_created_at).toBeInstanceOf(Date);
+    const row = assertDefined(
+      (
+        await db
+          .select()
+          .from(locations)
+          .where(eq(locations.location_pk, location.location_pk))
+      )[0],
+    );
+    expect(row.location_created_at).toBeInstanceOf(Date);
   });
 
   test('should accept optional fields', async () => {
@@ -86,7 +94,17 @@ describe('locationsService.create', () => {
     );
     expect(location.location_postal_code).toBe('2200');
     expect(location.location_country).toBe('Denmark');
-    expect(location.location_latitude).toBe('64.135338');
-    expect(location.location_longitude).toBe('-21.895210');
+    expect(location).not.toHaveProperty('location_latitude');
+    expect(location).not.toHaveProperty('location_longitude');
+    const row = assertDefined(
+      (
+        await db
+          .select()
+          .from(locations)
+          .where(eq(locations.location_pk, location.location_pk))
+      )[0],
+    );
+    expect(row.location_latitude).toBe('64.135338');
+    expect(row.location_longitude).toBe('-21.895210');
   });
 });

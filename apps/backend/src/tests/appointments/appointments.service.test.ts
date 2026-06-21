@@ -150,13 +150,13 @@ describe('appointmentsService.post', () => {
     expect(result.appointment_status).toBe('confirmed');
   });
 
-  it('should have appointment_deleted_at as null on creation', async () => {
+  it('should not expose appointment_deleted_at on creation', async () => {
     const result = assertDefined(
       await appointmentsService.post(makeInput(testUserId)),
     );
     testAppointmentIds.push(result.appointment_pk);
 
-    expect(result.appointment_deleted_at).toBeNull();
+    expect(result).not.toHaveProperty('appointment_deleted_at');
   });
 
   it('should store appointment_notes when provided', async () => {
@@ -226,7 +226,6 @@ describe('appointmentsService.patch', () => {
     );
 
     expect(updated.appointment_status).toBe('cancelled');
-    expect(updated.appointment_deleted_at).not.toBeNull();
 
     const found = await appointmentsService.get(created.appointment_pk);
     expect(found).toBeUndefined();
@@ -348,7 +347,8 @@ describe('appointmentsService.delete', () => {
       await appointmentsService.delete(created.appointment_pk),
     );
 
-    expect(deleted.appointment_deleted_at).not.toBeNull();
+    expect(deleted.appointment_pk).toBe(created.appointment_pk);
+    expect(deleted).not.toHaveProperty('appointment_deleted_at');
   });
 
   it('should hide the appointment from list() after deletion', async () => {

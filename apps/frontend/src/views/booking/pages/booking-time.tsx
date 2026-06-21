@@ -26,7 +26,8 @@ type FeasibleSlot = {
 };
 
 function isBookable(row: Availability): boolean {
-  return !row.availability_deleted_at && row.availability_type === 'available';
+  // Soft-deleted rows are already filtered out server-side.
+  return row.availability_type === 'available';
 }
 
 function parseDateId(dateId: string): Date {

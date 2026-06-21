@@ -16,7 +16,8 @@ export {
 
 export type { User, UserRow, AdminUser } from './src/types/user';
 export { toPublicUser, toAdminUser } from './src/types/user';
-export type { Service } from './src/types/service';
+export type { Service, PublicService } from './src/types/service';
+export { toPublicService } from './src/types/service';
 export {
   BOOKING_LOCATION_FEE_KR,
   BOOKING_MAX_DISTANCE_KM,
@@ -86,7 +87,8 @@ export {
   parseAvailability,
 } from './src/schemas/availability';
 
-export type { Location } from './src/types/location';
+export type { Location, PublicLocation } from './src/types/location';
+export { toPublicLocation } from './src/types/location';
 export type {
   AdminOrigin,
   CreateLocationInput,

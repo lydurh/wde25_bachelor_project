@@ -104,11 +104,11 @@ describe('availabilityService.post', () => {
     expect(result.availability_type).toBe('available');
   });
 
-  it('should have availability_deleted_at as null on creation', async () => {
+  it('should not expose availability_deleted_at on creation', async () => {
     const result = assertDefined(await availabilityService.post(validInput));
     testIds.push(result.availability_pk);
 
-    expect(result.availability_deleted_at).toBeNull();
+    expect(result).not.toHaveProperty('availability_deleted_at');
   });
 });
 
@@ -183,7 +183,8 @@ describe('availabilityService.delete', () => {
       await availabilityService.delete(created.availability_pk),
     );
 
-    expect(deleted.availability_deleted_at).not.toBeNull();
+    expect(deleted.availability_pk).toBe(created.availability_pk);
+    expect(deleted).not.toHaveProperty('availability_deleted_at');
   });
 
   it('should hide the record from list() after deletion', async () => {
