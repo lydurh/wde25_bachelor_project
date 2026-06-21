@@ -2,21 +2,11 @@ import type { Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { createFactory } from 'hono/factory';
 import { zValidator } from '@hono/zod-validator';
+import { createServiceSchema, updateServiceSchema } from '@repo/shared';
+import { requireUuidParam } from '../../lib/params';
 import { servicesService } from './services.service';
-import {
-  createServiceSchema,
-  updateServiceSchema,
-  uuidSchema,
-} from '@repo/shared';
 
 const factory = createFactory();
-
-function requireServiceId(id: string | undefined): string {
-  if (!id || !uuidSchema.safeParse(id).success) {
-    throw new HTTPException(400, { message: 'Invalid id parameter' });
-  }
-  return id;
-}
 
 export const listServices = async (c: Context) => {
   const data = await servicesService.list();
@@ -25,7 +15,7 @@ export const listServices = async (c: Context) => {
 };
 
 export const getService = async (c: Context) => {
-  const id = requireServiceId(c.req.param('id'));
+  const id = requireUuidParam(c.req.param('id'));
   const service = await servicesService.getById(id);
 
   if (!service) {
@@ -68,7 +58,7 @@ export const updateService = factory.createHandlers(
     return undefined;
   }),
   async (c) => {
-    const id = requireServiceId(c.req.param('id'));
+    const id = requireUuidParam(c.req.param('id'));
     const input = c.req.valid('json');
     const service = await servicesService.update(id, input);
 
@@ -81,7 +71,7 @@ export const updateService = factory.createHandlers(
 );
 
 export const deleteService = async (c: Context) => {
-  const id = requireServiceId(c.req.param('id'));
+  const id = requireUuidParam(c.req.param('id'));
   const service = await servicesService.remove(id);
 
   if (!service) {

@@ -51,16 +51,8 @@ export {
   updateServiceSchema,
 } from './src/schemas/service';
 
-export type {
-  GetUserByIdParams,
-  CreateUserInput,
-  UpdateUserInput,
-} from './src/schemas/user';
-export {
-  getUserByIdParamsSchema,
-  createUserSchema,
-  updateUserSchema,
-} from './src/schemas/user';
+export type { CreateUserInput, UpdateUserInput } from './src/schemas/user';
+export { createUserSchema, updateUserSchema } from './src/schemas/user';
 
 export type {
   CreateAppointmentInput,
@@ -129,3 +121,13 @@ export {
   resetPasswordInputSchema,
   verifyEmailQuerySchema,
 } from './src/schemas/auth';
+
+export type {
+  BusinessSettings,
+  UpdateBusinessSettingsInput,
+} from './src/schemas/business-settings';
+export {
+  businessSettingsSchema,
+  updateBusinessSettingsSchema,
+  parseBusinessSettings,
+} from './src/schemas/business-settings';

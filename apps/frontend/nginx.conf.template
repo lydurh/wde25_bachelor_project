@@ -1,3 +1,5 @@
+limit_req_zone $binary_remote_addr zone=api:10m rate=100r/m;
+
 server {
   listen 80;
   server_name _;
@@ -6,6 +8,9 @@ server {
   index index.html;
 
   location /api/ {
+    limit_req zone=api burst=20 nodelay;
+    limit_req_status 429;
+
     proxy_pass http://${BACKEND_HOST}:${BACKEND_PORT};
     proxy_http_version 1.1;
     proxy_set_header Host $host;

@@ -135,13 +135,18 @@ export const ServicePage = () => {
               />
             </div>
 
-            <div className="flex gap-2">
-              <Button type="submit" className="flex-1" disabled={submitting}>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                type="submit"
+                className="w-full sm:flex-1"
+                disabled={submitting}
+              >
                 {submitting ? 'Gemmer...' : 'Gem Ændringer'}
               </Button>
               <Button
                 type="button"
                 variant="destructive"
+                className="w-full sm:w-auto"
                 onClick={() => void handleDelete()}
               >
                 Slet

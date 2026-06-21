@@ -5,9 +5,9 @@ import { zValidator } from '@hono/zod-validator';
 import {
   createAvailabilityInputSchema,
   updateAvailabilityInputSchema,
-  uuidSchema,
   z,
 } from '@repo/shared';
+import { requireUuidParam } from '../../lib/params';
 import { availabilityService } from './availability.service';
 
 const factory = createFactory();
@@ -20,13 +20,6 @@ const slotsRequestSchema = z
   })
   .strict();
 
-function requireAvailabilityId(id: string | undefined): string {
-  if (!id || !uuidSchema.safeParse(id).success) {
-    throw new HTTPException(400, { message: 'Invalid id parameter' });
-  }
-  return id;
-}
-
 export const listAvailability = async (c: Context) => {
   const from = c.req.query('from');
   const data = await availabilityService.list(from);
@@ -34,7 +27,7 @@ export const listAvailability = async (c: Context) => {
 };
 
 export const getAvailability = async (c: Context) => {
-  const id = requireAvailabilityId(c.req.param('id'));
+  const id = requireUuidParam(c.req.param('id'));
   const data = await availabilityService.get(id);
   if (!data) {
     throw new HTTPException(404, { message: 'Availability not found' });
@@ -79,7 +72,7 @@ export const updateAvailability = factory.createHandlers(
     return undefined;
   }),
   async (c) => {
-    const id = requireAvailabilityId(c.req.param('id'));
+    const id = requireUuidParam(c.req.param('id'));
     const input = c.req.valid('json');
     const data = await availabilityService.patch(id, input);
     if (!data) {
@@ -90,7 +83,7 @@ export const updateAvailability = factory.createHandlers(
 );
 
 export const deleteAvailability = async (c: Context) => {
-  const id = requireAvailabilityId(c.req.param('id'));
+  const id = requireUuidParam(c.req.param('id'));
   const data = await availabilityService.delete(id);
   if (!data) {
     throw new HTTPException(404, { message: 'Availability not found' });

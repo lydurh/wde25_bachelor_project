@@ -125,6 +125,97 @@ describe('GET /api/appointments', () => {
   });
 });
 
+const ADMIN_TEST_USER_PK = 'a0000000-0000-4000-8000-000000000002';
+
+const signAdminToken = async (): Promise<string> =>
+  sign(
+    {
+      user_pk: ADMIN_TEST_USER_PK,
+      user_role: 'admin',
+      user_email: 'admin@test.com',
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    },
+    env.JWT_SECRET,
+    'HS256',
+  );
+
+describe('GET /api/appointments/list/:id', () => {
+  it('should return 200 when a user lists their own appointments', async () => {
+    const created = assertDefined(
+      await appointmentsService.post(makeBody(testUserId)),
+    );
+    testAppointmentIds.push(created.appointment_pk);
+
+    const res = await app.request(`/api/appointments/list/${testUserId}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${userToken}` },
+    });
+    const body = (await res.json()) as AppointmentListResponse;
+
+    expect(res.status).toBe(200);
+    expect(
+      body.data.some((a) => a.appointment_pk === created.appointment_pk),
+    ).toBe(true);
+  });
+
+  it("should return 200 when an admin lists another user's appointments", async () => {
+    const created = assertDefined(
+      await appointmentsService.post(makeBody(testUserId)),
+    );
+    testAppointmentIds.push(created.appointment_pk);
+
+    const res = await app.request(`/api/appointments/list/${testUserId}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${await signAdminToken()}` },
+    });
+    const body = (await res.json()) as AppointmentListResponse;
+
+    expect(res.status).toBe(200);
+    expect(
+      body.data.some((a) => a.appointment_pk === created.appointment_pk),
+    ).toBe(true);
+  });
+
+  it("should return 403 when a client lists another user's appointments", async () => {
+    const otherUser = assertDefined(
+      await authService.signup({
+        first_name: 'TEST',
+        last_name: 'OtherUser',
+        email: 'TEST_appt_handler_other@example.com',
+        password: 'password123',
+        address: 'TEST Address 2',
+        postal_code: '1234',
+        city: 'Copenhagen',
+      }),
+    );
+
+    const res = await app.request(
+      `/api/appointments/list/${otherUser.user.user_pk}`,
+      {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${userToken}` },
+      },
+    );
+
+    expect(res.status).toBe(403);
+  });
+
+  it('should return 401 without auth token', async () => {
+    const res = await app.request(`/api/appointments/list/${testUserId}`, {
+      method: 'GET',
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it('should return 400 for invalid UUID format', async () => {
+    const res = await app.request('/api/appointments/list/not-a-uuid', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${await signAdminToken()}` },
+    });
+    expect(res.status).toBe(400);
+  });
+});
+
 describe('GET /api/appointments/:id', () => {
   it('should return 200 with a valid appointment', async () => {
     const created = assertDefined(
@@ -190,6 +281,21 @@ describe('POST /api/appointments', () => {
       body: JSON.stringify({
         appointment_time: '10:00',
         appointment_date: '2030-07-20',
+      }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('should return 400 with invalid appointment_user_fk UUID', async () => {
+    const res = await app.request('/api/appointments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({
+        ...makeBody(testUserId),
+        appointment_user_fk: 'not-a-uuid',
       }),
     });
     expect(res.status).toBe(400);

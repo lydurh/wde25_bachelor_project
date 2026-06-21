@@ -18,9 +18,16 @@ import {
   buildSelectedServiceLines,
   getCumulatedServiceDurationFromQuantities,
   getBookingTotalPriceKr,
+  BOOKING_MAX_DISTANCE_KM,
+  BOOKING_LOCATION_FEE_KR,
 } from '@repo/shared';
-import type { Appointment, Location, User } from '@repo/shared';
-import { api } from '@/lib/api';
+import type {
+  Appointment,
+  BusinessSettings,
+  Location,
+  User,
+} from '@repo/shared';
+import { api, ApiError, getErrorMessage } from '@/lib/api';
 import type { BookingUserLoaderData } from '@/lib/loaders/booking-user';
 import type { ServicesLoaderData } from '@/lib/loaders/service';
 import {
@@ -50,11 +57,14 @@ type BookingContextValue = {
   /** Who the appointment is for (`selectedCustomer` when admin, else session user). */
   bookingCustomer: User | null;
   adminOrigin: BookingUserLoaderData['adminOrigin'];
+  /** Resolved business settings (falls back to compile-time defaults). */
+  businessSettings: BusinessSettings;
   currentStep: BookingStepValue;
   continueLabel: string;
   continueDisabled: boolean;
   showLayoutContinue: boolean;
   isSubmitting: boolean;
+  submitError: string | null;
   handleContinue: () => void;
   setStepFooter: (config: StepFooterConfig) => void;
   showSuccessDialog: boolean;
@@ -71,6 +81,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   const [draft, setDraftState] = useState<BookingDraft>({});
   const [stepFooter, setStepFooterState] = useState<StepFooterConfig>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [hasSubmittedSuccessfully, setHasSubmittedSuccessfully] =
     useState(false);
@@ -80,6 +91,14 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   const bookingUserData = useRouteLoaderData<BookingUserLoaderData>('book');
   const adminOrigin: BookingUserLoaderData['adminOrigin'] =
     bookingUserData?.adminOrigin ?? null;
+  const businessSettings: BusinessSettings = useMemo(
+    () =>
+      bookingUserData?.businessSettings ?? {
+        location_fee_threshold_km: BOOKING_MAX_DISTANCE_KM,
+        location_fee_kr: BOOKING_LOCATION_FEE_KR,
+      },
+    [bookingUserData?.businessSettings],
+  );
   const guardContext = useMemo(
     () => createBookingGuardContext(bookingUserData?.user?.user_pk),
     [bookingUserData?.user?.user_pk],
@@ -142,6 +161,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (currentStep !== 'confirm') {
       setHasSubmittedSuccessfully(false);
+      setSubmitError(null);
     }
   }, [currentStep]);
 
@@ -197,8 +217,10 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       const totalPrice = getBookingTotalPriceKr(
         selectedServices,
         draft.locationFeeApplies ?? false,
+        businessSettings.location_fee_kr,
       ).toFixed(2);
 
+      setSubmitError(null);
       setIsSubmitting(true);
       void (async () => {
         try {
@@ -244,10 +266,12 @@ export function BookingProvider({ children }: { children: ReactNode }) {
               console.warn('Failed to send confirmation email', err);
             });
         } catch (err: unknown) {
-          console.error('Booking failed', err);
-          const apiError = err as { status?: number; message?: string };
-          if (apiError?.status === 400 || apiError?.status === 409) {
-            console.warn(apiError.message ?? 'Booking validation failed');
+          if (err instanceof ApiError && err.issues?.length) {
+            setSubmitError(
+              [...new Set(err.issues.map((issue) => issue.message))].join('. '),
+            );
+          } else {
+            setSubmitError(getErrorMessage(err));
           }
         } finally {
           setIsSubmitting(false);
@@ -272,6 +296,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     draft.address,
     bookingCustomer,
     draft.locationFeeApplies,
+    businessSettings,
     navigate,
     servicesData,
     setDraft,
@@ -289,11 +314,13 @@ export function BookingProvider({ children }: { children: ReactNode }) {
         location: userLocation,
         bookingCustomer,
         adminOrigin,
+        businessSettings,
         currentStep,
         continueLabel,
         continueDisabled,
         showLayoutContinue,
         isSubmitting,
+        submitError,
         handleContinue,
         setStepFooter,
         showSuccessDialog,

@@ -8,7 +8,11 @@ import {
   sendConfirmationEmail,
   listAppointmentsByUserId,
 } from './appointments.handler';
-import { authMiddleware, adminMiddleware } from '../../middleware';
+import {
+  authMiddleware,
+  adminMiddleware,
+  selfOrAdminMiddleware,
+} from '../../middleware';
 
 export const appointmentsRoutes = new Hono();
 
@@ -20,7 +24,12 @@ appointmentsRoutes.use('*', authMiddleware);
 // Listing every appointment is admin-only; clients read their own via
 // `/list/:id`. Without this any authenticated user could enumerate all bookings.
 appointmentsRoutes.get('/', adminMiddleware, listAppointments);
-appointmentsRoutes.get('/list/:id', listAppointmentsByUserId);
+// A client may only read their own appointments; admins may read anyone's.
+appointmentsRoutes.get(
+  '/list/:id',
+  selfOrAdminMiddleware,
+  listAppointmentsByUserId,
+);
 appointmentsRoutes.post('/send-confirmation-email', ...sendConfirmationEmail);
 appointmentsRoutes.post('/', ...createAppointment);
 appointmentsRoutes.get('/:id', getAppointmentById);

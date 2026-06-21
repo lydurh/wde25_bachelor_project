@@ -1,6 +1,7 @@
 import { format, parse } from 'date-fns';
 import { HugeiconsIcon } from '@hugeicons/react';
 
+import { AuthFormBanner } from '@/components/auth/auth-form-field';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -19,11 +20,7 @@ import {
   ItemTitle,
 } from '@/components/ui/item';
 import { Separator } from '@/components/ui/separator';
-import {
-  BOOKING_LOCATION_FEE_KR,
-  getBookingTotalPriceKr,
-  getLinePriceKr,
-} from '@repo/shared';
+import { getBookingTotalPriceKr, getLinePriceKr } from '@repo/shared';
 import { LocationFeeLabel } from '@/views/booking/components/location-fee-label';
 import { BookingSuccessDialog } from '@/views/booking/components/booking-success-dialog';
 import {
@@ -57,7 +54,9 @@ export const ConfirmationPage = () => {
     continueDisabled,
     continueLabel,
     isSubmitting,
+    submitError,
     bookingCustomer,
+    businessSettings,
     showSuccessDialog,
     setShowSuccessDialog,
   } = useBooking();
@@ -72,6 +71,7 @@ export const ConfirmationPage = () => {
   const totalPriceKr = getBookingTotalPriceKr(
     selectedServices,
     locationFeeApplies,
+    businessSettings.location_fee_kr,
   );
 
   const appointmentLabel = formatAppointmentDateTime(
@@ -195,10 +195,12 @@ export const ConfirmationPage = () => {
           <Item variant="default" size="sm" className="p-0">
             <ItemContent className="flex flex-row justify-between">
               <ItemTitle>
-                <LocationFeeLabel />
+                <LocationFeeLabel
+                  thresholdKm={businessSettings.location_fee_threshold_km}
+                />
               </ItemTitle>
               <ItemDescription className="text-foreground">
-                {BOOKING_LOCATION_FEE_KR.toFixed(2)} kr
+                {businessSettings.location_fee_kr.toFixed(2)} kr
               </ItemDescription>
             </ItemContent>
           </Item>
@@ -212,7 +214,10 @@ export const ConfirmationPage = () => {
           </ItemContent>
         </Item>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex flex-col gap-3">
+        {submitError ? (
+          <AuthFormBanner variant="error">{submitError}</AuthFormBanner>
+        ) : null}
         <Button
           type="button"
           className="w-full"

@@ -7,6 +7,7 @@ import {
 import { computeRouteDistanceKm } from '../../utils/routes';
 import { geocodeFormattedAddress } from '../../utils/geocoder';
 import { usersService } from '../users/users.service';
+import { businessSettingsService } from '../business-settings/business-settings.service';
 
 export const locationsService = {
   async list() {
@@ -45,15 +46,24 @@ export const locationsService = {
   },
 
   async checkDistanceFee(destinationAddress: string) {
-    const admin = await usersService.getAdminLocation();
-    const distanceKm = await computeRouteDistanceKm(
-      admin.address,
-      destinationAddress,
-    );
+    const [admin, settings] = await Promise.all([
+      usersService.getAdminLocation(),
+      businessSettingsService.get(),
+    ]);
+
+    const originAddress = admin.address.trim();
+    const destination = destinationAddress.trim();
+    const distanceKm =
+      originAddress.toLowerCase() === destination.toLowerCase()
+        ? 0 // Same address: skip Routes API (returns no route for identical origin/destination)
+        : await computeRouteDistanceKm(originAddress, destination);
 
     return {
       distanceKm,
-      appliesLocationFee: appliesLocationFee(distanceKm),
+      appliesLocationFee: appliesLocationFee(
+        distanceKm,
+        settings.location_fee_threshold_km,
+      ),
     };
   },
 };

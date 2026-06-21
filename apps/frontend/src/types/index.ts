@@ -7,7 +7,6 @@ export type {
   CreateServiceInput,
   CreateUserInput,
   ForgotPasswordInput,
-  GetUserByIdParams,
   Location,
   LoginInput,
   ResetPasswordInput,
@@ -21,4 +20,5 @@ export type {
   User,
   UserRow,
   VerifyEmailQuery,
+  AppointmentWithServices,
 } from '@repo/shared';

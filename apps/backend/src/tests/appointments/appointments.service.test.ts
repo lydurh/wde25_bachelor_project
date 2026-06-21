@@ -213,6 +213,26 @@ describe('appointmentsService.patch', () => {
     expect(result).toBeUndefined();
   });
 
+  it('should soft-delete and cancel the appointment when status is cancelled', async () => {
+    const created = assertDefined(
+      await appointmentsService.post(makeInput(testUserId)),
+    );
+    testAppointmentIds.push(created.appointment_pk);
+
+    const updated = assertDefined(
+      await appointmentsService.patch(created.appointment_pk, {
+        appointment_status: 'cancelled',
+      }),
+    );
+
+    expect(updated.appointment_status).toBe('cancelled');
+    // `appointment_deleted_at` is stripped from API responses (#190); the
+    // soft-delete is verified below via `get` returning undefined.
+
+    const found = await appointmentsService.get(created.appointment_pk);
+    expect(found).toBeUndefined();
+  });
+
   it('should not update a soft-deleted appointment', async () => {
     const created = assertDefined(
       await appointmentsService.post(makeInput(testUserId)),

@@ -52,9 +52,8 @@ export function getTotalPriceKr(lines: BookingServiceLine[]): number {
 export function getBookingTotalPriceKr(
   lines: BookingServiceLine[],
   locationFeeApplies = false,
+  locationFeeKr: number = BOOKING_LOCATION_FEE_KR,
 ): number {
   const servicesTotal = getTotalPriceKr(lines);
-  return locationFeeApplies
-    ? servicesTotal + BOOKING_LOCATION_FEE_KR
-    : servicesTotal;
+  return locationFeeApplies ? servicesTotal + locationFeeKr : servicesTotal;
 }
