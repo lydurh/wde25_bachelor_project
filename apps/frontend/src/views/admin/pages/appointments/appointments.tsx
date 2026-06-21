@@ -1,9 +1,8 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import type { Appointment } from '@/types';
+import type { Appointment, AdminUser, Location } from '@/types';
 import {
   Table,
   TableBody,
@@ -18,25 +17,12 @@ type ApiResponse<T> = { data: T };
 const PAGE_SIZE = 10;
 const formatDate = (date: string) => new Date(date).toLocaleDateString('en-CA');
 
-const statusVariant = (
-  status: string,
-): 'default' | 'secondary' | 'destructive' | 'outline' => {
-  switch (status) {
-    case 'confirmed':
-      return 'default';
-    case 'completed':
-      return 'outline';
-    case 'cancelled':
-      return 'destructive';
-    default:
-      return 'secondary';
-  }
-};
-
 export const AppointmentsPage = () => {
   const navigate = useNavigate();
 
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
@@ -50,8 +36,14 @@ export const AppointmentsPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await api.get<ApiResponse<Appointment[]>>('/appointments');
-        setAppointments(res.data);
+        const [apptRes, userRes, locRes] = await Promise.all([
+          api.get<ApiResponse<Appointment[]>>('/appointments'),
+          api.get<ApiResponse<AdminUser[]>>('/users'),
+          api.get<ApiResponse<Location[]>>('/locations'),
+        ]);
+        setAppointments(apptRes.data);
+        setUsers(userRes.data);
+        setLocations(locRes.data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
@@ -61,13 +53,21 @@ export const AppointmentsPage = () => {
     void fetchData();
   }, []);
 
+  const userMap = useMemo(() => {
+    return new Map(users.map((u) => [u.user_pk, u]));
+  }, [users]);
+
+  const locationMap = useMemo(() => {
+    return new Map(locations.map((l) => [l.location_pk, l]));
+  }, [locations]);
+
   if (loading) return <p>Loading...</p>;
   if (error) return <p className="text-destructive">{error}</p>;
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h1>Aftaler</h1>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-semibold">Aftaler</h1>
       </div>
 
       {appointments.length === 0 ? (
@@ -75,43 +75,49 @@ export const AppointmentsPage = () => {
       ) : (
         <>
           <Table className="w-full rounded-md bg-card">
-            <TableHeader className="bg-secondary-background">
+            <TableHeader>
               <TableRow>
+                <TableHead>Kunde</TableHead>
+                <TableHead className="hidden sm:table-cell">Lokation</TableHead>
                 <TableHead>Dato</TableHead>
                 <TableHead>Tid</TableHead>
-                <TableHead>Varighed</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Pris</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {pageItems.map((appt) => (
-                <TableRow
-                  key={appt.appointment_pk}
-                  className="cursor-pointer"
-                  onClick={() =>
-                    void navigate(`/admin/appointments/${appt.appointment_pk}`)
-                  }
-                >
-                  <TableCell>{formatDate(appt.appointment_date)}</TableCell>
-                  <TableCell>{appt.appointment_time}</TableCell>
-                  <TableCell>
-                    {appt.appointment_duration
-                      ? `${appt.appointment_duration} min`
-                      : '—'}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariant(appt.appointment_status)}>
-                      {appt.appointment_status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {appt.appointment_total_price
-                      ? `${appt.appointment_total_price} kr`
-                      : '—'}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {pageItems.map((appt) => {
+                const user = userMap.get(appt.appointment_user_fk);
+                const location = user?.user_location_fk
+                  ? locationMap.get(user.user_location_fk)
+                  : null;
+
+                return (
+                  <TableRow
+                    key={appt.appointment_pk}
+                    className="cursor-pointer"
+                    onClick={() =>
+                      void navigate(
+                        `/admin/appointments/${appt.appointment_pk}`,
+                      )
+                    }
+                  >
+                    {/* Customer */}
+                    <TableCell className="font-medium">
+                      {user
+                        ? `${user.user_first_name} ${user.user_last_name}`
+                        : '—'}
+                    </TableCell>
+
+                    {/* Location */}
+                    <TableCell className="hidden sm:table-cell">
+                      {location?.location_address ?? '—'}
+                    </TableCell>
+                    <TableCell>{formatDate(appt.appointment_date)}</TableCell>
+                    <TableCell>
+                      {appt.appointment_time?.slice(0, 5) ?? '—'}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
 

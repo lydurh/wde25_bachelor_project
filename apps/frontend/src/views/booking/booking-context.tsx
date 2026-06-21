@@ -27,7 +27,7 @@ import type {
   Location,
   User,
 } from '@repo/shared';
-import { api } from '@/lib/api';
+import { api, ApiError, getErrorMessage } from '@/lib/api';
 import type { BookingUserLoaderData } from '@/lib/loaders/booking-user';
 import type { ServicesLoaderData } from '@/lib/loaders/service';
 import {
@@ -64,6 +64,7 @@ type BookingContextValue = {
   continueDisabled: boolean;
   showLayoutContinue: boolean;
   isSubmitting: boolean;
+  submitError: string | null;
   handleContinue: () => void;
   setStepFooter: (config: StepFooterConfig) => void;
   showSuccessDialog: boolean;
@@ -80,6 +81,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   const [draft, setDraftState] = useState<BookingDraft>({});
   const [stepFooter, setStepFooterState] = useState<StepFooterConfig>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [hasSubmittedSuccessfully, setHasSubmittedSuccessfully] =
     useState(false);
@@ -159,6 +161,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (currentStep !== 'confirm') {
       setHasSubmittedSuccessfully(false);
+      setSubmitError(null);
     }
   }, [currentStep]);
 
@@ -217,6 +220,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
         businessSettings.location_fee_kr,
       ).toFixed(2);
 
+      setSubmitError(null);
       setIsSubmitting(true);
       void (async () => {
         try {
@@ -262,10 +266,12 @@ export function BookingProvider({ children }: { children: ReactNode }) {
               console.warn('Failed to send confirmation email', err);
             });
         } catch (err: unknown) {
-          console.error('Booking failed', err);
-          const apiError = err as { status?: number; message?: string };
-          if (apiError?.status === 400 || apiError?.status === 409) {
-            console.warn(apiError.message ?? 'Booking validation failed');
+          if (err instanceof ApiError && err.issues?.length) {
+            setSubmitError(
+              [...new Set(err.issues.map((issue) => issue.message))].join('. '),
+            );
+          } else {
+            setSubmitError(getErrorMessage(err));
           }
         } finally {
           setIsSubmitting(false);
@@ -314,6 +320,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
         continueDisabled,
         showLayoutContinue,
         isSubmitting,
+        submitError,
         handleContinue,
         setStepFooter,
         showSuccessDialog,

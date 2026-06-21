@@ -9,10 +9,6 @@ import {
   uuidSchema,
 } from '../validators';
 
-export const getUserByIdParamsSchema = z.object({
-  id: uuidSchema,
-});
-
 export const createUserSchema = z.object({
   user_email: emailSchema,
   user_first_name: nameSchema({ label: 'First name' }),
@@ -26,7 +22,7 @@ export const createUserSchema = z.object({
 
 export const updateUserSchema = z
   .object({
-    user_email: z.string().email('Invalid email format').max(255).optional(),
+    user_email: z.email('Invalid email format').max(255).optional(),
     user_first_name: safeString({
       min: 1,
       max: 100,
@@ -61,13 +57,13 @@ export const updateUserSchema = z
       if (data.user_password) {
         if (!data.repeat_password) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: 'custom',
             path: ['repeat_password'],
             message: 'Repeat password is required',
           });
         } else if (data.repeat_password !== data.user_password) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: 'custom',
             path: ['repeat_password'],
             message: 'Passwords must match',
           });
@@ -76,6 +72,5 @@ export const updateUserSchema = z
     },
   );
 
-export type GetUserByIdParams = z.infer<typeof getUserByIdParamsSchema>;
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;

@@ -10,7 +10,6 @@ COPY packages/config/package.json packages/config/
 
 RUN bun install --frozen-lockfile
 
-# Vite inlines this at build time; must be present during the build, not at runtime.
 ARG VITE_GOOGLE_MAPS_API_KEY
 ENV VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY
 

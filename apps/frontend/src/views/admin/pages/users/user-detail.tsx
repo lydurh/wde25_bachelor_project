@@ -97,40 +97,50 @@ export const UserDetailPage = () => {
             {user.user_first_name} {user.user_last_name}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Email</span>
-            <span>{user.user_email}</span>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1 rounded-md border border-muted/20 bg-muted/5 p-3">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              Email
+            </p>
+            <p>{user.user_email}</p>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Role</span>
+          <div className="space-y-1 rounded-md border border-muted/20 bg-muted/5 p-3">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              Role
+            </p>
             <Badge
               variant={user.user_role === 'admin' ? 'default' : 'secondary'}
             >
               {user.user_role}
             </Badge>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Lokation</span>
-            <span>
+          <div className="space-y-1 rounded-md border border-muted/20 bg-muted/5 p-3">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              Lokation
+            </p>
+            <p>
               {user.user_location_fk
                 ? (locations.find(
                     (l) => l.location_pk === user.user_location_fk,
                   )?.location_address ?? '—')
                 : '—'}
-            </span>
+            </p>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Verified</span>
-            <span>
+          <div className="space-y-1 rounded-md border border-muted/20 bg-muted/5 p-3">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              Verified
+            </p>
+            <p>
               {user.user_verified_at
                 ? `Verified on ${formatDate(user.user_verified_at)}`
                 : 'Not verified'}
-            </span>
+            </p>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Joined</span>
-            <span>{formatDate(user.user_created_at)}</span>
+          <div className="sm:col-span-2 space-y-1 rounded-md border border-muted/20 bg-muted/5 p-3">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              Joined
+            </p>
+            <p>{formatDate(user.user_created_at)}</p>
           </div>
         </CardContent>
       </Card>

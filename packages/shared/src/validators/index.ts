@@ -1,12 +1,10 @@
 import { z } from 'zod';
 
-export const uuidSchema = z.string().uuid('Invalid UUID format');
+export const uuidSchema = z.uuid('Invalid UUID format');
 
 export const userRoleSchema = z.enum(['client', 'admin']);
 
 export const emailSchema = z
-  .string()
-  .trim()
   .email('Invalid email format')
   .max(255, 'Email is too long');
 

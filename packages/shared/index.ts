@@ -50,16 +50,8 @@ export {
   updateServiceSchema,
 } from './src/schemas/service';
 
-export type {
-  GetUserByIdParams,
-  CreateUserInput,
-  UpdateUserInput,
-} from './src/schemas/user';
-export {
-  getUserByIdParamsSchema,
-  createUserSchema,
-  updateUserSchema,
-} from './src/schemas/user';
+export type { CreateUserInput, UpdateUserInput } from './src/schemas/user';
+export { createUserSchema, updateUserSchema } from './src/schemas/user';
 
 export type {
   CreateAppointmentInput,

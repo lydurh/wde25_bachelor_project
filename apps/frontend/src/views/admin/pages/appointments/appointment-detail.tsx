@@ -8,6 +8,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type ApiResponse<T> = { data: T };
 
+// Extended appointment type with optional services and location
+type AppointmentDetail = Appointment & {
+  services?: Array<{
+    service_fk: string;
+    quantity: number;
+    service_title: string;
+    service_description: string | null;
+    service_duration: number;
+    service_price: string;
+  }>;
+  location?: {
+    location_pk: string;
+    location_address: string;
+    location_postal_code: string | null;
+    location_city: string;
+    location_country: string | null;
+  } | null;
+};
+
 const formatDate = (date: string) => new Date(date).toLocaleDateString('en-CA');
 
 const statusVariant = (
@@ -29,7 +48,9 @@ export const AppointmentDetailPage = () => {
   const { appointmentId } = useParams();
   const navigate = useNavigate();
 
-  const [appointment, setAppointment] = useState<Appointment | null>(null);
+  const [appointment, setAppointment] = useState<AppointmentDetail | null>(
+    null,
+  );
   const [client, setClient] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +85,7 @@ export const AppointmentDetailPage = () => {
     if (!appointment) return;
     setCancelling(true);
     try {
-      const res = await api.patch<ApiResponse<Appointment>>(
+      const res = await api.patch<ApiResponse<AppointmentDetail>>(
         `/appointments/${appointment.appointment_pk}`,
         { appointment_status: 'cancelled' },
       );
@@ -95,7 +116,7 @@ export const AppointmentDetailPage = () => {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            Appointment Details
+            Detaljer for aftale
             <Badge variant={statusVariant(appointment.appointment_status)}>
               {appointment.appointment_status}
             </Badge>
@@ -110,6 +131,17 @@ export const AppointmentDetailPage = () => {
             <span className="text-muted-foreground">Tid</span>
             <span>{appointment.appointment_time.slice(0, 5)}</span>
           </div>
+          {appointment.location && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Lokation</span>
+              <span>
+                {appointment.location.location_address}
+                {appointment.location.location_city
+                  ? ', ' + appointment.location.location_city
+                  : ''}
+              </span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className="text-muted-foreground">Varighed</span>
             <span>
@@ -126,9 +158,28 @@ export const AppointmentDetailPage = () => {
                 : '—'}
             </span>
           </div>
+          {appointment.services && appointment.services.length > 0 && (
+            <div className="pt-2">
+              <span className="text-muted-foreground block mb-2">Ydelser</span>
+              <div className="space-y-1">
+                {appointment.services.map((s) => (
+                  <div key={s.service_fk} className="flex items-center gap-2">
+                    <span>
+                      {s.quantity > 1 ? `${s.quantity} × ` : ''}
+                      {s.service_title}
+                    </span>
+                    <span>-</span>
+                    <span>
+                      {(parseFloat(s.service_price) * s.quantity).toFixed(2)} kr
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {client && (
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Client</span>
+              <span className="text-muted-foreground">Kunde</span>
               <span>
                 {client.user_first_name} {client.user_last_name}
               </span>
@@ -152,7 +203,7 @@ export const AppointmentDetailPage = () => {
                 disabled={cancelling}
                 onClick={() => void handleCancel()}
               >
-                {cancelling ? 'Cancelling...' : 'Cancel Appointment'}
+                {cancelling ? 'Cancelling...' : 'Aflys Aftale'}
               </Button>
             </div>
           )}
