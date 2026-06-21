@@ -226,8 +226,6 @@ describe('appointmentsService.patch', () => {
     );
 
     expect(updated.appointment_status).toBe('cancelled');
-    // `appointment_deleted_at` is stripped from API responses (#190); the
-    // soft-delete is verified below via `get` returning undefined.
 
     const found = await appointmentsService.get(created.appointment_pk);
     expect(found).toBeUndefined();
