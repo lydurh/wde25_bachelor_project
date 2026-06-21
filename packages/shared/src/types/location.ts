@@ -11,11 +11,22 @@ export type Location = {
   location_deleted_at: Date | null;
 };
 
-/** Public API shape — internal soft-delete marker stripped. */
-export type PublicLocation = Omit<Location, 'location_deleted_at'>;
+/** Public API shape — internal fields stripped. */
+export type PublicLocation = {
+  location_pk: string;
+  location_address: string;
+  location_postal_code: string | null;
+  location_city: string;
+  location_country: string | null;
+};
 
 /** Strip internal fields from a location row before returning to the client. */
 export function toPublicLocation(row: Location): PublicLocation {
-  const { location_deleted_at: _location_deleted_at, ...rest } = row;
-  return rest;
+  return {
+    location_pk: row.location_pk,
+    location_address: row.location_address,
+    location_postal_code: row.location_postal_code,
+    location_city: row.location_city,
+    location_country: row.location_country,
+  };
 }

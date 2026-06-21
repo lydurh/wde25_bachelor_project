@@ -122,7 +122,15 @@ describe('servicesService.create', () => {
     );
     testIds.push(result.service_pk);
 
-    expect(result.service_created_at).toBeInstanceOf(Date);
+    const row = assertDefined(
+      (
+        await db
+          .select()
+          .from(services)
+          .where(eq(services.service_pk, result.service_pk))
+      )[0],
+    );
+    expect(row.service_created_at).toBeInstanceOf(Date);
   });
 
   it('should not expose service_deleted_at on creation', async () => {
@@ -166,13 +174,21 @@ describe('servicesService.update', () => {
     );
     testIds.push(created.service_pk);
 
-    const result = assertDefined(
+    assertDefined(
       await servicesService.update(created.service_pk, {
         service_title: 'TEST_UpdatedTimestamp',
       }),
     );
 
-    expect(result.service_updated_at).toBeInstanceOf(Date);
+    const row = assertDefined(
+      (
+        await db
+          .select()
+          .from(services)
+          .where(eq(services.service_pk, created.service_pk))
+      )[0],
+    );
+    expect(row.service_updated_at).toBeInstanceOf(Date);
   });
 
   it('should leave unchanged fields the same', async () => {

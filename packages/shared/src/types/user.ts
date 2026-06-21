@@ -22,8 +22,6 @@ export type User = {
   user_first_name: string;
   user_last_name: string;
   user_location_fk: string | null;
-  user_created_at: Date;
-  user_updated_at: Date | null;
 };
 
 /** Strip sensitive fields from a DB row before returning to the client. */
@@ -35,8 +33,6 @@ export function toPublicUser(row: UserRow): User {
     user_first_name: row.user_first_name,
     user_last_name: row.user_last_name,
     user_location_fk: row.user_location_fk,
-    user_created_at: row.user_created_at,
-    user_updated_at: row.user_updated_at,
   };
 }
 
@@ -44,6 +40,7 @@ export function toPublicUser(row: UserRow): User {
 export type AdminUser = User & {
   user_note: string | null;
   user_verified_at: Date | null;
+  user_created_at: Date;
 };
 
 /** Convert a DB row to an admin-safe user (no password or deleted_at). */
@@ -52,5 +49,6 @@ export function toAdminUser(row: UserRow): AdminUser {
     ...toPublicUser(row),
     user_note: row.user_note,
     user_verified_at: row.user_verified_at,
+    user_created_at: row.user_created_at,
   };
 }

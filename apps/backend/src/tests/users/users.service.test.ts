@@ -1,6 +1,6 @@
 import { describe, it, expect, afterAll } from 'bun:test';
 import { usersService } from '../../api/users/users.service';
-import { db, users, like } from '@repo/db';
+import { db, users, like, eq } from '@repo/db';
 
 const testIds: string[] = [];
 
@@ -200,13 +200,18 @@ describe('usersService.update', () => {
     );
     testIds.push(created.user_pk);
 
-    const updated = assertDefined(
+    assertDefined(
       await usersService.update(created.user_pk, {
         user_first_name: 'TEST_Timestamp',
       }),
     );
 
-    expect(updated.user_updated_at).toBeInstanceOf(Date);
+    const row = assertDefined(
+      (
+        await db.select().from(users).where(eq(users.user_pk, created.user_pk))
+      )[0],
+    );
+    expect(row.user_updated_at).toBeInstanceOf(Date);
   });
 
   it('should return undefined for non-existent ID', async () => {

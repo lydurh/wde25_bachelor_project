@@ -9,11 +9,22 @@ export type Service = {
   service_deleted_at: Date | null;
 };
 
-/** Public API shape — internal soft-delete marker stripped. */
-export type PublicService = Omit<Service, 'service_deleted_at'>;
+/** Public API shape — internal fields stripped. */
+export type PublicService = {
+  service_pk: string;
+  service_title: string;
+  service_description: string | null;
+  service_duration: number;
+  service_price: string;
+};
 
 /** Strip internal fields from a service row before returning to the client. */
 export function toPublicService(row: Service): PublicService {
-  const { service_deleted_at: _service_deleted_at, ...rest } = row;
-  return rest;
+  return {
+    service_pk: row.service_pk,
+    service_title: row.service_title,
+    service_description: row.service_description,
+    service_duration: row.service_duration,
+    service_price: row.service_price,
+  };
 }
