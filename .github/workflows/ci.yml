@@ -76,7 +76,7 @@ jobs:
   docker:
     name: Docker Prod Build Validate
     runs-on: ubuntu-latest
-    needs: [check, test]
+    needs: [check, test, audit]
     strategy:
       matrix:
         include:
