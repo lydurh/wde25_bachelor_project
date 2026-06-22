@@ -3,8 +3,6 @@ name: CI
 
 on:
   workflow_call:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
@@ -78,8 +76,7 @@ jobs:
   docker:
     name: Docker Prod Build Validate
     runs-on: ubuntu-latest
-    needs: [check, test]
-    if: github.event_name == 'pull_request'
+    needs: [check, test, audit]
     strategy:
       matrix:
         include:
